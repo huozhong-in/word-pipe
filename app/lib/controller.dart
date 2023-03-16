@@ -112,3 +112,13 @@ var titleFontStyle = GoogleFonts.knewave(color: Colors.black, fontSize: 24, font
 // double decorationThickness,
 // String debugLabel,
 // })
+
+SnackBar customSnackBar({required String content}) {
+  return SnackBar(
+    backgroundColor: Colors.greenAccent,
+    content: Text(
+      content,
+      style: const TextStyle(color: Colors.blueGrey, letterSpacing: 0.5),
+    ),
+  );
+}

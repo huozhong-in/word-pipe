@@ -249,10 +249,11 @@ class Home extends StatelessWidget {
                             right: 0,
                             bottom: 0,
                             child: Container(
-                              padding: const EdgeInsets.all(16),
-                              constraints: const BoxConstraints(maxHeight: 400, minHeight: 400),
+                              height: 400,
+                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                              // constraints: const BoxConstraints(maxHeight: 400, minHeight: 400),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: Colors.white70,
                                 borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(16),
                                   topRight: Radius.circular(16),
@@ -268,7 +269,7 @@ class Home extends StatelessWidget {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                // mainAxisSize: MainAxisSize.min,
+                                // mainAxisSize: MainAxisSize.max,
                                 children: [
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -288,16 +289,18 @@ class Home extends StatelessWidget {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.max,
                                     children: [
-                                      Flexible(
+                                      Flexible( 
                                         flex: 1,
-                                        fit: FlexFit.tight,
+                                        fit: FlexFit.loose,
                                         child: Obx(() {
                                           return ListView.builder(
                                           itemBuilder: (_, int index) => _matchWords[index],
                                           reverse: true,
                                           itemCount: _matchWords.length,
                                           shrinkWrap: true,
+                                          primary: true
                                         );
                                         },),
                                       ),
@@ -305,15 +308,35 @@ class Home extends StatelessWidget {
                                         flex: 2,
                                         fit: FlexFit.tight,
                                         child: Obx(() {
-                                          return Flex(
-                                            direction: Axis.vertical,
-                                            mainAxisAlignment: MainAxisAlignment.start,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(_wordDetail['phonetic']!=null && _wordDetail['phonetic']!=""?"\\${_wordDetail['phonetic']}\\":"", style: const TextStyle(fontSize: 14)),
-                                              Text(_wordDetail['translation']!=null && _wordDetail['translation']!=""?_wordDetail['translation'] as String:"", style: textFontStyle.copyWith(fontSize: 14)),
-                                              Text(_wordDetail['definition']!=null && _wordDetail['definition']!=""?_wordDetail['definition'] as String:"", style: const TextStyle(backgroundColor: Colors.greenAccent, fontFamily: 'IosevkaNerdFontCompleteMono'))
-                                            ],
+                                          return SizedBox(
+                                            height: 350,
+                                            child: SingleChildScrollView(
+                                              scrollDirection: Axis.vertical,
+                                              child: Scrollbar(
+                                                thumbVisibility: true,
+                                                child: Text.rich(
+                                                  TextSpan(
+                                                    text: '',
+                                                    style: Theme.of(context).textTheme.bodyMedium!,
+                                                    children: <TextSpan>[
+                                                      TextSpan(
+                                                        text: _wordDetail['phonetic']!=null && _wordDetail['phonetic']!=""?"\\${_wordDetail['phonetic']}\\":"",
+                                                      ),
+                                                      const TextSpan(text: "\n"),
+                                                      TextSpan(
+                                                        text: _wordDetail['translation']!=null && _wordDetail['translation']!=""?_wordDetail['translation'] as String:"",
+                                                        style: const TextStyle(backgroundColor: Colors.greenAccent)
+                                                      ),
+                                                      const TextSpan(text: "\n"),
+                                                      TextSpan(
+                                                        text: _wordDetail['definition']!=null && _wordDetail['definition']!=""?_wordDetail['definition'] as String:"",
+                                                        style: const TextStyle(fontFamily: 'IosevkaNerdFontCompleteMono'),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                           );
                                         },),
                                       ),
@@ -332,7 +355,7 @@ class Home extends StatelessWidget {
             Container(
               margin: const EdgeInsets.fromLTRB(5, 0, 5, 5),
               padding: const EdgeInsets.all(7),
-              height: 100,
+              // height: 100,
               decoration: BoxDecoration(
                 color: Colors.white70,
                 borderRadius: const BorderRadius.only(
@@ -360,6 +383,7 @@ class Home extends StatelessWidget {
                       _commentFocus.requestFocus();
                     },
                     tooltip: "cmd+enter",
+                    hoverColor: Colors.black54,
                   ),
                 ],
               ),
@@ -380,17 +404,17 @@ class Message extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData themeData = Theme.of(context);
-    final TextStyle textStyle = themeData.textTheme.bodyLarge!.copyWith(
-      color: isMe ? Colors.white : Colors.black,
-    );
-    final BoxDecoration decoration = BoxDecoration(
-      color: isMe ? themeData.primaryColor : Colors.grey[300],
-      borderRadius: BorderRadius.circular(3.0),
-    );
+    // final ThemeData themeData = Theme.of(context);
+    // final TextStyle textStyle = themeData.textTheme.bodyLarge!.copyWith(
+    //   color: isMe ? Colors.white : Colors.black,
+    // );
+    // final BoxDecoration decoration = BoxDecoration(
+    //   color: isMe ? themeData.primaryColor : Colors.grey[300],
+    //   borderRadius: BorderRadius.circular(3.0),
+    // );
     return MessageBubble(
             message: text,
-            isSender: false,
+            isSender: isMe,
             bubbleColor: const Color.fromRGBO(40, 178, 95, 1));
     // return Container(
     //   margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
@@ -416,10 +440,11 @@ class MatchWords extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData themeData = Theme.of(context);
-    final TextStyle textStyle = themeData.textTheme.bodyMedium!.copyWith(
-      color: Colors.green[700],
-      backgroundColor: isSelected ? Colors.lightGreenAccent: Colors.transparent,
+    final TextStyle textStyle = themeData.textTheme.bodyLarge!.copyWith(
+      color: Colors.black87,
+      backgroundColor: isSelected ? Colors.greenAccent: Colors.transparent,
       fontWeight: fullMatch ? FontWeight.bold : FontWeight.normal,
+      fontFamily: 'IosevkaNerdFontCompleteMono',
     );
     return SizedBox(
       child: Text(text, style: textStyle),

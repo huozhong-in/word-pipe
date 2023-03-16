@@ -1,5 +1,9 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:app/controller.dart';
+
 
 class MessageBubbleClipper extends CustomClipper<Path> {
   final bool isSender;
@@ -47,21 +51,40 @@ class MessageBubble extends StatelessWidget {
     required this.bubbleColor,
   });
 
+  
+
   @override
   Widget build(BuildContext context) {
+    void copyTextToClipboard() async {
+      await Clipboard.setData(ClipboardData(text: message));
+      log('Text content copied to clipboard.');
+      ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
+        customSnackBar(content: "内容已复制到剪贴板")
+      );
+    }
+
     return Container(
-      width: Get.width * 0.8,
+      margin: isSender
+        ? const EdgeInsets.fromLTRB(50, 8, 8, 8)
+        : const EdgeInsets.fromLTRB(8, 8, 8, 50),
       padding: isSender
           ? const EdgeInsets.fromLTRB(16, 8, 30, 8)
           : const EdgeInsets.fromLTRB(30, 8, 16, 8),
       child: ClipPath(
         clipper: MessageBubbleClipper(isSender: isSender),
-        child: Container(
-          color: bubbleColor,
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-          child: Text(
-            message,
-            style: const TextStyle(fontSize: 16),
+        child: GestureDetector(
+              onDoubleTap: () {
+                copyTextToClipboard();
+              },
+          child: Container(
+            color: isSender
+              ? bubbleColor
+              : Colors.green[200],
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+            child: Text(
+              message,
+              style: const TextStyle(fontSize: 16),
+            ),
           ),
         ),
       ),
