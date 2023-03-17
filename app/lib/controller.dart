@@ -3,6 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 final WordsProvider _wordsProvider = WordsProvider();
+final UserProvider _userProvider = UserProvider();
+
+class Controller extends GetxController{
+  Future<List<dynamic>> searchWords(String word) async{
+    return await _wordsProvider.searchWords(word);
+  }
+  Future<List<dynamic>> getWord(String word) async{
+    return await _wordsProvider.getWord(word);
+  }
+  Future<List<dynamic>> reConnect(String userId, String lastEventId) async{
+    return await _userProvider.reConnect(userId,lastEventId);
+  }
+}
+
+
 class WordsProvider extends GetConnect {
   Future<List<dynamic>> searchWords(String word) async{
     final response = await get('http://127.0.0.1/s?k=$word');
@@ -19,21 +34,32 @@ class WordsProvider extends GetConnect {
     } else {
       throw Exception('Failed to fetch items');
     }
-  }
-  // Future<Response> postUser(Map data) => post('http://youapi/users', body: data);
+  }  
   // GetSocket userMessages() {
   //   return socket('https://yourapi/users/socket');
   // }
+}
 
+
+class UserProvider extends GetConnect {
+  Future<List<dynamic>> reConnect(String userId, String lastEventId) async{
+    String baseUrl='http://127.0.0.1/user/reconnect';
+    Uri url = Uri.parse(baseUrl).replace(
+      queryParameters: <String, String>{
+        'userId': userId,
+        'lastEventId': lastEventId
+      },
+    );
+    final response = await get(url.toString());
+    if (response.statusCode == 200) {
+      return response.body as List<dynamic>;
+    } else {
+      throw Exception('Failed to fetch items');
+    }
+  } 
 }
-class Controller extends GetxController{
-  Future<List<dynamic>> searchWords(String word) async{
-    return await _wordsProvider.searchWords(word);
-  }
-  Future<List<dynamic>> getWord(String word) async{
-    return await _wordsProvider.getWord(word);
-  }
-}
+
+
 
 
 final ThemeData appTheme = ThemeData(

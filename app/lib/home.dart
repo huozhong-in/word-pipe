@@ -1,11 +1,12 @@
+import 'dart:convert';
 import 'dart:math' as math;
-
-import 'package:get/get.dart';
-import 'package:app/controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get/get.dart';
+import 'package:app/controller.dart';
 import 'package:app/message_bubble.dart';
+import 'package:app/sse_client.dart';
 import 'dart:developer';
 
 
@@ -21,16 +22,20 @@ class Home extends StatelessWidget {
   late String _lastWord = "";
   late int _leftOrRight = 0;
   late final Map<String, String> _wordDetail = <String, String>{}.obs;
+  final String myId = "Dio";
   
   
-  void _handleSubmitted(String text) {
+  void _handleSubmitted(String text, String who) {
     if(text.trim() == ""){
       return;
     }
-    _textController.clear();
-    _matchWords.clear();
-    _indexGrey = 0;
-    _messages.insert(0, Message(text: text.trim(), isMe: true));
+    bool isMe = (who == myId);
+    if(isMe){
+      _textController.clear();
+      _matchWords.clear();
+      _indexGrey = 0;
+    }
+    _messages.insert(0, Message(key: ValueKey(_messages.length), text: text.trim(), isMe: isMe));
   }
 
   void _handleMatchWords(String text) {
@@ -94,13 +99,33 @@ class Home extends StatelessWidget {
       _lastWord = "";
     }
   }
+
+  void _handleSSE() async{
+    Uri url = Uri.parse('http://127.0.0.1/stream');
+    String eventType = 'broadcasting';
+    String channel = 'users.social';
+
+    SSEClient sseClient = SSEClient(url, eventType, channel);
+
+    // 订阅消息流
+    sseClient.messages.listen((message) {
+      log('from SSE Server: $message');
+      Map<String, String> m = Map<String, String>.from(jsonDecode(message));
+      if(m['user'] != null){
+        String user = m['user'] as String;
+        String msg = m['message'] as String;
+        _handleSubmitted(msg, user);
+      }
+    });
+  }
+
   Widget _myTextFild(){
     return Focus(
       onKey: (node, RawKeyEvent event) {
           // cmd+enter发送信息
           if (event.isMetaPressed && event.isKeyPressed(LogicalKeyboardKey.enter)) {
             log("cmd+enter: ${_textController.text.trim()}");
-            _handleSubmitted(_textController.text);
+            _handleSubmitted(_textController.text, myId);
             _commentFocus.requestFocus();
             return KeyEventResult.handled;
           }
@@ -206,6 +231,7 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(context){
+    _handleSSE();
     return Scaffold(
       appBar: AppBar(
           title: Text('Word Pipe',
@@ -275,8 +301,11 @@ class Home extends StatelessWidget {
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: const [
                                       Text(
-                                        'Mini vocabulary',
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                        'Live vocabulary helper',
+                                        style: TextStyle(
+                                          fontSize: 16, 
+                                          fontWeight: FontWeight.bold,
+                                          ),
                                       ),
                                       Text(
                                         '↑↓ to choose word / ⏎ to confirm',
@@ -379,7 +408,7 @@ class Home extends StatelessWidget {
                     icon: const Icon(Icons.send_rounded),
                     color: Colors.green[400],
                     onPressed: () {
-                      _handleSubmitted(_textController.text);
+                      _handleSubmitted(_textController.text, myId);
                       _commentFocus.requestFocus();
                     },
                     tooltip: "cmd+enter",
@@ -397,36 +426,14 @@ class Home extends StatelessWidget {
 
 
 class Message extends StatelessWidget {
-  const Message({super.key, required this.text, required this.isMe});
+  const Message({required Key key, required this.text, required this.isMe}) : super(key: key);
 
   final String text;
   final bool isMe;
 
   @override
   Widget build(BuildContext context) {
-    // final ThemeData themeData = Theme.of(context);
-    // final TextStyle textStyle = themeData.textTheme.bodyLarge!.copyWith(
-    //   color: isMe ? Colors.white : Colors.black,
-    // );
-    // final BoxDecoration decoration = BoxDecoration(
-    //   color: isMe ? themeData.primaryColor : Colors.grey[300],
-    //   borderRadius: BorderRadius.circular(3.0),
-    // );
-    return MessageBubble(
-            message: text,
-            isSender: isMe,
-            bubbleColor: const Color.fromRGBO(40, 178, 95, 1));
-    // return Container(
-    //   margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-    //   decoration: decoration,
-    //   child: Column(
-    //     crossAxisAlignment: CrossAxisAlignment.start,
-    //     children: [
-    //       Text(text, style: textStyle),
-          
-    //     ],
-    //   ),
-    // );
+    return MessageBubble(message: text, isMe: isMe);
   }
 }
 

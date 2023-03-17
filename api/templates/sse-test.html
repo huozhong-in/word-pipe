@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vue.js SSE Client</title>
+  <script src="https://unpkg.com/vue@next"></script>
+  <style>
+    .error-message {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Vue.js SSE Client</h1>
+    <textarea v-model="messageToSend" @keyup.enter="sendMessage" style="height:400px; width: 700px;"></textarea>
+    <button @click="sendMessage">Send</button>
+    {% raw %}
+    <div v-for="message in messages" :key="message.id" :class="{ 'error-message': message.isError }">
+      {{ message.text }}
+    </div>
+    {% endraw %}
+  </div>
+
+  <script>
+    const app = Vue.createApp({
+      data() {
+        return {
+          messageToSend: '',
+          messages: []
+        };
+      },
+      mounted() {
+        this.connectToSSE();
+      },
+      methods: {
+        connectToSSE() {
+          const source = new EventSource("{{ sse_url|safe }}");
+
+          source.addEventListener('broadcasting', (event) => {
+            const data = JSON.parse(event.data);
+            this.messages.push({ id: Date.now(), text: data.message, isError: false });
+          }, false);
+
+          source.addEventListener('error', (event) => {
+            const errorMessage = "Failed to connect to event stream. Is Redis running?";
+            this.messages.push({ id: Date.now(), text: errorMessage, isError: true });
+          }, false);
+        },
+        async sendMessage() {
+          if (this.messageToSend.trim() === '') return;
+
+          try {
+            const response = await fetch('/pub-test', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ message: this.messageToSend })
+            });
+
+            if (!response.ok) {
+              throw new Error(`HTTP error ${response.status}`);
+            }
+
+            const responseData = await response.json();
+            if (responseData.success) {
+              this.messageToSend = '';
+              // this.messages.push({ id: Date.now(), text: responseData.message, isError: false });
+              this.messages.push({ id: Date.now(), text: `${Date.now()}: message send.`, isError: false });
+            } else {
+              console.error('Error sending message:', responseData.message);
+            }
+          } catch (error) {
+            console.error('Error sending message:', error);
+          }
+        }
+      },
+    });
+
+    app.mount('#app');
+  </script>
+</body>
+</html>

@@ -1,71 +1,56 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  List<User> _users = [];
-
-  Future<List<User>> _fetchUsers() async {
-    final response = await http.get(Uri.parse('https://jsonplaceholder.typicode.com/users'));
-
-    if (response.statusCode == 200) {
-      final jsonData = json.decode(response.body) as List;
-      return jsonData.map((user) => User.fromJson(user)).toList();
-    } else {
-      throw Exception('Failed to load users');
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUsers().then((users) => setState(() => _users = users));
-  }
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter JSON Demo',
       home: Scaffold(
-        appBar: AppBar(
-          title: Text('Flutter JSON Demo'),
-        ),
-        body: ListView.builder(
-          itemCount: _users.length,
-          itemBuilder: (context, index) {
-            final user = _users[index];
-            return ListTile(
-              title: Text(user.name),
-              subtitle: Text(user.email),
-            );
-          },
+        appBar: AppBar(title: const Text('Selectable Text with ClipPath')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Stack(
+              children: [
+                CustomPaint(
+                  painter: ClipPathPainter(),
+                  child: Container(),
+                ),
+                const SelectableText(
+                  'This is some sample text that can be selected and copied.',
+                  style: TextStyle(fontSize: 18),
+                  cursorColor: Colors.blue,
+                  showCursor: true,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class User {
-  final int id;
-  final String name;
-  final String email;
+class ClipPathPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.lightBlue
+      ..style = PaintingStyle.fill;
 
-  User({required this.id, required this.name, required this.email});
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..lineTo(0, 0);
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['id'],
-      name: json['name'],
-      email: json['email'],
-    );
+    canvas.drawPath(path, paint);
   }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
