@@ -12,8 +12,11 @@ class Controller extends GetxController{
   Future<List<dynamic>> getWord(String word) async{
     return await _wordsProvider.getWord(word);
   }
-  Future<List<dynamic>> reConnect(String userId, String lastEventId) async{
-    return await _userProvider.reConnect(userId,lastEventId);
+  // Future<List<dynamic>> reConnect(String userId, String lastEventId) async{
+  //   return await _userProvider.reConnect(userId,lastEventId);
+  // }
+  Future<bool> chat(String userId, String message) async{
+    return await _userProvider.chat(userId, message);
   }
 }
 
@@ -56,7 +59,27 @@ class UserProvider extends GetConnect {
     } else {
       throw Exception('Failed to fetch items');
     }
-  } 
+  }
+  
+  Future<bool> chat(String userId, String message) async{
+    // String baseUrl='http://127.0.0.1/chat';
+    // Uri url = Uri.parse(baseUrl).replace(
+    //   queryParameters: <String, String>{
+    //     'userId': userId,
+    //     'message': message
+    //   },
+    // );
+    Uri url = Uri.parse('http://127.0.0.1/chat');
+    Map data = {};
+    data['user'] = userId;
+    data['message'] = message;
+    final response = await post(url.toString(), data=data);
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }
 
 
@@ -67,7 +90,7 @@ final ThemeData appTheme = ThemeData(
   primarySwatch: Colors.green,
   primaryColor: const Color(0xFFF5F7FD),
   scaffoldBackgroundColor: const Color(0xFFF5F7FD),
-  fontFamily: GoogleFonts.sourceSansPro().fontFamily, // 'Georgia'
+  fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, // 'Georgia'
   brightness: Brightness.light,
   // Define the default `TextTheme`. Use this to specify the default
   // text styling for headlines, titles, bodies of text, and more.

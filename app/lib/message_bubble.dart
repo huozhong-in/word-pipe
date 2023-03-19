@@ -74,41 +74,54 @@ class MessageBubble extends StatelessWidget {
       },
       child: Container(
         margin: isMe
-            ? const EdgeInsets.fromLTRB(8, 8, 8, 8)
-            : const EdgeInsets.fromLTRB(8, 8, 8, 8),
-        child: Stack(
-          children: [
-            CustomPaint(
-              painter: MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-                child: SelectableText.rich(
-                  TextSpan(
-                    style: DefaultTextStyle.of(context).style,
-                    children: <InlineSpan>[
-                      TextSpan(text: message),
-                      TextSpan(
-                        text: '链接',
-                        style: const TextStyle(color: Color.fromARGB(255, 11, 66, 93), decoration: TextDecoration.underline),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () async {
-                            Uri url = Uri.parse('https://translate.google.com/?sl=en&tl=zh-CN&text=demonstration&op=translate');
-                            if (await canLaunchUrl(url)) {
-                              await launchUrl(url);
-                            } else {
-                              ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
-                                const SnackBar(content: Text('无法打开链接')),
-                              );
-                            }
-                          },
+            ? const EdgeInsets.fromLTRB(80, 8, 8, 8)
+            : const EdgeInsets.fromLTRB(8, 8, 80, 8),
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            return Align(
+              alignment: isMe ? Alignment.topRight : Alignment.topLeft,
+              child: FractionallySizedBox(
+                widthFactor: 0.8,
+                child: IntrinsicWidth(
+                  child: Stack(
+                    alignment: isMe ? Alignment.topRight : Alignment.topLeft,
+                    children: [
+                      CustomPaint(
+                        painter: MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+                          child: SelectableText.rich(
+                            TextSpan(
+                              style: DefaultTextStyle.of(context).style,
+                              children: <InlineSpan>[
+                                TextSpan(text: message),
+                                TextSpan(
+                                  text: '链接',
+                                  style: const TextStyle(color: Color.fromARGB(255, 11, 66, 93), decoration: TextDecoration.underline),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () async {
+                                      Uri url = Uri.parse('https://translate.google.com/?sl=en&tl=zh-CN&text=demonstration&op=translate');
+                                      if (await canLaunchUrl(url)) {
+                                        await launchUrl(url);
+                                      } else {
+                                        ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
+                                          const SnackBar(content: Text('无法打开链接')),
+                                        );
+                                      }
+                                    },
+                                ),
+                                // const TextSpan(text: '查看更多信息。'),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                      // const TextSpan(text: '查看更多信息。'),
                     ],
-                  )
+                  ),
                 ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

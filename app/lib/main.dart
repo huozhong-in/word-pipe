@@ -13,7 +13,7 @@ class WordPipe extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    final Controller c = Get.put(Controller());
+    Get.put(Controller());
     
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
@@ -21,6 +21,11 @@ class WordPipe extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: Colors.red,
+          selectionColor: Colors.yellow,
+          selectionHandleColor: Colors.black,
+        ),
       ),
       home: Home(),
     );

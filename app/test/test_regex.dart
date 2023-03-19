@@ -1,7 +1,7 @@
 
 
 void main() {
-  String input = 'This is a long-time example with hyphenated-words.';
+  String input = 'This is a long-time example with hyphenated-words, including some non-alpha character...';
   RegExp exp = RegExp(r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b');
 
   Iterable<RegExpMatch> matches = exp.allMatches(input);

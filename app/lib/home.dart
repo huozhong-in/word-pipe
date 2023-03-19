@@ -10,6 +10,7 @@ import 'package:app/sse_client.dart';
 import 'dart:developer';
 
 
+// ignore: must_be_immutable
 class Home extends StatelessWidget {
   Home({super.key});
   final Controller c = Get.find();
@@ -25,19 +26,25 @@ class Home extends StatelessWidget {
   final String myId = "Dio";
   
   
-  void _handleSubmitted(String text, String who) {
+  void _handleSubmitted(String text) {
     if(text.trim() == ""){
       return;
     }
-    bool isMe = (who == myId);
-    if(isMe){
-      _textController.clear();
-      _matchWords.clear();
-      _indexGrey = 0;
-    }
-    _messages.insert(0, Message(key: ValueKey(_messages.length), text: text.trim(), isMe: isMe));
+    Future<bool> r = c.chat(myId, text.trim());
+    r.then((value){
+      if(value){
+        _textController.clear();
+        _matchWords.clear();
+        _indexGrey = 0;
+        _handleMessageBack(myId, text.trim());
+      }
+    });    
   }
 
+  void _handleMessageBack(String user, String message){
+    bool isMe = (user == myId);
+    _messages.insert(0, Message(key: ValueKey(_messages.length), text: message, isMe: isMe));
+  }
   void _handleMatchWords(String text) {
     if (text.trim() == ""){
       _matchWords.clear();
@@ -110,11 +117,15 @@ class Home extends StatelessWidget {
     // 订阅消息流
     sseClient.messages.listen((message) {
       log('from SSE Server: $message');
-      Map<String, String> m = Map<String, String>.from(jsonDecode(message));
+      Map<String, dynamic> m = Map<String, dynamic>.from(jsonDecode(message));
       if(m['user'] != null){
         String user = m['user'] as String;
-        String msg = m['message'] as String;
-        _handleSubmitted(msg, user);
+        String type = m['type'] as String;
+        if(type == "get_word_root"){
+          List<dynamic> data = m['data'] as List<dynamic>;
+          List<String> dataList = data.map((item) => item as String).toList();
+          _handleMessageBack(user, dataList.toString());
+        }
       }
     });
   }
@@ -125,7 +136,7 @@ class Home extends StatelessWidget {
           // cmd+enter发送信息
           if (event.isMetaPressed && event.isKeyPressed(LogicalKeyboardKey.enter)) {
             log("cmd+enter: ${_textController.text.trim()}");
-            _handleSubmitted(_textController.text, myId);
+            _handleSubmitted(_textController.text);
             _commentFocus.requestFocus();
             return KeyEventResult.handled;
           }
@@ -218,12 +229,12 @@ class Home extends StatelessWidget {
             _matchWords.clear();
             _indexGrey = 0;
           },
-          style: const TextStyle(fontFamily: 'IosevkaNerdFontCompleteMono'),
+          style: TextStyle(fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, fontWeight: FontWeight.w400),
           maxLines: 3,
           minLines: 3,
-          decoration: const InputDecoration.collapsed(
+          decoration: InputDecoration.collapsed(
             hintText: 'Input some words..',
-            hintStyle: TextStyle(color: Colors.grey, fontFamily: 'IosevkaNerdFontCompleteMono'),
+            hintStyle: TextStyle(color: Colors.grey, fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, fontWeight: FontWeight.w400),
           ),
         )
       );
@@ -383,7 +394,7 @@ class Home extends StatelessWidget {
             ),
             Container(
               margin: const EdgeInsets.fromLTRB(5, 0, 5, 5),
-              padding: const EdgeInsets.all(7),
+              padding: const EdgeInsets.all(10),
               // height: 100,
               decoration: BoxDecoration(
                 color: Colors.white70,
@@ -408,7 +419,7 @@ class Home extends StatelessWidget {
                     icon: const Icon(Icons.send_rounded),
                     color: Colors.green[400],
                     onPressed: () {
-                      _handleSubmitted(_textController.text, myId);
+                      _handleSubmitted(_textController.text);
                       _commentFocus.requestFocus();
                     },
                     tooltip: "cmd+enter",

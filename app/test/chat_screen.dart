@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'dart:developer';
 
 
+// ignore: must_be_immutable
 class ChatScreen extends StatelessWidget {
   ChatScreen({super.key});
   final Controller c = Get.find();
