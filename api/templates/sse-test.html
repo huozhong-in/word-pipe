@@ -44,6 +44,13 @@
           source.addEventListener('error', (event) => {
             const errorMessage = "Failed to connect to event stream. Is Redis running?";
             this.messages.push({ id: Date.now(), text: errorMessage, isError: true });
+            console.error(errorMessage);
+            
+            // 断线重连，降级方式重连
+            setTimeout(() => {
+              console.log('Trying to reconnect...');
+              this.connectToSSE();
+            }, 5000);
           }, false);
         },
         async sendMessage() {
@@ -65,7 +72,6 @@
             const responseData = await response.json();
             if (responseData.success) {
               this.messageToSend = '';
-              // this.messages.push({ id: Date.now(), text: responseData.message, isError: false });
               this.messages.push({ id: Date.now(), text: `${Date.now()}: message send.`, isError: false });
             } else {
               console.error('Error sending message:', responseData.message);

@@ -1,8 +1,8 @@
-import 'package:app/controller.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:get/get.dart';
+import 'package:app/config.dart';
 
 class CustomRichText extends StatelessWidget {
   final String message;

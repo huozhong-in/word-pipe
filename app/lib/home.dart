@@ -1,21 +1,23 @@
-import 'dart:convert';
+
 import 'dart:math' as math;
+import 'package:app/config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:app/controller.dart';
-import 'package:app/message_bubble.dart';
-import 'package:app/sse_client.dart';
+import 'package:app/MessageView.dart';
 import 'dart:developer';
 
+// ugly code
+import 'package:app/MessageController.dart';
+import 'package:app/MessageModel.dart';
 
 // ignore: must_be_immutable
 class Home extends StatelessWidget {
   Home({super.key});
   final Controller c = Get.find();
 
-  final List<Message> _messages = <Message>[].obs;
   final List<MatchWords> _matchWords = <MatchWords>[].obs;
   final TextEditingController _textController = TextEditingController();
   final FocusNode _commentFocus = FocusNode();
@@ -23,28 +25,25 @@ class Home extends StatelessWidget {
   late String _lastWord = "";
   late int _leftOrRight = 0;
   late final Map<String, String> _wordDetail = <String, String>{}.obs;
-  final String myId = "Dio";
-  
-  
+
   void _handleSubmitted(String text) {
     if(text.trim() == ""){
       return;
     }
-    Future<bool> r = c.chat(myId, text.trim());
+    Future<bool> r = c.chat(c.getUserId(), text.trim());
     r.then((value){
       if(value){
         _textController.clear();
         _matchWords.clear();
         _indexGrey = 0;
-        _handleMessageBack(myId, text.trim());
+        //ugly code
+        final MessageController messageController = Get.put(MessageController());
+        messageController.addMessage(MessageModel(dataList: text.trim(), type: WordPipeMessageType.text, userId: c.getUserId()));
       }
     });    
   }
 
-  void _handleMessageBack(String user, String message){
-    bool isMe = (user == myId);
-    _messages.insert(0, Message(key: ValueKey(_messages.length), text: message, isMe: isMe));
-  }
+  
   void _handleMatchWords(String text) {
     if (text.trim() == ""){
       _matchWords.clear();
@@ -107,27 +106,16 @@ class Home extends StatelessWidget {
     }
   }
 
-  void _handleSSE() async{
-    Uri url = Uri.parse('http://127.0.0.1/stream');
-    String eventType = 'broadcasting';
-    String channel = 'users.social';
+  
 
-    SSEClient sseClient = SSEClient(url, eventType, channel);
-
-    // 订阅消息流
-    sseClient.messages.listen((message) {
-      log('from SSE Server: $message');
-      Map<String, dynamic> m = Map<String, dynamic>.from(jsonDecode(message));
-      if(m['user'] != null){
-        String user = m['user'] as String;
-        String type = m['type'] as String;
-        if(type == "get_word_root"){
-          List<dynamic> data = m['data'] as List<dynamic>;
-          List<String> dataList = data.map((item) => item as String).toList();
-          _handleMessageBack(user, dataList.toString());
-        }
-      }
-    });
+  List<String> parse_text_to_words(String text){
+    List<String> words = [];
+    RegExp regex = RegExp(r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b');
+    Match? match = regex.firstMatch(text);
+    if (match != null) {
+      words.add(match.group(0)!);
+    }
+    return words;
   }
 
   Widget _myTextFild(){
@@ -233,7 +221,7 @@ class Home extends StatelessWidget {
           maxLines: 3,
           minLines: 3,
           decoration: InputDecoration.collapsed(
-            hintText: 'Input some words..',
+            hintText: '/ OR words',
             hintStyle: TextStyle(color: Colors.grey, fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, fontWeight: FontWeight.w400),
           ),
         )
@@ -242,7 +230,7 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(context){
-    _handleSSE();
+    
     return Scaffold(
       appBar: AppBar(
           title: Text('Word Pipe',
@@ -268,15 +256,9 @@ class Home extends StatelessWidget {
                       Container(
                         width: double.infinity,
                         height: double.infinity,
+                        alignment: Alignment.topCenter,
                         color: Colors.grey.withOpacity(0.5),
-                        child: Obx(() {
-                          return ListView.builder(
-                            itemBuilder: (_, int index) => _messages[index],
-                            reverse: true,
-                            itemCount: _messages.length,
-                            shrinkWrap: true,
-                          );
-                        },)
+                        child: MessageView(key: ValueKey(DateTime.now()))
                       ),
                       Obx(() => 
                         Visibility(
@@ -436,17 +418,17 @@ class Home extends StatelessWidget {
 }
 
 
-class Message extends StatelessWidget {
-  const Message({required Key key, required this.text, required this.isMe}) : super(key: key);
+// class Message extends StatelessWidget {
+//   const Message({required Key key, required this.text, required this.isMe}) : super(key: key);
 
-  final String text;
-  final bool isMe;
+//   final String text;
+//   final bool isMe;
 
-  @override
-  Widget build(BuildContext context) {
-    return MessageBubble(message: text, isMe: isMe);
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return MessageView(message: message);
+//   }
+// }
 
 class MatchWords extends StatelessWidget {
   const MatchWords({super.key, required this.text, required this.fullMatch, required this.isSelected});

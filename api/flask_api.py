@@ -1,15 +1,15 @@
 import json
+import threading
 import time
 import hashlib
 from pathlib import Path
-# import ahocorasick
-# import werkzeug
 import marisa_trie
 from flask import Flask, Response, jsonify, make_response, request, render_template, url_for
 from flask_cors import CORS #, cross_origin
 from flask_sse import sse
 from stardict import *
 from config import *
+
 
 app = Flask(__name__)
 cors = CORS(app, resource={
@@ -32,18 +32,12 @@ print(f'JUNIOR + SENIOR + IELTS, total: {len(vocab)} words.')
 ## marisa-trie for prefix search
 trie = marisa_trie.Trie(vocab, order=marisa_trie.LABEL_ORDER)
 
-## pyahocorasick for wild-search
-# A = ahocorasick.Automaton()
-# for idx, word in enumerate(vocab):
-#     A.add_word(word, (idx, word))
-# A.make_automaton()
-
 # parse wordroot.txt
 wordroot_file = Path(Path(__file__).parent.absolute() / 'db/wordroot.txt')
 with wordroot_file.open() as f:
     wordroot= json.load(f)
 print(f"wordroot.txt including {len(wordroot.keys())} roots.")
-word2root = {}
+word2root: dict = {}
 for key, value in wordroot.items():
     if 'example' in value:
         for word in value['example']:
@@ -53,12 +47,9 @@ for key, value in wordroot.items():
                 word2root[word] = [key]
 
 
-
 def generate_time_based_client_id(prefix='client_'):
     current_time = time.time()
-    # 使用当前时间创建一个唯一的ClientID
     raw_client_id = f"{prefix}{current_time}".encode('utf-8')
-    # 使用hashlib生成一个唯一的ClientID
     hashed_client_id = hashlib.sha256(raw_client_id).hexdigest()
     return hashed_client_id
 
@@ -109,14 +100,6 @@ def search() -> Response:
     print(f"[Processed in {toc - tic:0.4f} seconds]")
     return make_response(jsonify(x), 200)
 
-# @app.route('/ws', methods = ['GET'])
-# def wild_search():
-#     global A
-#     pattern = '*count*'
-#     results = A.keys("bl??k", "?", ahocorasick.MATCH_AT_LEAST_PREFIX)
-#     # print(list(results))
-#     return make_response(jsonify({"a":list(results)}), 200)
-
 @app.route('/p', methods = ['GET'])
 def point_search():
     '''
@@ -162,17 +145,6 @@ def favicon():
     r.mimetype = "image/x-icon"
     return r
 
-@app.route('/user/reconnect')
-def user_reconnect():
-    if not request.args.get('userId') or not request.args.get('lastEventId'):
-        return make_response(jsonify({}), 200)
-    userId: str = request.args.get('userId')
-    lastEventId: str = request.args.get('lastEventId')
-    if userId == '' or lastEventId=='':
-        return make_response(jsonify({}), 200)
-    print("/user/reconnect")
-    return 1
-
 @app.route('/sse-test.html')
 def sse_test():
     sse_url = url_for('sse.stream', channel=SSE_MSG_CHANNEL, _external=False)
@@ -183,16 +155,17 @@ def publish_test():
     if request.method != 'POST':
         return make_response('Please use POST method', 500)
     try:
-        data: dict = request.get_json()
-        message: str = data.get('message')
+        json: dict = request.get_json()
+        message: str = json.get('message')
     except:
         return make_response('JSON data required', 500)
-    
+    r: list = list()
     id: str = generate_time_based_client_id()
-    back_data: dict = dict()
-    back_data['user'] = "Jarvis"
-    back_data['type'] = "get_word_root"
-    back_data['data'] = [message]
+    back_data: json = {}
+    back_data['userId'] = "Jarvis"
+    back_data['type'] = 1
+    r.append(message)
+    back_data['dataList'] = r
     sse.publish(id=id, data=back_data, type=SSE_MSG_TYPE, channel=SSE_MSG_CHANNEL)
     return jsonify({"success": True, "message": f"Server response:{message}"})
 
@@ -209,34 +182,27 @@ def chat():
         return make_response('Please use POST method', 500)
     try:
         data: dict = request.get_json()
-        user: str = data.get('user')
+        user: str = data.get('userId')
         message: str = data.get('message')
     except:
         return make_response('JSON data required', 500)
+    
     tic = time.perf_counter()
     if message.startswith('/word '):
-        message = message.split('/word ')[1]
-        r: list = list()
-        import re
-        # message= 'This is a long-time example with hyphenated-words, including some non-alpha character...'
-        exp = r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b'
-        matches = re.finditer(exp, message)
-        for match in matches:
-            word = match.group(0)
-            t: list = get_root_by_word(word)
-            if len(t) != 0:
-                r.extend(t)
-                # for t1 in t:
-                #     r.append(wordroot[t1])
+        
+        back_data: json = {}
+        back_data = get_root_by_word(message)
 
-        back_data: dict = dict()
-        back_data['user'] = "Jarvis"
-        back_data['type'] = "get_word_root"
-        back_data['data'] = r
-     
-        id: str = generate_time_based_client_id(prefix=user)
-        print("chat() pushlish id:", id)
-        sse.publish(id=id, data=back_data, type=SSE_MSG_TYPE, channel=SSE_MSG_CHANNEL)
+        def publish_func():
+            id = generate_time_based_client_id(prefix=user)
+            print("chat() publish id:", id)
+            time.sleep(1)  # 延迟一秒
+            with app.app_context():
+                sse.publish(id=id, data=back_data, type=SSE_MSG_TYPE, channel=SSE_MSG_CHANNEL)
+
+        thread = threading.Thread(target=publish_func)
+        thread.start()
+
     elif message.startswith('/help '):
         pass
 
@@ -245,11 +211,85 @@ def chat():
 
     return make_response(list(), 200)
 
-def get_root_by_word(word:str) -> list:
-    # TODO example里单词可能有大写或带空格的情况，如"-ite2"
 
-    # print(word2root['tactful']) # 输出 ["-ful1","tact, tang, ting, tig"]
-    return list(word2root.get(word)) if word2root.get(word) != None else list()
+def get_root_by_word(message: str) -> json:
+    '''
+    根据单词查找词根词缀
+
+    print(word2root['tactful']) # 输出 ["-ful1","tact, tang, ting, tig"]
+    TODO example里单词可能有大写或带空格的情况，如"-ite2"
+    {
+        "userId": "Jarvis",
+        "type": 101,
+        "dataList":
+        [
+            {
+                "tactful":
+                [
+                    {
+                        "-ful1":
+                        [
+                            {
+                                "class": "adjective-forming suffix"
+                            }
+                        ]
+                    },
+                    {
+                        "tact, tang, ting, tig":
+                        [
+                            {
+                                "meaning": "touch"
+                            },
+                            {
+                                "class": "root"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "word2":
+                [
+                    "memor, member, membr",
+                    "viv, vivi, vit"
+                ]
+            }
+        ]
+    }
+    '''
+    
+    message = message.split('/word ')[1]
+    dataList: list = list()
+    import re
+    # message= 'This is a long-time example with hyphenated-words, including some non-alpha character...'
+    exp = r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b'
+    matches = re.finditer(exp, message)
+    for match in matches:
+        word = match.group(0)
+        rootlist: list = list(word2root.get(word)) if word2root.get(word) != None else list()
+        if len(rootlist) != 0:
+            a_word: list = list()
+            for root in rootlist:
+                a_root: list = list()
+                if wordroot[root].get('meaning') != None:
+                    a_root.append({'meaning': wordroot[root]['meaning']})
+                if wordroot[root].get('class') != None:
+                    a_root.append({'class':  wordroot[root]['class']})
+                if wordroot[root].get('origin') != None:
+                    a_root.append({'origin': wordroot[root]['origin']})
+                if wordroot[root].get('function') != None:
+                    a_root.append({'function': wordroot[root]['function']})
+                if wordroot[root].get('example') != None:
+                    a_root.append({'example': wordroot[root]['example']})
+                a_word.append({root: a_root}) 
+            dataList.append({word: a_word})
+            
+    back_data: json = {}
+    back_data['userId'] = "Jarvis"
+    back_data['type'] = 101
+    back_data['dataList'] = dataList
+    print(back_data)
+    return back_data
 
 
 if __name__ == '__main__':
