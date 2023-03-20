@@ -4,11 +4,13 @@ import time
 import hashlib
 from pathlib import Path
 import marisa_trie
-from flask import Flask, Response, jsonify, make_response, request, render_template, url_for
+from flask import Flask, Response, jsonify, make_response, request, render_template, url_for, send_file
 from flask_cors import CORS #, cross_origin
 from flask_sse import sse
 from stardict import *
 from config import *
+from io import BytesIO
+from PIL import Image
 
 
 app = Flask(__name__)
@@ -192,19 +194,39 @@ def chat():
         
         back_data: json = {}
         back_data = get_root_by_word(message)
-
-        def publish_func():
+        def publish_func1():
             id = generate_time_based_client_id(prefix=user)
             print("chat() publish id:", id)
             time.sleep(1)  # 延迟一秒
             with app.app_context():
                 sse.publish(id=id, data=back_data, type=SSE_MSG_TYPE, channel=SSE_MSG_CHANNEL)
 
-        thread = threading.Thread(target=publish_func)
+        thread = threading.Thread(target=publish_func1)
+        thread.start()
+
+    elif message.startswith('/root '):
+        root: str = message.split('/root ')[1]
+        back_data: json = {}
+        dataList = wordroot[root]['example']
+        back_data['userId'] = "Jarvis"
+        back_data['type'] = 102
+        back_data['dataList'] = [{root: dataList}]
+        def publish_func2():
+            id = generate_time_based_client_id(prefix=user)
+            print("chat() publish id:", id)
+            time.sleep(1)  # 延迟一秒
+            with app.app_context():
+                sse.publish(id=id, data=back_data, type=SSE_MSG_TYPE, channel=SSE_MSG_CHANNEL)
+         
+        thread = threading.Thread(target=publish_func2)
         thread.start()
 
     elif message.startswith('/help '):
         pass
+
+    
+
+   
 
     toc = time.perf_counter()
     print(f"[Processed in {toc - tic:0.4f} seconds]")
@@ -291,6 +313,16 @@ def get_root_by_word(message: str) -> json:
     print(back_data)
     return back_data
 
+
+@app.route('/avatar/Javris.jpg')
+def get_image():
+    # 读取图片数据
+    img = Image.open(Path(Path(__file__).parent.absolute() / 'assets/avatar-Jarvis.jpg'))
+    img_byte_arr = BytesIO()
+    img.save(img_byte_arr, format='JPEG')
+    img_byte_arr.seek(0)
+    # 发送图像数据
+    return send_file(img_byte_arr, mimetype='image/jpeg')
 
 if __name__ == '__main__':
     app.run(debug=True, host='127.0.0.1', port=5000)

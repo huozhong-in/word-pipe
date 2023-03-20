@@ -1,10 +1,12 @@
 import 'dart:developer';
 import 'package:app/MessageController.dart';
+import 'package:app/controller.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:app/config.dart';
 import 'package:get/get.dart';
 import 'package:flutter/gestures.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class MessageBubblePainter extends CustomPainter {
@@ -48,13 +50,14 @@ class MessageBubble extends StatelessWidget {
   final dynamic dataList;
   final int type;
 
-  const MessageBubble({
+  MessageBubble({
     super.key,
     required this.userId,
     required this.dataList,
     required this.type,
   });
-  
+
+  final Controller c = Get.find();
   bool get isMe => userId == Get.find<MessageController>().getUserId();
 
   @override
@@ -99,9 +102,10 @@ class MessageBubble extends StatelessWidget {
                     child: CachedNetworkImage(
                       width: 30,
                       height: 30,
-                      imageUrl: "http://wx.qlogo.cn/mmhead/ver_1/22L33xntlj70zzQKIljicaA5fk2z1fzFXjyqkiajicsHQsZtN3pGgw7mmju2M5VDaymv2iayhicEkR9ww2ibVW5ep4rA/132",
+                      imageUrl: "${HTTP_SERVER_HOST}/avatar/Javris.jpg",
                       imageBuilder: (context, imageProvider) => Container(
                         decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(3),
                           image: DecorationImage(
                               image: imageProvider,
                               fit: BoxFit.cover,
@@ -127,7 +131,7 @@ class MessageBubble extends StatelessWidget {
                           //   minWidth: 320,
                           // ),
                           child: SelectableText.rich(
-                            templateWordRoot(context),
+                            templateDispatch(context),
                           ),
                         ),
                       ),
@@ -147,6 +151,7 @@ class MessageBubble extends StatelessWidget {
                       imageUrl: "https://wx.qlogo.cn/mmhead/ver_1/A2d22lUC03hNxPgdZ9iaSMwQUuwBMsol0cTWdQbjqGpdpQtGP1iaAia4UR5yvf0rhLicbiaLkSVUibpX1wqvzn9d1hMj0NicfZev8v58w0b8tInn8g/0",
                       imageBuilder: (context, imageProvider) => Container(
                         decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(3),
                           image: DecorationImage(
                               image: imageProvider,
                               fit: BoxFit.cover,
@@ -167,32 +172,98 @@ class MessageBubble extends StatelessWidget {
       ),
     );
   }
-// TODO pending 的效果，因为跟机器人的对话实质是下任务，所以要有回执，有回复就占用回执的位置显示出来
-  TextSpan templateWordRoot(BuildContext context) {
+  // todo pending 的效果，因为跟机器人的对话实质是下任务，所以要有回执，有回复就占用回执的位置显示出来
+  // todo 机器人的回复，要有一个loading的效果，因为机器人的回复是异步的，所以要有loading的效果，使用SSE实现
+  TextSpan templateDispatch(BuildContext context) {
+    if(type==WordPipeMessageType.word2root){
+      return templateWord2Root(context);
+    }else if(type==WordPipeMessageType.root2word){
+      return templateRoot2Word(context);
+    }else{
+      return templateText(context);
+    }
+  }
+
+
+  TextSpan templateWord2Root(BuildContext context) {
+    List<TextSpan> spans = [];
+
+    dataList.forEach((word_list) {
+      word_list.forEach((word_name, root_list) {
+        spans.add(TextSpan(text: word_name, style: TextStyle(fontFamily: 'IosevkaNerdFontCompleteMono', fontWeight: FontWeight.bold, fontSize: 16)));
+        spans.add(TextSpan(text: "\n"));
+        root_list.forEach((root) {
+          root.forEach((root_name, attr_list) {
+            spans.add(TextSpan(text: root_name, style: TextStyle(color: Colors.blue)));
+            spans.add(TextSpan(text: "\n"));
+            attr_list.forEach((attr) {
+              attr.forEach((key, value) {
+                if (key == 'example') {
+                  // Handle 'example' key, which contains a list of strings
+                  List<String> examples = List<String>.from(value);
+                  spans.add(TextSpan(text: "Examples:\n"));
+                  examples.forEach((example) {
+                    spans.add(TextSpan(text: " ["));
+                    spans.add(
+                      TextSpan(
+                        text: example, 
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 11, 66, 93),
+                          fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily,
+                          fontSize: 14,
+                          decoration: TextDecoration.underline),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () async {
+                              await c.chat(userId, "/word $example");
+                            },
+                      )
+                    );
+                    spans.add(TextSpan(text: "] "));
+                  });
+                  spans.add(TextSpan(text: "\n"));
+                  spans.add(TextSpan(text: "\n"));
+                } else {
+                  // Handle other keys, which contain strings
+                  spans.add(TextSpan(text: "    ${key}: ${(value as String).trim()}\n", style: TextStyle(color: Colors.blueGrey)));
+                }
+              });
+            });
+          });
+        });
+      });
+    });
+
+    return TextSpan(
+      style: DefaultTextStyle.of(context).style,
+      children: spans,
+    );
+  }
+
+
+
+  TextSpan templateText(BuildContext context) {
     return TextSpan(
       style: DefaultTextStyle.of(context).style,
       children: <InlineSpan>[
-        TextSpan(text: dataList),
-        // TextSpan(
-        //   text: '链接',
-        //   style: const TextStyle(
-        //       color: Color.fromARGB(255, 11, 66, 93),
-        //       decoration: TextDecoration.underline),
-        //   recognizer: TapGestureRecognizer()
-        //     ..onTap = () async {
-        //       Uri url = Uri.parse(
-        //           'https://translate.google.com/?sl=en&tl=zh-CN&text=demonstration&op=translate');
-        //       if (await canLaunchUrl(url)) {
-        //         await launchUrl(url);
-        //       } else {
-        //         ScaffoldMessenger.of(Get.overlayContext!)
-        //             .showSnackBar(
-        //           const SnackBar(
-        //               content: Text('无法打开链接')),
-        //         );
-        //       }
-        //     },
-        // ),
+        TextSpan(text: dataList[0] as String),
+      ],
+    );
+  }
+
+  TextSpan templateRoot2Word(BuildContext context) {
+    return TextSpan(
+      style: DefaultTextStyle.of(context).style,
+      children: <InlineSpan>[
+        ...dataList.map((value) => TextSpan(
+          text: value,
+          style: TextStyle(
+              color: Color.fromARGB(255, 210, 10, 220),
+              decoration: TextDecoration.underline),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () async {
+              await c.chat(userId, "/word $value");
+            },
+        )),
       ],
     );
   }

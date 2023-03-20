@@ -16,13 +16,14 @@ final String DEFAULT_AYONYMOUS_USER_ID = "anonymous";
 class WordPipeMessageType{
   static const int reserved = 0;
   static const int text = 1;
+  static const int word2root = 101;
+  static const int root2word = 102;
   static const int image = 3;
   static const int audio = 34;
   static const int video = 43;
   static const int emoticon = 47;
   static const int location = 48;
   static const int card = 49;
-  static const int word_root = 101;
   static const int recall = 10000;
 }
 
@@ -63,7 +64,7 @@ class CustomColors {
 
 var textFontStyle = TextStyle(
   color: Colors.black,
-  fontFamily: GoogleFonts.sourceSansPro().fontFamily,
+  fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily,
   fontFamilyFallback: const ['Arial','IosevkaNerdFontCompleteMono'],
 );
 var titleFontStyle = GoogleFonts.knewave(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold);

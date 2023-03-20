@@ -38,7 +38,7 @@ class Home extends StatelessWidget {
         _indexGrey = 0;
         //ugly code
         final MessageController messageController = Get.put(MessageController());
-        messageController.addMessage(MessageModel(dataList: text.trim(), type: WordPipeMessageType.text, userId: c.getUserId()));
+        messageController.addMessage(MessageModel(dataList: [text.trim()], type: WordPipeMessageType.text, userId: c.getUserId()));
       }
     });    
   }

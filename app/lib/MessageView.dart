@@ -24,7 +24,7 @@ class MessageView extends StatelessWidget {
             final message = messageController.messages[index];
             return MessageItem(message: message);
           },
-          reverse: true,
+          // reverse: true,
           shrinkWrap: true,
         ),
       );

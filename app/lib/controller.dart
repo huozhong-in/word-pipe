@@ -43,7 +43,8 @@ class WordsProvider extends GetConnect {
     } else {
       throw Exception('Failed to fetch items');
     }
-  }  
+  }
+  
   // GetSocket userMessages() {
   //   return socket('https://yourapi/users/socket');
   // }
@@ -51,22 +52,6 @@ class WordsProvider extends GetConnect {
 
 
 class UserProvider extends GetConnect {
-  Future<List<dynamic>> reConnect(String userId, String lastEventId) async{
-    String baseUrl='$HTTP_SERVER_HOST/user/reconnect';
-    Uri url = Uri.parse(baseUrl).replace(
-      queryParameters: <String, String>{
-        'userId': userId,
-        'lastEventId': lastEventId
-      },
-    );
-    final response = await get(url.toString());
-    if (response.statusCode == 200) {
-      return response.body as List<dynamic>;
-    } else {
-      throw Exception('Failed to fetch items');
-    }
-  }
-  
   Future<bool> chat(String userId, String message) async{
     // String baseUrl='$HTTP_SERVER_HOST/chat';
     // Uri url = Uri.parse(baseUrl).replace(
