@@ -13,7 +13,7 @@ class MessageView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
+    // 通过这种方式将MVC中的Controller和程序框架的Controller隔离开来
     messageController.setUserId(c.getUserId());
     messageController.handleSSE();
 

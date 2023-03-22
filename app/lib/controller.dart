@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:get/get.dart';
 import 'package:app/config.dart';
 
@@ -22,10 +24,15 @@ class Controller extends GetxController{
     return await _wordsProvider.getWord(word);
   }
 
+  Future<List<dynamic>> getWords(List<dynamic> word_json_list) async {
+    return await _wordsProvider.getWords(word_json_list);
+  }
+
   Future<bool> chat(String userId, String message) async{
     return await _userProvider.chat(userId, message);
   }
 }
+
 
 class WordsProvider extends GetConnect {
   Future<List<dynamic>> searchWords(String word) async{
@@ -36,8 +43,21 @@ class WordsProvider extends GetConnect {
       throw Exception('Failed to fetch items');
     }
   }
+
   Future<List<dynamic>> getWord(String word) async{
     final response = await get('$HTTP_SERVER_HOST/p?k=$word');
+    if (response.statusCode == 200) {
+      return response.body as List<dynamic>;
+    } else {
+      throw Exception('Failed to fetch items');
+    }
+  }
+
+  Future<List<dynamic>> getWords(List<dynamic> word_json_list) async{
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/qb');
+    // String data = jsonEncode(word_json_list);
+    final response = await post(url.toString(), word_json_list);
+    
     if (response.statusCode == 200) {
       return response.body as List<dynamic>;
     } else {
@@ -60,12 +80,12 @@ class UserProvider extends GetConnect {
     //     'message': message
     //   },
     // );
-    Uri url = Uri.parse('http://127.0.0.1/chat');
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/chat');
     Map data = {};
     data['userId'] = userId;
     data['message'] = message;
-    final response = await post(url.toString(), data=data);
-    if (response.statusCode == 200) {
+    final response = await post(url.toString(), data);
+    if (response.statusCode == 204) {
       return true;
     } else {
       return false;

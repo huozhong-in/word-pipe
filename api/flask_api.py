@@ -27,9 +27,9 @@ vocab_file = Path(Path(__file__).parent.absolute() / 'db/vocab.json')
 vocab = set()
 with vocab_file.open() as f:
     data: dict = json.load(f)
-# print(data.keys())
-vocab = set(data['JUNIOR']).union(set(data['SENIOR'])).union(set(data['IELTS']))
-print(f'JUNIOR + SENIOR + IELTS, total: {len(vocab)} words.')
+print(data.keys())
+vocab = set(data['JUNIOR']).union(set(data['SENIOR'])).union(set(data['IELTS'])).union(set(data['TOEFL'])).union(set(data['GRE'])).union(set(data['TOEIC']))
+print(f'total: {len(vocab)} words.')
 
 ## marisa-trie for prefix search
 trie = marisa_trie.Trie(vocab, order=marisa_trie.LABEL_ORDER)
@@ -72,12 +72,11 @@ def test() -> Response:
     #     start_index = match.start()
     #     end_index = match.end()
     #     print(f'Found "{word}" at position {start_index}-{end_index}')
-    # 创建新的数据结构
     
     return make_response(jsonify(get_root_by_word('tactful')), 200)
 
 @app.route('/s', methods = ['GET'])
-def search() -> Response:
+def prefix_search() -> Response:
     '''
     从vocab.json中搜索前缀，
 
@@ -96,7 +95,7 @@ def search() -> Response:
     result["result"] = list(r)
     x = list()
     x.append(result)
-    print(f"search() result: {x}")
+    print(f"prefix_search() result: {x}")
 
     toc = time.perf_counter()
     print(f"[Processed in {toc - tic:0.4f} seconds]")
@@ -105,7 +104,7 @@ def search() -> Response:
 @app.route('/p', methods = ['GET'])
 def point_search():
     '''
-    查询单词的意思：
+    查询单词的意思，返回一个结果
 
     '''
     if not request.args.get('k'):
@@ -127,6 +126,10 @@ def point_search():
 
 @app.route('/m', methods = ['GET'])
 def match_words():
+    """
+    通过sw精确匹配单词，返回多个结果
+
+    """
     if not request.args.get('k'):
         return make_response(jsonify({}), 200)
     k: str = request.args.get('k')
@@ -134,13 +137,34 @@ def match_words():
         return make_response(jsonify({}), 200)
     tic = time.perf_counter()
     sd = StarDict(Path(Path(__file__).parent.absolute() / 'db/stardict.db'), False)
-    r: list = sd.match(word=k, limit=10, strip=True)
+    r: list = sd.match2(prefix=k)
     sd.close()
     toc = time.perf_counter()
     print(f"match_words() word: {k}")
     print(f"[Processed in {toc - tic:0.4f} seconds]")
     return make_response(jsonify(r), 200)
 
+@app.route('/qb', methods = ['POST'])
+def query_batch():
+    """
+    批量查询单词的意思，传入多个单词（不是sw）返回结果包括全部字段
+
+    """
+    if request.method != 'POST':
+        return make_response('Please use POST method', 500)
+    try:
+        json_list: list = request.get_json()
+    except:
+        return make_response('JSON data required', 500)
+    tic = time.perf_counter()
+    sd = StarDict(Path(Path(__file__).parent.absolute() / 'db/stardict.db'), False)
+    r: list = sd.query_batch(json_list)
+    sd.close()
+    toc = time.perf_counter()
+    print(f"query_batch() word: {r}")
+    print(f"[Processed in {toc - tic:0.4f} seconds]")
+    return make_response(jsonify(r), 200)
+    
 @app.route('/favicon.ico')
 def favicon():
     r = make_response("data:;base64,iVBORw0KGgo=", 200)
@@ -149,11 +173,19 @@ def favicon():
 
 @app.route('/sse-test.html')
 def sse_test():
+    """
+    渲染SSE测试页面
+    
+    """
     sse_url = url_for('sse.stream', channel=SSE_MSG_CHANNEL, _external=False)
     return render_template('sse-test.html', sse_url=sse_url)
 
 @app.route('/pub-test', methods = ['POST'])
 def publish_test():
+    """
+    SSE测试页面的发布测试
+
+    """
     if request.method != 'POST':
         return make_response('Please use POST method', 500)
     try:
@@ -176,9 +208,9 @@ def chat():
     '''
     通过对话的方式，将用户查询的字符串拆分成单个单词，分别查找词根词缀。
 
-    - 有可能命中多个词根词缀
-    - 单词是动词的话只有原型，需要先查lemma得到原型
-    - 给出相同词根的其他单词，按频次倒序，只出现在选定范围（四六雅思）内的词
+    - 可能命中多个词根词缀，所以要有list结构
+    - TODO 单词是动词的话只有原型，将lemma.en.txt的内容实现转成键值对，拼接到结果中，供前端显示
+    - 给出相同词根的其他单词。TODO 按频次倒序。 TODO 只出现在选定范围（四六雅思）内的词
     '''
     if request.method != 'POST':
         return make_response('Please use POST method', 500)
@@ -224,14 +256,10 @@ def chat():
     elif message.startswith('/help '):
         pass
 
-    
-
-   
-
     toc = time.perf_counter()
     print(f"[Processed in {toc - tic:0.4f} seconds]")
 
-    return make_response(list(), 200)
+    return make_response('', 204)
 
 
 def get_root_by_word(message: str) -> json:
@@ -240,44 +268,6 @@ def get_root_by_word(message: str) -> json:
 
     print(word2root['tactful']) # 输出 ["-ful1","tact, tang, ting, tig"]
     TODO example里单词可能有大写或带空格的情况，如"-ite2"
-    {
-        "userId": "Jarvis",
-        "type": 101,
-        "dataList":
-        [
-            {
-                "tactful":
-                [
-                    {
-                        "-ful1":
-                        [
-                            {
-                                "class": "adjective-forming suffix"
-                            }
-                        ]
-                    },
-                    {
-                        "tact, tang, ting, tig":
-                        [
-                            {
-                                "meaning": "touch"
-                            },
-                            {
-                                "class": "root"
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "word2":
-                [
-                    "memor, member, membr",
-                    "viv, vivi, vit"
-                ]
-            }
-        ]
-    }
     '''
     
     message = message.split('/word ')[1]

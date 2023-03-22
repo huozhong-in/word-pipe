@@ -21,22 +21,23 @@ class Home extends StatelessWidget {
   final List<MatchWords> _matchWords = <MatchWords>[].obs;
   final TextEditingController _textController = TextEditingController();
   final FocusNode _commentFocus = FocusNode();
-  late int _indexGrey = 0;
-  late String _lastWord = "";
-  late int _leftOrRight = 0;
+  late int _indexHighlight = 0; // 此变量用于记录当前选中的匹配单词的索引
+  late String _currentWord = ""; // 文本框中输入光标所在的单词
+  late int _leftOrRight = 0; // 此变量用于记录当按下键盘左右键时，光标应向左移动还是向右移动，-1表示向左，1表示向右，0表示未移动
   late final Map<String, String> _wordDetail = <String, String>{}.obs;
 
   void _handleSubmitted(String text) {
     if(text.trim() == ""){
       return;
     }
+    // 向服务端发送消息，如果返回http code 200，则将消息添加到消息列表中
     Future<bool> r = c.chat(c.getUserId(), text.trim());
     r.then((value){
       if(value){
         _textController.clear();
         _matchWords.clear();
-        _indexGrey = 0;
-        //ugly code
+        _indexHighlight = 0;
+        //ugly code，因为系统中存在两个Controller，没有更好的隔离方法。按理说MessageController应该是MVC中的，而不是在这里直接能调用到
         final MessageController messageController = Get.put(MessageController());
         messageController.addMessage(MessageModel(dataList: [text.trim()], type: WordPipeMessageType.text, userId: c.getUserId()));
       }
@@ -47,10 +48,13 @@ class Home extends StatelessWidget {
   void _handleMatchWords(String text) {
     if (text.trim() == ""){
       _matchWords.clear();
-      _indexGrey = 0;
+      _indexHighlight = 0;
       return;
     }
-    // 获取光标的位置
+    // 获取光标的位置。
+    // 因捕获键盘事件在前，_textControll.selection.start和end变化在后，
+    // 导致此时获得的光标实际位置向左或向右偏移了1个字符，所以要预先设置_leftOrRight，并在这里修正
+    // 注意光标变量不能小于0，也不能超过text的长度
     int cursorPosition = _textController.selection.start;
     if(_leftOrRight == -1){
       cursorPosition = math.max(0, cursorPosition - 1);
@@ -60,63 +64,87 @@ class Home extends StatelessWidget {
     _leftOrRight = 0;
     log("Cursor position: $cursorPosition");
 
-    text = text.substring(0, cursorPosition);
-    if (text.trim() == ""){
-      _matchWords.clear();
-      _indexGrey = 0;
-      return;
+    // 获取当前光标所在的单词。单词用正则表达式从句子中匹配拆分出来，正则判读条件为所有大小写字母和带连字符“-”的单词
+    bool isFound = false;
+    RegExp exp = RegExp(r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b');
+    Iterable<RegExpMatch> matches = exp.allMatches(text);
+    int startIndex = 0;
+    int endIndex = 0;
+    for (RegExpMatch match in matches) {
+      String? word = match.group(0);
+      startIndex = match.start;
+      endIndex = match.end;
+      log('Found "$word" at position $startIndex-$endIndex');
+      if(cursorPosition > startIndex && cursorPosition <= endIndex){
+        _currentWord = word!;
+        isFound = true;
+        log("_currentWord: $word");
+        break;
+      }
     }
-    
-    // String test_input = "hello123worldABCD";
-    RegExp regex = RegExp(r"[a-zA-Z]+$");
-    Match? match = regex.firstMatch(text);
-    if (match != null) {
-      _lastWord = match.group(0)!;
-      log("last word:$_lastWord");
+    if (isFound == false){
+      _currentWord = "";
+      _matchWords.clear();
+      _indexHighlight = 0;
+    }
 
-      Future<List<dynamic>> r =  c.searchWords(_lastWord.toLowerCase());
-      r.then((value){
-
-        _matchWords.clear();
-
-        List<dynamic> n = value[0]['result'];
-        int i = 0;
-        for (String element in n) {
-          if(i == _indexGrey){
-            Future<List<dynamic>> rr = c.getWord(element);
-            rr.then((m){
-              Map<String, dynamic> stringMap = Map<String, dynamic>.from(m[0]);
-              stringMap.forEach((key, value) {
-                _wordDetail[key] = value.toString();
-              });
-              // log(_wordDetail['phonetic']!);
-              // log(_wordDetail['definition']!);
-              // log(_wordDetail['translation']!);
-            });
-          }
-          bool fullMatch = (element.toLowerCase() == _lastWord.toLowerCase());
-          _matchWords.insert(0, MatchWords(text: element, fullMatch: fullMatch, isSelected: element == n[_indexGrey]));
-          i++;
-        }
-      });
+    if (_currentWord != ""){
+      //取得当前单词中光标前的部分字符串
+      String currentWordPart = _currentWord.substring(0, cursorPosition - startIndex);
+      if (currentWordPart != "") {
+        // 将单词前面的字符串当作前缀，拿到匹配的单词列表
+        Future<List<dynamic>> r =  c.searchWords(currentWordPart.toLowerCase());
+        r.then((value){
+          List<dynamic> n = value[0]['result'];
+          build_matchWords_list(n.map((e) => e.toString()).toList());
+        });
+      }
     }else{
       _matchWords.clear();
-      _indexGrey = 0;
-      _lastWord = "";
+      _indexHighlight = 0;
     }
   }
 
-  
-
-  List<String> parse_text_to_words(String text){
-    List<String> words = [];
-    RegExp regex = RegExp(r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b');
-    Match? match = regex.firstMatch(text);
-    if (match != null) {
-      words.add(match.group(0)!);
+  void build_matchWords_list(List<String> words){
+    _matchWords.clear();
+    int i = 0;
+    for (String element in words) {
+      // 用isSelected变量告知前端是否高亮显示当前单词
+      bool fullMatch = (element.toLowerCase() == _currentWord.toLowerCase());
+      _matchWords.insert(_matchWords.length, MatchWords(text: element, fullMatch: fullMatch, isSelected: element == words[_indexHighlight]));
+      // 获取列表中被高亮单词的详细信息，放入_wordDetail中，即在右侧显示音标、定义和翻译等信息
+      if(i == _indexHighlight){
+        Future<List<dynamic>> r = c.getWord(element);
+        r.then((m){
+          Map<String, dynamic> stringMap = Map<String, dynamic>.from(m[0]);
+          stringMap.forEach((key, value) {
+            _wordDetail[key] = value.toString();
+          });
+        });
+      }      
+      i++;
     }
-    return words;
   }
+
+
+  List<int> get_word_index_range_in_text(String text, int cursorPosition){
+    RegExp exp = RegExp(r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b');
+    Iterable<RegExpMatch> matches = exp.allMatches(text);
+    int startIndex = 0;
+    int endIndex = 0;
+    for (RegExpMatch match in matches) {
+      String? word = match.group(0);
+      startIndex = match.start;
+      endIndex = match.end;
+      log('get_word_index_range_in_text(): Found "$word" at position $startIndex-$endIndex');
+      if(cursorPosition > startIndex && cursorPosition <= endIndex){
+        _currentWord = word!;
+        return [startIndex, endIndex];    
+      }
+    }
+    return [0, 0];
+  }
+
 
   Widget _myTextFild(){
     return Focus(
@@ -130,41 +158,44 @@ class Home extends StatelessWidget {
           }
           // 阻止默认的回车提交功能，改为到onSubmitted()中手动控制
           if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
-            log("enter: ${_textController.text.trim()}");
+            // log("enter2: ${_textController.text.trim()}");
             _commentFocus.requestFocus();
             return KeyEventResult.handled;
           }
+          // 列表到顶后从底端继续循环
           if (event.isKeyPressed(LogicalKeyboardKey.arrowUp) | (event.isControlPressed && event.isKeyPressed(LogicalKeyboardKey.keyP))){
-            log("arrowUp or ctrl+p");
-            if (_indexGrey == 0 ){
-              _indexGrey = _matchWords.length -1;
+            // log("arrowUp or ctrl+p: ${_indexHighlight}");
+            if (_indexHighlight == 0 ){
+              _indexHighlight = _matchWords.length -1;
             }else{
-              _indexGrey -= 1;
+              _indexHighlight -= 1;
             }
-            _handleMatchWords(_textController.text);
+            List<String> t = _matchWords.map((e) => e.text).toList();
+            build_matchWords_list(t);
             return KeyEventResult.handled;
           }
+          // 列表到底后从顶端继续循环
           if (event.isKeyPressed(LogicalKeyboardKey.arrowDown) | (event.isControlPressed && event.isKeyPressed(LogicalKeyboardKey.keyN))){
-            log("arrowDown or ctrl+n");
-            if (_indexGrey == _matchWords.length -1 ){
-              _indexGrey = 0;
+            // log("arrowDown or ctrl+n: ${_indexHighlight}");
+            if (_indexHighlight == _matchWords.length -1 ){
+              _indexHighlight = 0;
             }else{
-              _indexGrey += 1;
+              _indexHighlight += 1;
             }
-            _handleMatchWords(_textController.text);
+            List<String> t = _matchWords.map((e) => e.text).toList();
+            build_matchWords_list(t);
             return KeyEventResult.handled;
           }
+          // 光标向左移动，截取光标左侧单词的子串，匹配单词列表
           if (event.isKeyPressed(LogicalKeyboardKey.arrowLeft) | (event.isControlPressed && event.isKeyPressed(LogicalKeyboardKey.keyB))){
-            log("arrowLeft or ctrl+b");
-            // int cursorStart = _textController.selection.start;
-            // int cursorEnd = _textController.selection.end;
-            // log('Cursor Start: $cursorStart Cursor End: $cursorEnd');
+            // log("arrowLeft or ctrl+b");
             _leftOrRight = -1;
             _handleMatchWords(_textController.text);
             return KeyEventResult.ignored;
           }
+          // 光标向右移动，截取光标左侧单词的子串，匹配单词列表
           if (event.isKeyPressed(LogicalKeyboardKey.arrowRight) | (event.isControlPressed && event.isKeyPressed(LogicalKeyboardKey.keyF))){
-            log("arrowRight or ctrl+f");
+            // log("arrowRight or ctrl+f");
             _leftOrRight = 1;
             _handleMatchWords(_textController.text);
             return KeyEventResult.ignored;
@@ -181,41 +212,37 @@ class Home extends StatelessWidget {
           },
           textInputAction: TextInputAction.send,
           onSubmitted: (value) {
-            // 按下回车，从候选词中选中上屏
-            log('enter2: $value');
+            // 按下回车，从匹配到的词列表中选中一个单词加到文本框中
+            log('enter: $value');
             _commentFocus.requestFocus();
-
-            int lastWordIndex = _textController.text.lastIndexOf(_lastWord);
-            log("_lastWord:$_lastWord lastWordIndex:$lastWordIndex");
+            // 当前光标位置
+            int cursorStart = _textController.selection.start;
+            // 取得当前光标所在单词的起始位置和结束位置
+            List<int> currentWordIndexRange = get_word_index_range_in_text(_textController.text, cursorStart);
+            // 如果从接口中查询到的匹配单词列表不为空
             if (_matchWords.isNotEmpty){ 
               log("_matchWords.length:${_matchWords.length}");
-              if(lastWordIndex == 0){
-                if(_textController.text[0] == _textController.text[0].toUpperCase()){
-                  _textController.text = "${_matchWords[_matchWords.length-1-_indexGrey].text.capitalizeFirst}";
+              if(currentWordIndexRange != [0,0]){
+                String words_behind = _textController.text.substring(currentWordIndexRange[1], _textController.text.length);
+                String words_before = _textController.text.substring(0, currentWordIndexRange[0]);
+                log("words_before:$words_before");
+                log("words_behind:$words_behind");
+                log("_currentWord:${_currentWord}");
+                if(_currentWord[0] == _currentWord[0].toUpperCase()){
+                  _textController.text = "${words_before}${_matchWords[_indexHighlight].text.capitalizeFirst}${words_behind}";
                 }else{
-                  _textController.text = _matchWords[_matchWords.length-1-_indexGrey].text;
-                }
-              }else{
-                // todo 这里有Bug，修改中间单词，回车后后面词会消失
-                if(_lastWord[0] == _lastWord[0].toUpperCase()){
-                  _textController.text = "${_textController.text.substring(0, lastWordIndex)}${_matchWords[_matchWords.length-1-_indexGrey].text.capitalizeFirst}";
-                }else{
-                  _textController.text = "${_textController.text.substring(0, lastWordIndex)}${_matchWords[_matchWords.length-1-_indexGrey].text}";
+                  _textController.text = "${words_before}${_matchWords[_indexHighlight].text}${words_behind}";
                 }
               }
-              _textController.value = _textController.value.copyWith(
-                selection: TextSelection(
-                  baseOffset: _textController.text.length,
-                  extentOffset: _textController.text.length,
-                ),
-              );
+              // 光标移到_matchWords[_indexGrey].text和words_behind之间
+              _textController.selection = TextSelection(baseOffset: currentWordIndexRange[0]+_matchWords[_indexHighlight].text.length, extentOffset: currentWordIndexRange[0]+_matchWords[_indexHighlight].text.length) ;
             }else{
-              // todo 光标处加回车，并将光标移到回车处
-              _textController.text = "${_textController.text}\n";
-              _textController.selection = TextSelection(baseOffset: _textController.text.length, extentOffset: _textController.text.length) ;
+              // 如果不是选中单词到文本框，只是想在光标处加回车，则在适当位置增加换行符，并将光标移到回车处
+              _textController.text = "${_textController.text.substring(0, cursorStart)}\n${_textController.text.substring(cursorStart, _textController.text.length)}";
+              _textController.selection = TextSelection(baseOffset: cursorStart+1, extentOffset: cursorStart+1) ;
             }
             _matchWords.clear();
-            _indexGrey = 0;
+            _indexHighlight = 0;
           },
           style: TextStyle(fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, fontWeight: FontWeight.w400),
           maxLines: 3,
@@ -268,7 +295,7 @@ class Home extends StatelessWidget {
                             right: 0,
                             bottom: 0,
                             child: Container(
-                              height: 400,
+                              height: 410,
                               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                               // constraints: const BoxConstraints(maxHeight: 400, minHeight: 400),
                               decoration: BoxDecoration(
@@ -319,7 +346,7 @@ class Home extends StatelessWidget {
                                         child: Obx(() {
                                           return ListView.builder(
                                           itemBuilder: (_, int index) => _matchWords[index],
-                                          reverse: true,
+                                          reverse: false,
                                           itemCount: _matchWords.length,
                                           shrinkWrap: true,
                                           primary: true
@@ -351,7 +378,17 @@ class Home extends StatelessWidget {
                                                       ),
                                                       const TextSpan(text: "\n"),
                                                       TextSpan(
-                                                        text: _wordDetail['definition']!=null && _wordDetail['definition']!=""?_wordDetail['definition'] as String:"",
+                                                        text: _wordDetail['tag']!=null && _wordDetail['tag']!=""?_wordDetail['tag'] as String:"",
+                                                        style: const TextStyle(fontFamily: 'IosevkaNerdFontCompleteMono'),
+                                                      ),
+                                                      const TextSpan(text: "\n"),
+                                                      TextSpan(
+                                                        text: _wordDetail['pos']!=null && _wordDetail['pos']!=""?_wordDetail['pos'] as String:"",
+                                                        style: const TextStyle(fontFamily: 'IosevkaNerdFontCompleteMono'),
+                                                      ),
+                                                      const TextSpan(text: "\n"),
+                                                      TextSpan(
+                                                        text: _wordDetail['exchange']!=null && _wordDetail['exchange']!=""?_wordDetail['exchange'] as String:"",
                                                         style: const TextStyle(fontFamily: 'IosevkaNerdFontCompleteMono'),
                                                       ),
                                                     ],
@@ -416,19 +453,6 @@ class Home extends StatelessWidget {
     );
   }
 }
-
-
-// class Message extends StatelessWidget {
-//   const Message({required Key key, required this.text, required this.isMe}) : super(key: key);
-
-//   final String text;
-//   final bool isMe;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MessageView(message: message);
-//   }
-// }
 
 class MatchWords extends StatelessWidget {
   const MatchWords({super.key, required this.text, required this.fullMatch, required this.isSelected});

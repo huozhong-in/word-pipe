@@ -158,8 +158,47 @@ class StarDict (object):
             result.append(tuple(record))
         return result
 
+    # 查询单词匹配-第二版
+    # 需要事先建立索引`CREATE INDEX IF NOT EXISTS stardict_sw_index ON stardict(sw COLLATE NOCASE, word COLLATE NOCASE, phonetic, pos, definition, translation, tag, exchange, bnc ASC);`
+    # 注意严格取出的字段只能是word, phonetic, definition, translation, pos, tag, exchange这些全部，否则不能命中索引
+    def match2(self, prefix, limit=20) -> list:
+        print(f"prefix = {prefix}")
+
+        def stripword_with_dash(word):
+            return stripword(word.replace('-', ''))
+
+        c = self.__conn.cursor()
+        prefix_upper_bound = prefix[:-1] + chr(ord(prefix[-1]) + 1)
+        sql = '''
+            SELECT word, phonetic, definition, translation, pos, tag, exchange
+            FROM stardict
+            WHERE sw >= ? AND sw < ?
+            ORDER BY bnc ASC
+            LIMIT ?
+        '''
+        c.execute(sql, (stripword_with_dash(prefix), stripword_with_dash(prefix_upper_bound), limit))
+        records = c.fetchall()
+        # 将多条记录转化为字典列表，键为字段名（word, phonetic, definition, translation, pos, tag, exchange），值为字段值
+        r: dict = dict()
+        x: list = list()
+        fields = ( 'word', 'phonetic', 'definition', 
+            'translation', 'pos', 'tag', 'exchange' )
+        # fields的值为字典键，字典值为数据库查到的值
+        # x = [{"word":"apple", "phonetic":"","definition":"","translation":"","pos":"","tag":"","exchange":""},{"word":"orange", "phonetic":"","definition":"","translation":"","pos":"","tag":"","exchange":""}]
+        print(f"records = {records}")
+
+        for record in records:
+            r = dict()
+            for i in range(len(fields)):
+                r[fields[i]] = record[i]
+            x.append(r)
+        
+        return x
+
+
+
     # 批量查询
-    def query_batch (self, keys):
+    def query_batch (self, keys) -> list:
         sql = 'select * from stardict where '
         if keys is None:
             return None
@@ -188,7 +227,8 @@ class StarDict (object):
                 results.append(query_word.get(key.lower(), None))
             else:
                 results.append(None)
-        return tuple(results)
+        # return tuple(results)
+        return results
 
     # 取得单词总数
     def count (self):
