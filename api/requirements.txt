@@ -1,4 +1,6 @@
-mysql-connector-python
 flask
-flask-cors
 marisa-trie
+pillow
+gunicorn
+gevent
+# mysql-connector-python

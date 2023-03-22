@@ -11,8 +11,8 @@ import logging
 REDIS_URL ="redis://localhost"
 
 # ----- SSE SERVER ----
-SSE_SERVER_HOST = "http://127.0.0.1"
-SSE_SERVER_PORT = "80"
-SSE_SERVER_PATH = "/stream"
+SSE_SERVER_HOST = "https://wordpipe.huozhong.in"
+SSE_SERVER_PORT = "443"
+SSE_SERVER_PATH = "/api/stream"
 SSE_MSG_TYPE = "broadcasting"
 SSE_MSG_CHANNEL = "users.social"

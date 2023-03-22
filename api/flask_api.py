@@ -5,7 +5,6 @@ import hashlib
 from pathlib import Path
 import marisa_trie
 from flask import Flask, Response, jsonify, make_response, request, render_template, url_for, send_file
-from flask_cors import CORS #, cross_origin
 from flask_sse import sse
 from stardict import *
 from config import *
@@ -14,13 +13,13 @@ from PIL import Image
 
 
 app = Flask(__name__)
-cors = CORS(app, resource={
-    r"/*":{
-        "origins":"*"
-    }
-})
 app.config["REDIS_URL"] = REDIS_URL
+@sse.after_request
+def add_header(response):
+    response.headers['X-Accel-Buffering'] = 'no'
+    return response
 app.register_blueprint(sse, url_prefix=SSE_SERVER_PATH)
+
 
 ## load json
 vocab_file = Path(Path(__file__).parent.absolute() / 'db/vocab.json')
@@ -55,7 +54,7 @@ def generate_time_based_client_id(prefix='client_'):
     hashed_client_id = hashlib.sha256(raw_client_id).hexdigest()
     return hashed_client_id
 
-@app.route('/test', methods = ['GET'])
+@app.route('/api/test', methods = ['GET'])
 def test() -> Response:
     # response.headers.add("Access-Control-Allow-Origin", "*")
     # response.headers.add("Access-Control-Allow-Credentials", "true")
@@ -75,12 +74,13 @@ def test() -> Response:
     
     return make_response(jsonify(get_root_by_word('tactful')), 200)
 
-@app.route('/s', methods = ['GET'])
+@app.route('/api/s', methods = ['GET'])
 def prefix_search() -> Response:
     '''
     从vocab.json中搜索前缀，
 
     '''
+    
     if not request.args.get('k'):
         return make_response(jsonify({}), 200)
     k:str = request.args.get('k')
@@ -99,9 +99,16 @@ def prefix_search() -> Response:
 
     toc = time.perf_counter()
     print(f"[Processed in {toc - tic:0.4f} seconds]")
-    return make_response(jsonify(x), 200)
+    response =  make_response(jsonify(x), 200)
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    # response.headers.add("Access-Control-Allow-Credentials", "true")
+    # response.headers.add("Access-Control-Allow-Headers", "*")
+    # response.headers.add("Access-Control-Allow-Methods", "*")
+    # response.headers.add("Access-Control-Allow-Methods", "GET,PUT,PATCH,POST,DELETE")
+    # response.headers.add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+    return response
 
-@app.route('/p', methods = ['GET'])
+@app.route('/api/p', methods = ['GET'])
 def point_search():
     '''
     查询单词的意思，返回一个结果
@@ -124,7 +131,7 @@ def point_search():
     print(f"[Processed in {toc - tic:0.4f} seconds]")
     return make_response(jsonify(x), 200)
 
-@app.route('/m', methods = ['GET'])
+@app.route('/api/m', methods = ['GET'])
 def match_words():
     """
     通过sw精确匹配单词，返回多个结果
@@ -144,7 +151,7 @@ def match_words():
     print(f"[Processed in {toc - tic:0.4f} seconds]")
     return make_response(jsonify(r), 200)
 
-@app.route('/qb', methods = ['POST'])
+@app.route('/api/qb', methods = ['POST'])
 def query_batch():
     """
     批量查询单词的意思，传入多个单词（不是sw）返回结果包括全部字段
@@ -171,7 +178,7 @@ def favicon():
     r.mimetype = "image/x-icon"
     return r
 
-@app.route('/sse-test.html')
+@app.route('/api/sse-test.html')
 def sse_test():
     """
     渲染SSE测试页面
@@ -180,7 +187,7 @@ def sse_test():
     sse_url = url_for('sse.stream', channel=SSE_MSG_CHANNEL, _external=False)
     return render_template('sse-test.html', sse_url=sse_url)
 
-@app.route('/pub-test', methods = ['POST'])
+@app.route('/api/pub-test', methods = ['POST'])
 def publish_test():
     """
     SSE测试页面的发布测试
@@ -203,7 +210,7 @@ def publish_test():
     sse.publish(id=id, data=back_data, type=SSE_MSG_TYPE, channel=SSE_MSG_CHANNEL)
     return jsonify({"success": True, "message": f"Server response:{message}"})
 
-@app.route('/chat', methods = ['POST'])
+@app.route('/api/chat', methods = ['POST'])
 def chat():
     '''
     通过对话的方式，将用户查询的字符串拆分成单个单词，分别查找词根词缀。
@@ -304,7 +311,7 @@ def get_root_by_word(message: str) -> json:
     return back_data
 
 
-@app.route('/avatar/Javris.jpg')
+@app.route('/api/avatar/Javris')
 def get_image():
     # 读取图片数据
     img = Image.open(Path(Path(__file__).parent.absolute() / 'assets/avatar-Jarvis.jpg'))
@@ -315,4 +322,4 @@ def get_image():
     return send_file(img_byte_arr, mimetype='image/jpeg')
 
 if __name__ == '__main__':
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=9000)

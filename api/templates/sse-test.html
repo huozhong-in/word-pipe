@@ -57,7 +57,7 @@
           if (this.messageToSend.trim() === '') return;
 
           try {
-            const response = await fetch('/pub-test', {
+            const response = await fetch('/api/pub-test', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
