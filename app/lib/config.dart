@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 
-final String SSE_SERVER_HOST = "http://127.0.0.1";
-final String SSE_SERVER_PATH = "/stream";
+final String SSE_SERVER_HOST = "https://wordpipe.huozhong.in";
+final String SSE_SERVER_PATH = "/api/stream";
 final String SSE_MSG_TYPE = "broadcasting";
 final String SSE_MSG_CHANNEL = "users.social";
 
-final String HTTP_SERVER_HOST = "http://127.0.0.1";
+final String HTTP_SERVER_HOST = "https://wordpipe.huozhong.in/api";
 
 final String DEFAULT_AYONYMOUS_USER_ID = "anonymous";
 
@@ -65,7 +65,7 @@ class CustomColors {
 var textFontStyle = TextStyle(
   color: Colors.black,
   fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily,
-  fontFamilyFallback: const ['Arial','IosevkaNerdFontCompleteMono'],
+  fontFamilyFallback: const ['Arial'],
 );
 var titleFontStyle = GoogleFonts.knewave(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold);
 //

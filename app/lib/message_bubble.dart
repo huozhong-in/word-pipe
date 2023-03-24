@@ -102,7 +102,7 @@ class MessageBubble extends StatelessWidget {
                     child: CachedNetworkImage(
                       width: 30,
                       height: 30,
-                      imageUrl: "${HTTP_SERVER_HOST}/avatar/Javris.jpg",
+                      imageUrl: "${HTTP_SERVER_HOST}/avatar/Javris",
                       imageBuilder: (context, imageProvider) => Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(3),
@@ -190,7 +190,10 @@ class MessageBubble extends StatelessWidget {
 
     dataList.forEach((word_list) {
       word_list.forEach((word_name, root_list) {
-        spans.add(TextSpan(text: word_name, style: TextStyle(fontFamily: 'IosevkaNerdFontCompleteMono', fontWeight: FontWeight.bold, fontSize: 16)));
+        spans.add(TextSpan(text: word_name, style: TextStyle(
+          fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily,
+          fontFamilyFallback: const ['Arial'],
+          fontWeight: FontWeight.bold, fontSize: 16)));
         spans.add(TextSpan(text: "\n"));
         root_list.forEach((root) {
           root.forEach((root_name, attr_list) {

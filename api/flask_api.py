@@ -2,14 +2,25 @@ import json
 import threading
 import time
 import hashlib
+import random
 from pathlib import Path
 import marisa_trie
-from flask import Flask, Response, jsonify, make_response, request, render_template, url_for, send_file
+from flask import (
+    Flask, 
+    Response, 
+    make_response, 
+    jsonify, 
+    request, 
+    render_template, 
+    url_for, 
+    send_file,
+    g)
 from flask_sse import sse
 from stardict import *
 from config import *
 from io import BytesIO
 from PIL import Image
+from user import UserDB
 
 
 app = Flask(__name__)
@@ -19,7 +30,7 @@ def add_header(response):
     response.headers['X-Accel-Buffering'] = 'no'
     return response
 app.register_blueprint(sse, url_prefix=SSE_SERVER_PATH)
-
+## for SSE nginx configuration https://serverfault.com/questions/801628/for-server-sent-events-sse-what-nginx-proxy-configuration-is-appropriate
 
 ## load json
 vocab_file = Path(Path(__file__).parent.absolute() / 'db/vocab.json')
@@ -47,6 +58,26 @@ for key, value in wordroot.items():
             else:
                 word2root[word] = [key]
 
+# init user db
+userDB = UserDB()
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    # 请求上下文结束时自动释放 session
+    g.session.close()
+
+@app.before_request
+def before_request():
+    # 请求开始时将连接和 session 绑定到请求上下文
+    g.db = userDB.engine.connect()
+    g.session = userDB.session
+
+@app.after_request
+def after_request(response):
+    # 请求结束时断开连接
+    g.db.close()
+    return response
+
 
 def generate_time_based_client_id(prefix='client_'):
     current_time = time.time()
@@ -55,12 +86,7 @@ def generate_time_based_client_id(prefix='client_'):
     return hashed_client_id
 
 @app.route('/api/test', methods = ['GET'])
-def test() -> Response:
-    # response.headers.add("Access-Control-Allow-Origin", "*")
-    # response.headers.add("Access-Control-Allow-Credentials", "true")
-    # response.headers.add("Access-Control-Allow-Headers", "*")
-    # response.headers.add("Access-Control-Allow-Methods", "*")
-    
+def test() -> Response:    
     # import re
     # input_str = 'This is a long-time example with hyphenated-words, including some non-alpha character...'
     # exp = r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b'
@@ -71,8 +97,10 @@ def test() -> Response:
     #     start_index = match.start()
     #     end_index = match.end()
     #     print(f'Found "{word}" at position {start_index}-{end_index}')
+    random_user_name = f"test{random.randint(0, 1000)}"
+    user = userDB.create_user_by_password(user_name=random_user_name, password='test1')
     
-    return make_response(jsonify(get_root_by_word('tactful')), 200)
+    return make_response(jsonify(user.uuid), 200)
 
 @app.route('/api/s', methods = ['GET'])
 def prefix_search() -> Response:
@@ -100,7 +128,7 @@ def prefix_search() -> Response:
     toc = time.perf_counter()
     print(f"[Processed in {toc - tic:0.4f} seconds]")
     response =  make_response(jsonify(x), 200)
-    response.headers.add("Access-Control-Allow-Origin", "*")
+    # response.headers.add("Access-Control-Allow-Origin", "*")
     # response.headers.add("Access-Control-Allow-Credentials", "true")
     # response.headers.add("Access-Control-Allow-Headers", "*")
     # response.headers.add("Access-Control-Allow-Methods", "*")
@@ -207,7 +235,7 @@ def publish_test():
     back_data['type'] = 1
     r.append(message)
     back_data['dataList'] = r
-    sse.publish(id=id, data=back_data, type=SSE_MSG_TYPE, channel=SSE_MSG_CHANNEL)
+    sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=SSE_MSG_CHANNEL)
     return jsonify({"success": True, "message": f"Server response:{message}"})
 
 @app.route('/api/chat', methods = ['POST'])
@@ -238,7 +266,7 @@ def chat():
             print("chat() publish id:", id)
             time.sleep(1)  # 延迟一秒
             with app.app_context():
-                sse.publish(id=id, data=back_data, type=SSE_MSG_TYPE, channel=SSE_MSG_CHANNEL)
+                sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=SSE_MSG_CHANNEL)
 
         thread = threading.Thread(target=publish_func1)
         thread.start()
@@ -255,7 +283,7 @@ def chat():
             print("chat() publish id:", id)
             time.sleep(1)  # 延迟一秒
             with app.app_context():
-                sse.publish(id=id, data=back_data, type=SSE_MSG_TYPE, channel=SSE_MSG_CHANNEL)
+                sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=SSE_MSG_CHANNEL)
          
         thread = threading.Thread(target=publish_func2)
         thread.start()

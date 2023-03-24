@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:app/config.dart';
+import 'package:app/cache_helper.dart';
 
 
 class Controller extends GetxController{
@@ -36,20 +37,36 @@ class Controller extends GetxController{
 
 class WordsProvider extends GetConnect {
   Future<List<dynamic>> searchWords(String word) async{
+    // 检查缓存中是否有数据
+    if (await CacheHelper.hasData(word)) {
+      print('Fetching data from cache in searchWords("$word")');
+      return await CacheHelper.getData(word) as List<dynamic>;
+    }
+    // 如果缓存中没有数据，则发起网络请求
     final response = await get('$HTTP_SERVER_HOST/s?k=$word');
     if (response.statusCode == 200) {
-      return response.body as List<dynamic>;
+      // 解码响应体
+      List<dynamic> data = response.body as List<dynamic>;
+      // 将数据存储到缓存中
+      await CacheHelper.setData(word, data);
+      return data;
     } else {
-      throw Exception('Failed to fetch items');
+      throw Exception('Failed to fetch items in searchWords("$word")');
     }
   }
 
   Future<List<dynamic>> getWord(String word) async{
+    if (await CacheHelper.hasData(word)) {
+      print('Fetching data from cache in getWord("$word")');
+      return await CacheHelper.getData(word) as List<dynamic>;
+    }
     final response = await get('$HTTP_SERVER_HOST/p?k=$word');
     if (response.statusCode == 200) {
-      return response.body as List<dynamic>;
+      List<dynamic> data = response.body as List<dynamic>;
+      await CacheHelper.setData(word, data);
+      return data;
     } else {
-      throw Exception('Failed to fetch items');
+      throw Exception('Failed to fetch items in getWord("$word")');
     }
   }
 

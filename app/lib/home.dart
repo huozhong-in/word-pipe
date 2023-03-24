@@ -95,8 +95,12 @@ class Home extends StatelessWidget {
         // 将单词前面的字符串当作前缀，拿到匹配的单词列表
         Future<List<dynamic>> r =  c.searchWords(currentWordPart.toLowerCase());
         r.then((value){
-          List<dynamic> n = value[0]['result'];
-          build_matchWords_list(n.map((e) => e.toString()).toList());
+          try{
+            List<dynamic> n = value[0]['result'];
+            build_matchWords_list(n.map((e) => e.toString()).toList());
+          }catch(e){
+            log("_handleMatchWords() " + e.toString());
+          }
         });
       }
     }else{
@@ -116,10 +120,15 @@ class Home extends StatelessWidget {
       if(i == _indexHighlight){
         Future<List<dynamic>> r = c.getWord(element);
         r.then((m){
-          Map<String, dynamic> stringMap = Map<String, dynamic>.from(m[0]);
-          stringMap.forEach((key, value) {
-            _wordDetail[key] = value.toString();
-          });
+          try{
+            Map<String, dynamic> stringMap = Map<String, dynamic>.from(m[0]);
+            stringMap.forEach((key, value) {
+              _wordDetail[key] = value.toString();
+            });
+          }catch(e){
+            _wordDetail.clear();
+            log("build_matchWords_list($element) " + e.toString());
+          }
         });
       }      
       i++;
@@ -370,27 +379,19 @@ class Home extends StatelessWidget {
                                                     children: <TextSpan>[
                                                       TextSpan(
                                                         text: _wordDetail['phonetic']!=null && _wordDetail['phonetic']!=""?"\\${_wordDetail['phonetic']}\\":"",
+                                                        style: const TextStyle(fontSize: 16)
                                                       ),
+                                                      const TextSpan(text: "\n"),
+                                                      _addHighlightToTags(_wordDetail),
                                                       const TextSpan(text: "\n"),
                                                       TextSpan(
                                                         text: _wordDetail['translation']!=null && _wordDetail['translation']!=""?_wordDetail['translation'] as String:"",
                                                         style: const TextStyle(backgroundColor: Colors.greenAccent)
                                                       ),
                                                       const TextSpan(text: "\n"),
-                                                      TextSpan(
-                                                        text: _wordDetail['tag']!=null && _wordDetail['tag']!=""?_wordDetail['tag'] as String:"",
-                                                        style: const TextStyle(fontFamily: 'IosevkaNerdFontCompleteMono'),
-                                                      ),
+                                                      _addHighlightToPos(_wordDetail),
                                                       const TextSpan(text: "\n"),
-                                                      TextSpan(
-                                                        text: _wordDetail['pos']!=null && _wordDetail['pos']!=""?_wordDetail['pos'] as String:"",
-                                                        style: const TextStyle(fontFamily: 'IosevkaNerdFontCompleteMono'),
-                                                      ),
-                                                      const TextSpan(text: "\n"),
-                                                      TextSpan(
-                                                        text: _wordDetail['exchange']!=null && _wordDetail['exchange']!=""?_wordDetail['exchange'] as String:"",
-                                                        style: const TextStyle(fontFamily: 'IosevkaNerdFontCompleteMono'),
-                                                      ),
+                                                      _addHighlightToExchange(_wordDetail),
                                                     ],
                                                   ),
                                                 ),
@@ -431,8 +432,27 @@ class Home extends StatelessWidget {
               ),
               child: Row(
                 children: [
+                  Ink(
+                    decoration: const ShapeDecoration(
+                      color: Colors.lightBlue,
+                      shape: CircleBorder(),
+                    ),
+                    child: IconButton(
+                      color: Colors.grey,
+                      hoverColor: Colors.black54,
+                      onPressed: () {
+                        ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
+                          customSnackBar(content: "暂未开放"),
+                        );
+                      }, 
+                      icon: const Icon(Icons.mic_rounded)
+                    ),
+                  ),
                   Expanded(
-                    child: _myTextFild()
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: _myTextFild(),
+                    )
                   ),
                   IconButton(
                     icon: const Icon(Icons.send_rounded),
@@ -452,6 +472,93 @@ class Home extends StatelessWidget {
       ),
     );
   }
+
+  TextSpan _addHighlightToTags(Map<String, String> tags) {
+    if(tags['tag']!=null && tags['tag'] as String !=""){
+      final List<TextSpan> children = <TextSpan>[];
+      final List<String> words = (tags['tag'] as String).split(' ');
+      for (final String word in words) {
+        children.add(TextSpan(
+          text: " $word ".replaceFirst('zk', '中考').replaceFirst('gk', '高考').replaceFirst('ky', '考研')
+            .replaceFirst('cet4', '四级').replaceFirst('cet6', '六级').replaceFirst('toefl', '托福')
+            .replaceFirst('ielts', '雅思').replaceFirst('gre', 'GRE'),
+          style: const TextStyle(fontSize: 12,color: Colors.white, backgroundColor: Colors.teal),
+        ));
+      children.add(const TextSpan(text: ' '));
+      }
+      return TextSpan(children: children);
+    }else{
+      return TextSpan(text: "");
+    }    
+  }
+}
+// 拆分_wordDetail['exchange']的词性和释义
+TextSpan _addHighlightToExchange(Map<String, String> wordDetail) {
+  //   比如 perceive 这个单词的 exchange 为：
+  // ```text
+  // d:perceived/p:perceived/3:perceives/i:perceiving
+  // ```
+
+  // 意思是 perceive 的过去式（`p`） 为 perceived，过去分词（`d`）为 perceived, 现在分词（'i'）是 perceiving，第三人称单数（`3`）为 perceives。冒号前面具体项目为：
+
+  // | 类型 | 说明                                                       |
+  // | ---- | ---------------------------------------------------------- |
+  // | p    | 过去式（did）                                              |
+  // | d    | 过去分词（done）                                           |
+  // | i    | 现在分词（doing）                                          |
+  // | 3    | 第三人称单数（does）                                       |
+  // | r    | 形容词比较级（-er）                                        |
+  // | t    | 形容词最高级（-est）                                       |
+  // | s    | 名词复数形式                                               |
+  // | 0    | Lemma，如 perceived 的 Lemma 是 perceive                   |
+  // | 1    | Lemma 的变换形式，比如 s 代表 apples 是其 lemma 的复数形式 |
+  if(wordDetail['exchange']!=null && wordDetail['exchange'] as String !=""){
+    final List<TextSpan> children = <TextSpan>[];
+    final List<String> words = (wordDetail['exchange'] as String).split('/');
+    for (final String word in words) {
+      final List<String> wordList = word.split(':');
+      children.add(TextSpan(
+        text: wordList[0].replaceFirst('p', '过去式').replaceFirst('d', '过去分词').replaceFirst('i', '现在分词').replaceFirst('3', '第三人称单数')
+        .replaceFirst('r', "形容词比较级").replaceFirst('t', "形容词最高级").replaceFirst('s', "名词复数").replaceFirst('0', '原型').replaceFirst('1', '原型变换'),
+        style: const TextStyle(fontSize: 14,color: Colors.teal),
+      ));
+      if(wordList.length>1){
+        children.add(TextSpan(
+        text: wordList[1],
+      ));
+      }
+    children.add(const TextSpan(text: '\n'));
+    }
+    return TextSpan(children: children);
+  }else{
+    return TextSpan(text: "");
+  }    
+}
+// 拆分_wordDetail['pos']的词性和出现概率
+TextSpan _addHighlightToPos(Map<String, String> wordDetail) {
+  // fuse：pos = `n:46/v:54`
+  // 代表 fuse 这个词有两个位置（词性），n（名词）占比 46%，v（动词）占比 54%，根据后面的比例，你可以知道该词语在语料库里各个 pos 所出现的频率
+  if(wordDetail['pos']!=null && wordDetail['pos'] as String !=""){
+    final List<TextSpan> children = <TextSpan>[];
+    children.add(const TextSpan(text: '词性：'));
+    final List<String> words = (wordDetail['pos'] as String).split('/');
+    for (final String word in words) {
+      final List<String> wordList = word.split(':');
+      children.add(TextSpan(
+        text: wordList[0].replaceFirst('n', '名词').replaceFirst('v', '动词').replaceFirst('j', '形容词').replaceFirst('r', '副词')
+        .replaceFirst('m', '数词').replaceFirst('q', '量词').replaceFirst('p', '介词').replaceFirst('c', '连词')
+        .replaceFirst('u', '助词').replaceFirst('y', '语气词').replaceFirst('e', '叹词').replaceFirst('o', '拟声词'),
+      ));
+      children.add(TextSpan(
+        text: wordList[1]+"%",
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ));
+    children.add(const TextSpan(text: ' '));
+    }
+    return TextSpan(children: children,style: TextStyle(fontSize: 14,color: Colors.blue,fontFamily: GoogleFonts.getFont('Roboto').fontFamily),);
+  }else{
+    return TextSpan(text: "");
+  }    
 }
 
 class MatchWords extends StatelessWidget {
@@ -468,7 +575,8 @@ class MatchWords extends StatelessWidget {
       color: Colors.black87,
       backgroundColor: isSelected ? Colors.greenAccent: Colors.transparent,
       fontWeight: fullMatch ? FontWeight.bold : FontWeight.normal,
-      fontFamily: 'IosevkaNerdFontCompleteMono',
+      fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily,
+      fontFamilyFallback: const ['Arial']
     );
     return SizedBox(
       child: Text(text, style: textStyle),
