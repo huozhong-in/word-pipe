@@ -1,12 +1,21 @@
 import 'package:get/get.dart';
 import 'package:app/controller.dart';
 import 'package:flutter/material.dart';
+// import 'package:desktop_window/desktop_window.dart'as window_size;
 import 'package:app/home.dart';
+// import 'dart:io' show Platform;
 
-void main() {
+// Future<void> main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+//     window_size.DesktopWindow.setMinWindowSize(Size(375, 750));
+//     window_size.DesktopWindow.setMaxWindowSize(Size(800, 1000));
+//   }
+//   runApp(const WordPipe());
+// }
+void main(){
   runApp(const WordPipe());
 }
-
 class WordPipe extends StatelessWidget {
   const WordPipe({super.key});
 
@@ -19,6 +28,7 @@ class WordPipe extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Word Pipe',
       theme: ThemeData(
+        useMaterial3: true,
         primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         textSelectionTheme: const TextSelectionThemeData(

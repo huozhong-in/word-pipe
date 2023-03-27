@@ -3,4 +3,6 @@ marisa-trie
 pillow
 gunicorn
 gevent
+flask_sse
+sqlalchemy
 # mysql-connector-python

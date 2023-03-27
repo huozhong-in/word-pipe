@@ -17,7 +17,7 @@
   - [ ] 迁移到国内主机
   - [ ] wasm实现marisa-trie
 - 用户注册
-  - [ ] 规划PUBSUB type/channel，增加多用户支持。eventType="prod/dev/test" channel="hash(userId+salt)" 其中salt随机（更新回用户表）或者固定（用算法就能确定）
+  - [ ] 规划PUBSUB type/channel，增加多用户支持。eventType="prod/dev/test" channel="hash(userId+pass)" 其中salt随机（更新回用户表）或者固定（用算法就能确定）
   - [ ] 微信登录
 - 命令行增强
   - [x] 查找词根词缀
@@ -27,7 +27,8 @@
   - [ ] 聊天记录
 - 封装OpenAI功能
   - [ ] 封装代理ChatGPT用SSE。
-  - [ ] 其他类型消息，流式效果设计
+  - [ ] 其他类型消息，流式效果设计。语音无法流式传送，按照微信语音的体验做即可。
+  - [ ] 新消息来后，自动滚动到底，或者不动、只在底部增加提示
   - [ ] 消息气泡改进：打字占位符；机器人发送任务卡片；被邀请加入群聊，两个人对话，好像真实场景似的。其实是两个AI对话……
 - 品牌元素
   - [ ] 图标

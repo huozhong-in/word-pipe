@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 
-final String SSE_SERVER_HOST = "https://wordpipe.huozhong.in";
+final String SSE_SERVER_HOST = "http://127.0.0.1";
 final String SSE_SERVER_PATH = "/api/stream";
 final String SSE_MSG_TYPE = "broadcasting";
 final String SSE_MSG_CHANNEL = "users.social";
 
-final String HTTP_SERVER_HOST = "https://wordpipe.huozhong.in/api";
+final String HTTP_SERVER_HOST = "http://127.0.0.1/api";
 
 final String DEFAULT_AYONYMOUS_USER_ID = "anonymous";
 
@@ -49,8 +49,8 @@ final ThemeData appTheme = ThemeData(
 );
 
 class CustomColors {
-  static const Color splashStart = Color(0xFF5D18C6);
-  static const Color splashEnd = Color(0xFF0D25BE);
+  static const Color splashStart = Color.fromARGB(255, 24, 198, 56);
+  static const Color splashEnd = Color.fromARGB(255, 3, 103, 16);
   static const Color smallTipText = Color(0xFF676769);
   static const Color linkTipText = Color(0xFF0D25BE);
 

@@ -1,5 +1,5 @@
-import 'dart:convert';
-
+// import 'dart:convert';
+// import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:app/config.dart';
 import 'package:app/cache_helper.dart';
@@ -8,29 +8,48 @@ import 'package:app/cache_helper.dart';
 class Controller extends GetxController{
   final WordsProvider _wordsProvider = WordsProvider();
   final UserProvider _userProvider = UserProvider();
-
-  String getUserId() {
-    // final userId = await GetStorage().read('userId');
-    // if (userId != null) {
-    //   Get.find<Controller>().userId = userId;
-    // }
+  
+  Future<String> getUserId() async{
+    if (await CacheHelper.hasData('userId')){
+      return await CacheHelper.getData('userId');
+    }
     return DEFAULT_AYONYMOUS_USER_ID;
-  }
-
+  }  
   Future<List<dynamic>> searchWords(String word) async{
     return await _wordsProvider.searchWords(word);
   }
-
   Future<List<dynamic>> getWord(String word) async{
     return await _wordsProvider.getWord(word);
   }
-
   Future<List<dynamic>> getWords(List<dynamic> word_json_list) async {
     return await _wordsProvider.getWords(word_json_list);
   }
-
   Future<bool> chat(String userId, String message) async{
     return await _userProvider.chat(userId, message);
+  }
+  Future<bool> signin(String username, String password) async{
+    if (await _userProvider.signin(username, password)){
+      await CacheHelper.setData('userId', username);
+      return true;
+    }else{
+      return false;
+    }
+  }
+  Future<bool> signup(String username, String password) async{
+    if (await _userProvider.signup(username, password)){
+      await CacheHelper.setData('userId', username);
+      return true;
+    }else{
+      return false;
+    }
+  }
+  Future<bool> signout() async{
+    if(await CacheHelper.hasData('userId')){
+      await CacheHelper.setData('userId', null);
+      return true;
+    }else{
+      return false;
+    }
   }
 }
 
@@ -108,4 +127,30 @@ class UserProvider extends GetConnect {
       return false;
     }
   }
+
+  Future<bool> signin(String username, String password) async{
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signin');
+    Map data = {};
+    data['username'] = username;
+    data['password'] = password;
+    final response = await post(url.toString(), data);
+    if (response.statusCode == 204) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  Future<bool> signup(String username, String password) async{
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signup');
+    Map data = {};
+    data['username'] = username;
+    data['password'] = password;
+    final response = await post(url.toString(), data);
+    if (response.statusCode == 204) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
 }

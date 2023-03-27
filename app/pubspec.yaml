@@ -46,6 +46,12 @@ dependencies:
   shared_preferences: ^2.0.20
   wechat_kit: ^5.0.3
   wechat_kit_extension: ^1.0.1
+  path_provider_foundation: ^2.2.0
+  shared_preferences_foundation: ^2.1.5
+  sqflite: ^2.2.6
+  url_launcher_macos: ^3.0.4
+  desktop_window: ^0.4.0
+  font_awesome_flutter: ^10.4.0
 
 dev_dependencies:
   flutter_test:

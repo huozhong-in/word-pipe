@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:app/controller.dart';
 import 'package:app/MessageView.dart';
+import 'package:app/user_profile.dart';
 import 'dart:developer';
 
 // ugly code
@@ -31,7 +32,7 @@ class Home extends StatelessWidget {
       return;
     }
     // 向服务端发送消息，如果返回http code 200，则将消息添加到消息列表中
-    Future<bool> r = c.chat(c.getUserId(), text.trim());
+    Future<bool> r = c.chat(c.getUserId() as String, text.trim());
     r.then((value){
       if(value){
         _textController.clear();
@@ -39,7 +40,7 @@ class Home extends StatelessWidget {
         _indexHighlight = 0;
         //ugly code，因为系统中存在两个Controller，没有更好的隔离方法。按理说MessageController应该是MVC中的，而不是在这里直接能调用到
         final MessageController messageController = Get.put(MessageController());
-        messageController.addMessage(MessageModel(dataList: [text.trim()], type: WordPipeMessageType.text, userId: c.getUserId()));
+        messageController.addMessage(MessageModel(dataList: [text.trim()], type: WordPipeMessageType.text, userId: c.getUserId() as String));
       }
     });    
   }
@@ -120,6 +121,7 @@ class Home extends StatelessWidget {
       if(i == _indexHighlight){
         Future<List<dynamic>> r = c.getWord(element);
         r.then((m){
+          _wordDetail.clear();
           try{
             Map<String, dynamic> stringMap = Map<String, dynamic>.from(m[0]);
             stringMap.forEach((key, value) {
@@ -160,20 +162,49 @@ class Home extends StatelessWidget {
       onKey: (node, RawKeyEvent event) {
           // cmd+enter发送信息
           if (event.isMetaPressed && event.isKeyPressed(LogicalKeyboardKey.enter)) {
-            log("cmd+enter: ${_textController.text.trim()}");
+            // log("cmd+enter: ${_textController.text.trim()}");
             _handleSubmitted(_textController.text);
             _commentFocus.requestFocus();
             return KeyEventResult.handled;
           }
-          // 阻止默认的回车提交功能，改为到onSubmitted()中手动控制
+          // 按下回车，从匹配到的词列表中选中一个单词加到文本框中
           if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
             // log("enter2: ${_textController.text.trim()}");
             _commentFocus.requestFocus();
+            // 当前光标位置
+            int cursorStart = _textController.selection.start;
+            // 取得当前光标所在单词的起始位置和结束位置
+            List<int> currentWordIndexRange = get_word_index_range_in_text(_textController.text, cursorStart);
+            // 如果从接口中查询到的匹配单词列表不为空
+            if (_matchWords.isNotEmpty){ 
+              // log("_matchWords.length:${_matchWords.length}");
+              if(currentWordIndexRange != [0,0]){
+                String words_behind = _textController.text.substring(currentWordIndexRange[1], _textController.text.length);
+                String words_before = _textController.text.substring(0, currentWordIndexRange[0]);
+                // log("words_before:$words_before");
+                // log("words_behind:$words_behind");
+                // log("_currentWord:${_currentWord}");
+                if(_currentWord[0] == _currentWord[0].toUpperCase()){
+                  _textController.text = "${words_before}${_matchWords[_indexHighlight].text.capitalizeFirst}${words_behind}";
+                }else{
+                  _textController.text = "${words_before}${_matchWords[_indexHighlight].text}${words_behind}";
+                }
+              }
+              // 光标移到_matchWords[_indexGrey].text和words_behind之间
+              _textController.selection = TextSelection(baseOffset: currentWordIndexRange[0]+_matchWords[_indexHighlight].text.length, extentOffset: currentWordIndexRange[0]+_matchWords[_indexHighlight].text.length) ;
+            }else{
+              return KeyEventResult.ignored;
+            }
+            _matchWords.clear();
+            _indexHighlight = 0;
             return KeyEventResult.handled;
           }
           // 列表到顶后从底端继续循环
           if (event.isKeyPressed(LogicalKeyboardKey.arrowUp) | (event.isControlPressed && event.isKeyPressed(LogicalKeyboardKey.keyP))){
             // log("arrowUp or ctrl+p: ${_indexHighlight}");
+            if (_matchWords.length == 0){
+              return KeyEventResult.ignored;
+            }
             if (_indexHighlight == 0 ){
               _indexHighlight = _matchWords.length -1;
             }else{
@@ -186,6 +217,9 @@ class Home extends StatelessWidget {
           // 列表到底后从顶端继续循环
           if (event.isKeyPressed(LogicalKeyboardKey.arrowDown) | (event.isControlPressed && event.isKeyPressed(LogicalKeyboardKey.keyN))){
             // log("arrowDown or ctrl+n: ${_indexHighlight}");
+            if (_matchWords.length == 0){
+              return KeyEventResult.ignored;
+            }
             if (_indexHighlight == _matchWords.length -1 ){
               _indexHighlight = 0;
             }else{
@@ -209,6 +243,14 @@ class Home extends StatelessWidget {
             _handleMatchWords(_textController.text);
             return KeyEventResult.ignored;
           }
+          // if ESC pressed, clear the matchWords list, then close the Words list interface.
+          if (event.isKeyPressed(LogicalKeyboardKey.escape)) {
+            // log("escape");
+            _matchWords.clear();
+            _indexHighlight = 0;
+            return KeyEventResult.handled;
+          }
+
           return KeyEventResult.ignored;
         },
       child: 
@@ -219,46 +261,50 @@ class Home extends StatelessWidget {
           onChanged: (value) {
             _handleMatchWords(_textController.text);
           },
-          textInputAction: TextInputAction.send,
-          onSubmitted: (value) {
-            // 按下回车，从匹配到的词列表中选中一个单词加到文本框中
-            log('enter: $value');
-            _commentFocus.requestFocus();
-            // 当前光标位置
-            int cursorStart = _textController.selection.start;
-            // 取得当前光标所在单词的起始位置和结束位置
-            List<int> currentWordIndexRange = get_word_index_range_in_text(_textController.text, cursorStart);
-            // 如果从接口中查询到的匹配单词列表不为空
-            if (_matchWords.isNotEmpty){ 
-              log("_matchWords.length:${_matchWords.length}");
-              if(currentWordIndexRange != [0,0]){
-                String words_behind = _textController.text.substring(currentWordIndexRange[1], _textController.text.length);
-                String words_before = _textController.text.substring(0, currentWordIndexRange[0]);
-                log("words_before:$words_before");
-                log("words_behind:$words_behind");
-                log("_currentWord:${_currentWord}");
-                if(_currentWord[0] == _currentWord[0].toUpperCase()){
-                  _textController.text = "${words_before}${_matchWords[_indexHighlight].text.capitalizeFirst}${words_behind}";
-                }else{
-                  _textController.text = "${words_before}${_matchWords[_indexHighlight].text}${words_behind}";
-                }
-              }
-              // 光标移到_matchWords[_indexGrey].text和words_behind之间
-              _textController.selection = TextSelection(baseOffset: currentWordIndexRange[0]+_matchWords[_indexHighlight].text.length, extentOffset: currentWordIndexRange[0]+_matchWords[_indexHighlight].text.length) ;
-            }else{
-              // 如果不是选中单词到文本框，只是想在光标处加回车，则在适当位置增加换行符，并将光标移到回车处
-              _textController.text = "${_textController.text.substring(0, cursorStart)}\n${_textController.text.substring(cursorStart, _textController.text.length)}";
-              _textController.selection = TextSelection(baseOffset: cursorStart+1, extentOffset: cursorStart+1) ;
-            }
-            _matchWords.clear();
-            _indexHighlight = 0;
-          },
+          textInputAction: TextInputAction.newline,
           style: TextStyle(fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, fontWeight: FontWeight.w400),
           maxLines: 3,
           minLines: 3,
-          decoration: InputDecoration.collapsed(
+          decoration: InputDecoration(
             hintText: '/ OR words',
             hintStyle: TextStyle(color: Colors.grey, fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, fontWeight: FontWeight.w400),
+            prefixIcon: IconButton(
+                color: Colors.grey,
+                hoverColor: Colors.black54,
+                onPressed: () {
+                  ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
+                    customSnackBar(content: "暂未开放"),
+                  );
+                }, 
+                icon: const Icon(Icons.mic_rounded)
+              ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10),),
+              borderSide: BorderSide(
+                color: Colors.grey,
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10),),
+              borderSide: BorderSide(
+                color: Colors.grey,
+                width: 1,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10),),
+              borderSide: BorderSide(
+                color: Colors.redAccent,
+                width: 1,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Colors.redAccent,
+                width: 1,
+              ),
+            ),
           ),
         )
       );
@@ -269,16 +315,62 @@ class Home extends StatelessWidget {
     
     return Scaffold(
       appBar: AppBar(
-          title: Text('Word Pipe',
-            style: TextStyle(
-              color: Colors.black54,
-              fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
-              fontWeight: FontWeight.w600),
-          ),
-          centerTitle: true,
-          backgroundColor: Colors.greenAccent[100],
-          automaticallyImplyLeading: false,
+        // actions: [
+        //   // a button to configurate the app
+        //   IconButton(
+        //     icon: Icon(Icons.settings),
+        //     color: Colors.black54,
+        //     onPressed: () {
+        //       Scaffold.of(context).openEndDrawer();
+        //     },
+        //   ),],
+        title: Text('Word Pipe',
+          style: TextStyle(
+            color: Colors.black54,
+            fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
+            fontWeight: FontWeight.w600),
         ),
+        centerTitle: true,
+        backgroundColor: Colors.greenAccent[100],
+        automaticallyImplyLeading: false,
+      ),
+      endDrawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.teal,
+              ),
+              child: Text(
+                'Settings',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            // ListTile(
+            //   leading: Icon(Icons.message),
+            //   title: Text('Messages'),
+            // ),
+            ListTile(
+              leading: Icon(Icons.account_circle),
+              title: Text('Profile'),
+              onTap: () => Get.to(UserProfile()),
+            ),
+            ListTile(
+              leading: Icon(Icons.settings),
+              title: Text('Settings'),
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.info),
+              title: Text('About Us'),
+            ),
+          ],
+        ),
+      ),
       body: Center(
         child: Column(
           children: [
@@ -328,12 +420,13 @@ class Home extends StatelessWidget {
                                 children: [
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: const [
+                                    children: [
                                       Text(
                                         'Live vocabulary helper',
                                         style: TextStyle(
                                           fontSize: 16, 
                                           fontWeight: FontWeight.bold,
+                                          fontFamily: GoogleFonts.getFont('Roboto').fontFamily,
                                           ),
                                       ),
                                       Text(
@@ -347,11 +440,11 @@ class Home extends StatelessWidget {
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.max,
+                                    // mainAxisSize: MainAxisSize.max,
                                     children: [
                                       Flexible( 
                                         flex: 1,
-                                        fit: FlexFit.loose,
+                                        fit: FlexFit.tight,
                                         child: Obx(() {
                                           return ListView.builder(
                                           itemBuilder: (_, int index) => _matchWords[index],
@@ -432,22 +525,22 @@ class Home extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Ink(
-                    decoration: const ShapeDecoration(
-                      color: Colors.lightBlue,
-                      shape: CircleBorder(),
-                    ),
-                    child: IconButton(
-                      color: Colors.grey,
-                      hoverColor: Colors.black54,
-                      onPressed: () {
-                        ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
-                          customSnackBar(content: "暂未开放"),
-                        );
-                      }, 
-                      icon: const Icon(Icons.mic_rounded)
-                    ),
-                  ),
+                  // Ink(
+                  //   decoration: const ShapeDecoration(
+                  //     color: Colors.lightBlue,
+                  //     shape: CircleBorder(),
+                  //   ),
+                  //   child: IconButton(
+                  //     color: Colors.grey,
+                  //     hoverColor: Colors.black54,
+                  //     onPressed: () {
+                  //       ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
+                  //         customSnackBar(content: "暂未开放"),
+                  //       );
+                  //     }, 
+                  //     icon: const Icon(Icons.mic_rounded)
+                  //   ),
+                  // ),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(left: 10),
@@ -492,6 +585,7 @@ class Home extends StatelessWidget {
     }    
   }
 }
+
 // 拆分_wordDetail['exchange']的词性和释义
 TextSpan _addHighlightToExchange(Map<String, String> wordDetail) {
   //   比如 perceive 这个单词的 exchange 为：
@@ -549,10 +643,12 @@ TextSpan _addHighlightToPos(Map<String, String> wordDetail) {
         .replaceFirst('m', '数词').replaceFirst('q', '量词').replaceFirst('p', '介词').replaceFirst('c', '连词')
         .replaceFirst('u', '助词').replaceFirst('y', '语气词').replaceFirst('e', '叹词').replaceFirst('o', '拟声词'),
       ));
-      children.add(TextSpan(
+      if(wordList.length>1){
+        children.add(TextSpan(
         text: wordList[1]+"%",
         style: const TextStyle(fontWeight: FontWeight.bold),
       ));
+      }
     children.add(const TextSpan(text: ' '));
     }
     return TextSpan(children: children,style: TextStyle(fontSize: 14,color: Colors.blue,fontFamily: GoogleFonts.getFont('Roboto').fontFamily),);
@@ -570,16 +666,14 @@ class MatchWords extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData themeData = Theme.of(context);
-    final TextStyle textStyle = themeData.textTheme.bodyLarge!.copyWith(
+    final TextStyle textStyle = TextStyle(
       color: Colors.black87,
       backgroundColor: isSelected ? Colors.greenAccent: Colors.transparent,
+      fontSize: 12,
       fontWeight: fullMatch ? FontWeight.bold : FontWeight.normal,
-      fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily,
+      fontFamily: GoogleFonts.getFont('Roboto').fontFamily,
       fontFamilyFallback: const ['Arial']
     );
-    return SizedBox(
-      child: Text(text, style: textStyle),
-    );
+    return Text(text, style: textStyle);
   }
 }

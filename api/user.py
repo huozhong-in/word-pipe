@@ -39,7 +39,7 @@ class UserDB:
         Base.metadata.create_all(self.engine)
 
     # Create
-    def create_user_by_password(self, user_name='', password='', last_ip=''):
+    def create_user_by_username(self, user_name='', password='', last_ip=''):
         myuuid: str = str(uuid.uuid4())
         pass_word = hashlib.sha256(str(myuuid+password).encode('utf-8')).hexdigest()
         ctime: int = int(time.time())
@@ -49,16 +49,22 @@ class UserDB:
             self.session.commit()
         except Exception as e:
             print(e)
+            return None
         
         return user
 
     def create_user_by_email(self, email='', password='', last_ip=''):
-        uuid: str = str(uuid.uuid4())
-        pass_word = hashlib.sha256(uuid+password).hexdigest()
+        myuuid: str = str(uuid.uuid4())
+        pass_word = hashlib.sha256(str(myuuid+password).encode('utf-8')).hexdigest()
         ctime: int = int(time.time())
-        user = User(uuid=uuid, email=email, password=pass_word, last_ip=last_ip, ctime=ctime)
-        self.session.add(user)
-        self.session.commit()
+        try:
+            user = User(uuid=myuuid, email=email, password=pass_word, last_ip=last_ip, ctime=ctime)
+            self.session.add(user)
+            self.session.commit()
+        except Exception as e:
+            print(e)
+            return None
+        
         return user
 
     # Read
@@ -78,7 +84,7 @@ class UserDB:
     def check_password(self, user_name, password):
         user = self.get_user_by_username(user_name)
         if user is not None:
-            pass_word = hashlib.sha256(user.uuid+password).hexdigest()
+            pass_word = hashlib.sha256(str(user.uuid+password).encode('utf-8')).hexdigest()
             if user.password == pass_word:
                 return True
             else:

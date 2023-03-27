@@ -20,16 +20,21 @@ from stardict import *
 from config import *
 from io import BytesIO
 from PIL import Image
-from user import UserDB
+from user import User,UserDB
+from flask_cors import CORS
 
 
 app = Flask(__name__)
+CORS(app)
 app.config["REDIS_URL"] = REDIS_URL
 @sse.after_request
 def add_header(response):
     response.headers['X-Accel-Buffering'] = 'no'
+    # response.headers['Cache-Control'] = 'no-cache'
+    # response.headers['Connection'] = 'keep-alive'
+    response.headers['Content-Type'] = 'text/event-stream'
     return response
-app.register_blueprint(sse, url_prefix=SSE_SERVER_PATH)
+app.register_blueprint(sse, url_prefix=SSE_SERVER_PATH, headers={'X-Accel-Buffering': 'no'})
 ## for SSE nginx configuration https://serverfault.com/questions/801628/for-server-sent-events-sse-what-nginx-proxy-configuration-is-appropriate
 
 ## load json
@@ -64,7 +69,8 @@ userDB = UserDB()
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     # 请求上下文结束时自动释放 session
-    g.session.close()
+    # g.session.close()
+    userDB.session.close()
 
 @app.before_request
 def before_request():
@@ -98,7 +104,7 @@ def test() -> Response:
     #     end_index = match.end()
     #     print(f'Found "{word}" at position {start_index}-{end_index}')
     random_user_name = f"test{random.randint(0, 1000)}"
-    user = userDB.create_user_by_password(user_name=random_user_name, password='test1')
+    user = userDB.create_user_by_username(user_name=random_user_name, password='test117')
     
     return make_response(jsonify(user.uuid), 200)
 
@@ -118,7 +124,7 @@ def prefix_search() -> Response:
     tic = time.perf_counter()
 
     global trie    
-    r = trie.keys(k)[0:20]    
+    r = trie.keys(k)[0:20]
     result = dict()
     result["result"] = list(r)
     x = list()
@@ -348,6 +354,49 @@ def get_image():
     img_byte_arr.seek(0)
     # 发送图像数据
     return send_file(img_byte_arr, mimetype='image/jpeg')
+
+@app.route('/api/user/signup', methods = ['POST'])
+def signup():
+    '''
+    用户注册
+    '''
+    if request.method != 'POST':
+        return make_response('Please use POST method', 500)
+    try:
+        data: dict = request.get_json()
+        username: str = data.get('username')
+        password: str = data.get('password')
+    except:
+        return make_response('JSON data required', 500)
+    if username == None or password == None:
+        return make_response('Please provide username and password', 500)
+    user: User = userDB.get_user_by_username(username)
+    if user != None:
+        return make_response('User already exists', 500)
+    user = UserDB.create_user_by_username(user_name=username, password=password)
+    if user == None:
+        return make_response('User create failed', 500)
+    return make_response('', 204)
+
+@app.route('/api/user/signin', methods = ['POST'])
+def signin():
+    '''
+    用户登录
+    '''
+    if request.method != 'POST':
+        return make_response('Please use POST method', 500)
+    try:
+        data: dict = request.get_json()
+        username: str = data.get('username')
+        password: str = data.get('password')
+    except:
+        return make_response('JSON data required', 500)
+    if username == None or password == None:
+        return make_response('Please provide username and password', 500)
+    r: bool = userDB.check_password(username, password)
+    if r == False:
+        return make_response('Username Or Password is incorrect', 500)
+    return make_response('', 204)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=9000)
