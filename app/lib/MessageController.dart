@@ -7,25 +7,26 @@ import 'package:app/config.dart';
 
 class MessageController extends GetxController {
   final messages = <MessageModel>[].obs;
-  late String userId = DEFAULT_AYONYMOUS_USER_ID;
+  late String username = DEFAULT_AYONYMOUS_USER_ID;
+  late SSEClient sseClient;
 
   void addMessage(MessageModel message) {
     messages.add(message);
   }
 
-  void setUserId(String userId) {
-    this.userId = userId;
+  void setUsername(String username) {
+    this.username = username;
   }
-  String getUserId() {
-    return this.userId;
+  String getUsername() {
+    return this.username;
   }
 
-  void handleSSE() async{
+  void handleSSE(String channel) async{
     Uri url = Uri.parse(SSE_SERVER_HOST+SSE_SERVER_PATH);
     String eventType = SSE_MSG_TYPE;
-    String channel = SSE_MSG_CHANNEL;
 
-    SSEClient sseClient = SSEClient(url, eventType, channel);
+
+    sseClient = SSEClient(url, eventType, channel);
 
     // 订阅消息流
     sseClient.messages.listen((message) {
@@ -39,13 +40,17 @@ class MessageController extends GetxController {
       
     });
   }
+  // 关闭 SSE 连接，以便可以重新订阅其他频道
+  void closeSSE(){
+    sseClient.close();
+  }
 
   Future<void> fetchMessages() async {
     // 从 API 获取数据并解析 JSON，此处仅为示例
     List<Map<String, dynamic>> jsonResponse = [
-      {"userId": "user1", "text": "Text 1", "type": "text"},
-      {"userId": "user2", "text": "Text 2", "type": "link"},
-      {"userId": "user3", "text": "Text 3", "type": "reserved"},
+      {"username": "user1", "text": "Text 1", "type": "text"},
+      {"username": "user2", "text": "Text 2", "type": "link"},
+      {"username": "user3", "text": "Text 3", "type": "reserved"},
     ];
 
     List<MessageModel> newMessages =

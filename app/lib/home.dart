@@ -31,18 +31,23 @@ class Home extends StatelessWidget {
     if(text.trim() == ""){
       return;
     }
-    // 向服务端发送消息，如果返回http code 200，则将消息添加到消息列表中
-    Future<bool> r = c.chat(c.getUserId() as String, text.trim());
-    r.then((value){
-      if(value){
-        _textController.clear();
-        _matchWords.clear();
-        _indexHighlight = 0;
-        //ugly code，因为系统中存在两个Controller，没有更好的隔离方法。按理说MessageController应该是MVC中的，而不是在这里直接能调用到
-        final MessageController messageController = Get.put(MessageController());
-        messageController.addMessage(MessageModel(dataList: [text.trim()], type: WordPipeMessageType.text, userId: c.getUserId() as String));
-      }
-    });    
+    // 向服务端发送消息，如果返回http code 204，则将消息添加到消息列表中
+    Future<String> myId = c.getUserName();
+    myId.then((value){
+      Future<bool> r = c.chat(value, text.trim());
+      r.then((value2){
+        if(value2){
+          _textController.clear();
+          _matchWords.clear();
+          _indexHighlight = 0;
+          //ugly code，因为系统中存在两个Controller，没有更好的隔离方法。按理说MessageController应该是MVC中的，而不是在这里直接能调用到
+          final MessageController messageController = Get.put(MessageController());
+          messageController.addMessage(MessageModel(dataList: [text.trim()], type: WordPipeMessageType.text, username: value));
+        }
+      });    
+
+    });
+    
   }
 
   
@@ -315,15 +320,6 @@ class Home extends StatelessWidget {
     
     return Scaffold(
       appBar: AppBar(
-        // actions: [
-        //   // a button to configurate the app
-        //   IconButton(
-        //     icon: Icon(Icons.settings),
-        //     color: Colors.black54,
-        //     onPressed: () {
-        //       Scaffold.of(context).openEndDrawer();
-        //     },
-        //   ),],
         title: Text('Word Pipe',
           style: TextStyle(
             color: Colors.black54,
@@ -340,7 +336,7 @@ class Home extends StatelessWidget {
           children: <Widget>[
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.teal,
+                color: Colors.green.withOpacity(0.6),
               ),
               child: Text(
                 'Settings',
@@ -357,7 +353,7 @@ class Home extends StatelessWidget {
             ListTile(
               leading: Icon(Icons.account_circle),
               title: Text('Profile'),
-              onTap: () => Get.to(UserProfile()),
+              onTap: () => Get.offAll(UserProfile()),
             ),
             ListTile(
               leading: Icon(Icons.settings),
@@ -427,6 +423,7 @@ class Home extends StatelessWidget {
                                           fontSize: 16, 
                                           fontWeight: FontWeight.bold,
                                           fontFamily: GoogleFonts.getFont('Roboto').fontFamily,
+                                          fontFamilyFallback: ['Arial']
                                           ),
                                       ),
                                       Text(
@@ -651,7 +648,7 @@ TextSpan _addHighlightToPos(Map<String, String> wordDetail) {
       }
     children.add(const TextSpan(text: ' '));
     }
-    return TextSpan(children: children,style: TextStyle(fontSize: 14,color: Colors.blue,fontFamily: GoogleFonts.getFont('Roboto').fontFamily),);
+    return TextSpan(children: children,style: TextStyle(fontSize: 14,color: Colors.blue,fontFamily: GoogleFonts.getFont('Roboto').fontFamily,fontFamilyFallback: ['Arial']),);
   }else{
     return TextSpan(text: "");
   }    

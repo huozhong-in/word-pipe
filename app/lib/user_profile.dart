@@ -1,4 +1,5 @@
 import 'package:app/config.dart';
+import 'package:app/home.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
 // import 'package:google_fonts/google_fonts.dart';
@@ -14,12 +15,12 @@ import 'package:app/sign_in.dart';
 class UserProfile extends StatelessWidget {
   UserProfile({Key? key}) : super(key: key);
   final Controller c = Get.find();
-  late String userId = DEFAULT_AYONYMOUS_USER_ID;
+  late String username = DEFAULT_AYONYMOUS_USER_ID;
 
   @override
   Widget build(BuildContext context) {
-    Future<String> myId = c.getUserId();
-    myId.then((value) => userId = value);
+    Future<String> myId = c.getUserName();
+    myId.then((value) => username = value);
 
     return FutureBuilder(
       future: checkUserLogin(), // 调用异步方法检查用户是否登录
@@ -28,19 +29,27 @@ class UserProfile extends StatelessWidget {
             return Text('Error initializing.');
           } else if (snapshot.connectionState ==
               ConnectionState.done) {
-            if (userId != DEFAULT_AYONYMOUS_USER_ID) {
+            if (username != DEFAULT_AYONYMOUS_USER_ID) {
                 return MaterialApp(
+                  debugShowCheckedModeBanner: false,
                   home: Scaffold(
                     appBar: AppBar(
                       title: Text('User Profile'),
                       centerTitle: true,
-                      backgroundColor: Colors.green,
+                      backgroundColor: Colors.green.withOpacity(0.6),
+                      automaticallyImplyLeading: false,
+                      leading: IconButton(
+                        icon: Icon(Icons.arrow_back),
+                        onPressed: () {
+                          Get.offAll(Home());
+                        },
+                      )
                     ),
                     body: Center(
                       child: Column(
                         children: [
                           SizedBox(height: 20),
-                          Text('User ID: $userId'),
+                          Text('User ID: $username'),
                           SizedBox(height: 20),
                           ElevatedButton(
                             onPressed: () async {
@@ -90,7 +99,7 @@ class UserProfile extends StatelessWidget {
   Future<bool> checkUserLogin() async {
     // 异步方法检查用户登录状态，返回true表示已登录，false表示未登录
     Future<bool> result = Future.value(false);
-    if (userId == DEFAULT_AYONYMOUS_USER_ID) {
+    if (username == DEFAULT_AYONYMOUS_USER_ID) {
       result = Future.value(false);
     } else {
       result = Future.value(true);

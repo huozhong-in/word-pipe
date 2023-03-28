@@ -1,13 +1,14 @@
 import 'dart:developer';
 import 'package:app/MessageController.dart';
 import 'package:app/controller.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:app/config.dart';
 import 'package:get/get.dart';
 import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class MessageBubblePainter extends CustomPainter {
   final bool isMe;
@@ -46,19 +47,19 @@ class MessageBubblePainter extends CustomPainter {
 }
 
 class MessageBubble extends StatelessWidget {
-  final String userId;
+  final String username;
   final dynamic dataList;
   final int type;
 
   MessageBubble({
     super.key,
-    required this.userId,
+    required this.username,
     required this.dataList,
     required this.type,
   });
 
   final Controller c = Get.find();
-  bool get isMe => userId == Get.find<MessageController>().getUserId();
+  bool get isMe => username == Get.find<MessageController>().getUsername();
 
   @override
   Widget build(BuildContext context) {
@@ -95,14 +96,14 @@ class MessageBubble extends StatelessWidget {
                 if (!isMe) ...[
                   // Left avatar
                   Container(
-                    width: 40,
-                    height: 40,
-                    color: Colors.black12, // Replace with your avatar image
+                    width: 50,
+                    height: 50,
+                    color: Colors.black12,
                     margin: const EdgeInsets.only(right: 8),
                     child: CachedNetworkImage(
-                      width: 30,
-                      height: 30,
-                      imageUrl: "${HTTP_SERVER_HOST}/avatar/Javris",
+                      width: 40,
+                      height: 40,
+                      imageUrl: "${HTTP_SERVER_HOST}/avatar-Javris",
                       imageBuilder: (context, imageProvider) => Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(3),
@@ -141,28 +142,19 @@ class MessageBubble extends StatelessWidget {
                 if (isMe) ...[
                   // Right avatar
                   Container(
-                    width: 40,
-                    height: 40,
-                    color: Colors.black12, // Replace with your avatar image
+                    width: 50,
+                    height: 50,
+                    // color: Colors.black12,
                     margin: const EdgeInsets.only(left: 8),
-                    child: CachedNetworkImage(
-                      width: 30,
-                      height: 30,
-                      imageUrl: "https://wx.qlogo.cn/mmhead/ver_1/A2d22lUC03hNxPgdZ9iaSMwQUuwBMsol0cTWdQbjqGpdpQtGP1iaAia4UR5yvf0rhLicbiaLkSVUibpX1wqvzn9d1hMj0NicfZev8v58w0b8tInn8g/0",
-                      imageBuilder: (context, imageProvider) => Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(3),
-                          image: DecorationImage(
-                              image: imageProvider,
-                              fit: BoxFit.cover,
-                              // colorFilter:
-                              //     ColorFilter.mode(Colors.red, BlendMode.colorBurn)
-                              ),
-                        ),
-                      ),
-                      placeholder: (context, url) => CircularProgressIndicator(),
-                      errorWidget: (context, url, error) => Icon(Icons.error),
-                    ),
+                    child: SvgPicture.network(
+                      "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${Get.find<MessageController>().getUsername()}",
+                      height: 40,
+                      width: 40,
+                      semanticsLabel: 'user avatar',
+                      placeholderBuilder: (BuildContext context) => Container(
+                          padding: const EdgeInsets.all(40.0),
+                          child: const CircularProgressIndicator()),
+                      )
                   ),
                 ],
               ],
@@ -217,7 +209,7 @@ class MessageBubble extends StatelessWidget {
                           decoration: TextDecoration.underline),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () async {
-                              await c.chat(userId, "/word $example");
+                              await c.chat(username, "/word $example");
                             },
                       )
                     );
@@ -264,7 +256,7 @@ class MessageBubble extends StatelessWidget {
               decoration: TextDecoration.underline),
           recognizer: TapGestureRecognizer()
             ..onTap = () async {
-              await c.chat(userId, "/word $value");
+              await c.chat(username, "/word $value");
             },
         )),
       ],

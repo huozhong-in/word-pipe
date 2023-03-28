@@ -2,7 +2,7 @@
 
 ## 新增包的方法可以选择不直接修改pubspec.yaml，使用以下命令
 
-`dart pub add url_launcher` 之后VSCode会自动执行`flutter packages get` 或 `flutter pub get`
+`dart pub add url_launcher` 或 `flutter pub add url_launcher`
 
 `flutter pub run flutter_native_splash:create`
 
@@ -17,18 +17,19 @@
   - [ ] 迁移到国内主机
   - [ ] wasm实现marisa-trie
 - 用户注册
-  - [ ] 规划PUBSUB type/channel，增加多用户支持。eventType="prod/dev/test" channel="hash(userId+pass)" 其中salt随机（更新回用户表）或者固定（用算法就能确定）
-  - [ ] 微信登录
+  - [x] 用户名+密码
+  - [x] 规划PUBSUB type/channel，增加多用户支持。eventType="prod/dev/test" channel="hash(user_uuid+pass)" 
+  - 微信登录
 - 命令行增强
   - [x] 查找词根词缀
   - [ ] 翻译（ChatGPT）
   - [ ] 语音对话
   - [ ] 角色扮演
-  - [ ] 聊天记录
+  - [ ] 聊天记录。进入聊天界面后，如果有留言，顶部增加提示，点击跳转
 - 封装OpenAI功能
   - [ ] 封装代理ChatGPT用SSE。
   - [ ] 其他类型消息，流式效果设计。语音无法流式传送，按照微信语音的体验做即可。
-  - [ ] 新消息来后，自动滚动到底，或者不动、只在底部增加提示
+  - [ ] 新消息来后，底部增加提示
   - [ ] 消息气泡改进：打字占位符；机器人发送任务卡片；被邀请加入群聊，两个人对话，好像真实场景似的。其实是两个AI对话……
 - 品牌元素
   - [ ] 图标
@@ -38,7 +39,8 @@
 - 运维工作。自动从github打包发布？没测试啊。
   - [x] 部署mysql,或用sqlite
   - [x] Redis
-  - [ ] 用户库。userId为全局唯一ID，
+  - [x] 用户库。user_uuid为全局唯一ID，username在注册时要检查重复（区分大小写）
+  - [ ] 服务端日志
   - [ ] 收集哪些数据做统计
   - [ ] ChatGPT聊天记录存本地还是云端
 - 单词本

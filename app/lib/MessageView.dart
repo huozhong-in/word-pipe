@@ -1,4 +1,4 @@
-
+import 'package:app/config.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:app/controller.dart';
@@ -14,9 +14,21 @@ class MessageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 通过这种方式将MVC中的Controller和程序框架的Controller隔离开来
-    Future<String> UserId = c.getUserId();
-    UserId.then((value) => messageController.setUserId(value));
-    messageController.handleSSE();
+    Future<String> Username = c.getUserName();
+    Username.then((value) {
+      messageController.setUsername(value);
+      try{
+        messageController.closeSSE();
+      }catch(e){
+        // print(e);
+      }
+      if (value == DEFAULT_AYONYMOUS_USER_ID){
+        messageController.handleSSE(SSE_MSG_DEFAULT_CHANNEL);
+      }else{
+        messageController.handleSSE(value);
+      }
+    });
+
 
     return Obx(
         () => ListView.builder(

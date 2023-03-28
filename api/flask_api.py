@@ -218,7 +218,7 @@ def sse_test():
     渲染SSE测试页面
     
     """
-    sse_url = url_for('sse.stream', channel=SSE_MSG_CHANNEL, _external=False)
+    sse_url = url_for('sse.stream', channel=SSE_MSG_DEFAULT_CHANNEL, _external=False)
     return render_template('sse-test.html', sse_url=sse_url)
 
 @app.route('/api/pub-test', methods = ['POST'])
@@ -237,11 +237,11 @@ def publish_test():
     r: list = list()
     id: str = generate_time_based_client_id()
     back_data: json = {}
-    back_data['userId'] = "Jarvis"
+    back_data['username'] = "Jarvis"
     back_data['type'] = 1
     r.append(message)
     back_data['dataList'] = r
-    sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=SSE_MSG_CHANNEL)
+    sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=SSE_MSG_DEFAULT_CHANNEL)
     return jsonify({"success": True, "message": f"Server response:{message}"})
 
 @app.route('/api/chat', methods = ['POST'])
@@ -253,26 +253,40 @@ def chat():
     - TODO 单词是动词的话只有原型，将lemma.en.txt的内容实现转成键值对，拼接到结果中，供前端显示
     - 给出相同词根的其他单词。TODO 按频次倒序。 TODO 只出现在选定范围（四六雅思）内的词
     '''
+    
     if request.method != 'POST':
         return make_response('Please use POST method', 500)
     try:
         data: dict = request.get_json()
-        user: str = data.get('userId')
+        username: str = data.get('username')
         message: str = data.get('message')
     except:
         return make_response('JSON data required', 500)
     
     tic = time.perf_counter()
+
+    # 给每一个登录用户分配一个channel，用于SSE推送
+    channel: str = SSE_MSG_DEFAULT_CHANNEL
+    if request.headers.get('X-access-token'):
+        print('X-access-token: ', request.headers['X-access-token'])
+        u: User = userDB.get_user_by_username(username)
+        if u is None:
+            return make_response('', 500)
+        if u.access_token != request.headers['X-access-token']:
+            return make_response('', 500)
+        if u.access_token_expire_at < int(time.time()):
+            return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
+        channel = username
+    
     if message.startswith('/word '):
-        
         back_data: json = {}
         back_data = get_root_by_word(message)
         def publish_func1():
-            id = generate_time_based_client_id(prefix=user)
+            id = generate_time_based_client_id(prefix=username)
             print("chat() publish id:", id)
             time.sleep(1)  # 延迟一秒
             with app.app_context():
-                sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=SSE_MSG_CHANNEL)
+                sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
 
         thread = threading.Thread(target=publish_func1)
         thread.start()
@@ -281,15 +295,15 @@ def chat():
         root: str = message.split('/root ')[1]
         back_data: json = {}
         dataList = wordroot[root]['example']
-        back_data['userId'] = "Jarvis"
+        back_data['username'] = "Jarvis"
         back_data['type'] = 102
         back_data['dataList'] = [{root: dataList}]
         def publish_func2():
-            id = generate_time_based_client_id(prefix=user)
+            id = generate_time_based_client_id(prefix=username)
             print("chat() publish id:", id)
             time.sleep(1)  # 延迟一秒
             with app.app_context():
-                sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=SSE_MSG_CHANNEL)
+                sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
          
         thread = threading.Thread(target=publish_func2)
         thread.start()
@@ -338,14 +352,13 @@ def get_root_by_word(message: str) -> json:
             dataList.append({word: a_word})
             
     back_data: json = {}
-    back_data['userId'] = "Jarvis"
+    back_data['username'] = "Jarvis"
     back_data['type'] = 101
     back_data['dataList'] = dataList
     print(back_data)
     return back_data
 
-
-@app.route('/api/avatar/Javris')
+@app.route('/api/avatar-Javris')
 def get_image():
     # 读取图片数据
     img = Image.open(Path(Path(__file__).parent.absolute() / 'assets/avatar-Jarvis.jpg'))
@@ -355,28 +368,36 @@ def get_image():
     # 发送图像数据
     return send_file(img_byte_arr, mimetype='image/jpeg')
 
+@app.route('/api/avatar/<user_name>')
+def get_user_avatar(user_name: str):
+    if Path(Path(__file__).parent.absolute() / f'assets/avatar/{user_name}.svg').exists() == False:
+        user_name = DEFAULT_AYONYMOUS_USER_ID
+    with open(Path(Path(__file__).parent.absolute() / f'assets/avatar/{user_name}.svg'), 'r') as f:
+        svg = f.read()
+    return Response(svg, mimetype='image/svg+xml')
+
 @app.route('/api/user/signup', methods = ['POST'])
 def signup():
     '''
     用户注册
     '''
     if request.method != 'POST':
-        return make_response('Please use POST method', 500)
+        return make_response(jsonify({"errcode":50001,"errmsg":"Please use POST method"}), 500)
     try:
         data: dict = request.get_json()
         username: str = data.get('username')
         password: str = data.get('password')
     except:
-        return make_response('JSON data required', 500)
+        return make_response(jsonify({"errcode":50002,"errmsg":"JSON data required"}), 500)
     if username == None or password == None:
         return make_response('Please provide username and password', 500)
     user: User = userDB.get_user_by_username(username)
     if user != None:
-        return make_response('User already exists', 500)
-    user = UserDB.create_user_by_username(user_name=username, password=password)
-    if user == None:
-        return make_response('User create failed', 500)
-    return make_response('', 204)
+        return make_response(jsonify({"errcode":50005,"errmsg":"User already exists"}), 500)
+    r: dict = userDB.create_user_by_username(user_name=username, password=password)
+    if r == {}:
+        return make_response(jsonify({"errcode": 50006,"errmsg": 'User create failed'}), 500)
+    return make_response(jsonify(r), 200)
 
 @app.route('/api/user/signin', methods = ['POST'])
 def signin():
@@ -384,19 +405,19 @@ def signin():
     用户登录
     '''
     if request.method != 'POST':
-        return make_response('Please use POST method', 500)
+        return make_response(jsonify({"errcode":50001,"errmsg":"Please use POST method"}), 500)
     try:
         data: dict = request.get_json()
         username: str = data.get('username')
         password: str = data.get('password')
     except:
-        return make_response('JSON data required', 500)
+        return make_response(jsonify({"errcode":50002,"errmsg":"JSON data required"}), 500)
     if username == None or password == None:
-        return make_response('Please provide username and password', 500)
-    r: bool = userDB.check_password(username, password)
-    if r == False:
-        return make_response('Username Or Password is incorrect', 500)
-    return make_response('', 204)
+        return make_response(jsonify({"errcode":50003,"errmsg":"Please provide username and password"}), 500)
+    r: dict = userDB.check_password(username, password)
+    if r == {}:
+        return make_response(jsonify({"errcode":50004,"errmsg":"Username Or Password is incorrect"}), 500)
+    return make_response(jsonify(r), 200)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=9000)

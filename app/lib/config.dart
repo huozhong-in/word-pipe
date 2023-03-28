@@ -4,13 +4,14 @@ import 'package:google_fonts/google_fonts.dart';
 
 final String SSE_SERVER_HOST = "http://127.0.0.1";
 final String SSE_SERVER_PATH = "/api/stream";
-final String SSE_MSG_TYPE = "broadcasting";
-final String SSE_MSG_CHANNEL = "users.social";
+final String SSE_MSG_TYPE = "prod"; // prod, dev, test
+final String SSE_MSG_DEFAULT_CHANNEL = "users.social";
 
 final String HTTP_SERVER_HOST = "http://127.0.0.1/api";
 
 final String DEFAULT_AYONYMOUS_USER_ID = "anonymous";
 
+final AVATAR_FILE_DIR = "avatar";
 
 // 1表示普通文本，3表示图片，34表示语音，43表示视频，47表示表情包，48表示位置，49是卡片消息(文件/视频号/引用/其他),10000表示撤回消息
 class WordPipeMessageType{

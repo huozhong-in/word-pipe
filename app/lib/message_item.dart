@@ -15,9 +15,9 @@ class MessageItem extends StatelessWidget {
       case WordPipeMessageType.reserved:
         return const Text("reserved");
       case WordPipeMessageType.text:
-        return MessageBubble(userId: message.userId, dataList: message.dataList, type: message.type);
+        return MessageBubble(username: message.username, dataList: message.dataList, type: message.type);
       case  WordPipeMessageType.word2root:
-        return MessageBubble(userId: message.userId, dataList: message.dataList, type: message.type);
+        return MessageBubble(username: message.username, dataList: message.dataList, type: message.type);
       // 根据需要添加更多类型
       default:
         return const Text('Unknown type');

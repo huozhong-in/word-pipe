@@ -1,13 +1,13 @@
 class MessageModel {
-  final String userId;
+  final String username;
   final int type;
   final dynamic dataList;
 
-  MessageModel({required this.dataList, required this.type, required this.userId});
+  MessageModel({required this.dataList, required this.type, required this.username});
   
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     return MessageModel(
-      userId: json['userId'],
+      username: json['username'],
       type: json['type'],
       dataList: json['dataList'],
     );

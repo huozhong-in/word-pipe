@@ -7,15 +7,19 @@ class Validator {
     if (name.contains(" ")){
       return 'Name can\'t contains SPACE';
     }
-    // allow letter, number, 3~20 length
-  if (name.length < 3 || name.length > 20)
-    return 'please enter 3~20 letter or number';
-  RegExp regex = RegExp(r"^[a-zA-Z0-9\w-]{3,20}$");
-  if (!regex.hasMatch(name))
-    return 'please enter 3~20 letter or number';
-  else
-    return null;
-    // abandon words filter
+    // allow 3~20 length
+    if (name.length < 3 || name.length > 20)
+      return 'please enter 3~20 characters';
+  
+    // This regular expression is used to validate a username
+    // It checks that the username is between 3 and 20 characters
+    // And that it only contains letters, numbers, and dashes. no underscores
+    RegExp regex = RegExp(r'^[a-zA-Z0-9-]{3,20}$');
+    if (!regex.hasMatch(name))
+      return 'please enter 3~20: a-z A-Z 0-9 and -';
+    else
+      return null;
+      // todo abandon words filter
   }
 
   static String? validateEmail({required String email}) {

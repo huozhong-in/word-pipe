@@ -152,8 +152,8 @@ class ResetPassword extends StatelessWidget {
                           //   Color.fromARGB(255, 62, 182, 226)
                           // ],
                           colors: [
-                            Colors.purple,
-                            Colors.deepPurpleAccent,
+                            CustomColors.splashStart,
+                            CustomColors.splashEnd,
                           ],
                         ),
                       ),

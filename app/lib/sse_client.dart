@@ -40,7 +40,7 @@ class SSEClient {
       if (_eventSource!.readyState != html.EventSource.CONNECTING) {
         // String lastEventId = (event as html.MessageEvent).lastEventId;
         // log(lastEventId);
-        // c.reConnect('userId', lastEventId);
+        // c.reConnect('username', lastEventId);
       }
     });
 

@@ -3,18 +3,29 @@
 import 'package:get/get.dart';
 import 'package:app/config.dart';
 import 'package:app/cache_helper.dart';
-
+import 'dart:convert';
 
 class Controller extends GetxController{
   final WordsProvider _wordsProvider = WordsProvider();
   final UserProvider _userProvider = UserProvider();
   
-  Future<String> getUserId() async{
-    if (await CacheHelper.hasData('userId')){
-      return await CacheHelper.getData('userId');
+  Future<String> getUserName() async{
+    if (await CacheHelper.hasData('username')){
+      if(await CacheHelper.getData('username') != null){
+        return await CacheHelper.getData('username');
+      }
     }
     return DEFAULT_AYONYMOUS_USER_ID;
-  }  
+  }
+  Future<String> getAccessToken() async{
+    if (await CacheHelper.hasData('access_token')){
+      if(await CacheHelper.getData('access_token') != null){
+        Future<String> access_token = await CacheHelper.getData('access_token');
+        return access_token;
+      }
+    }
+    return "";
+  }
   Future<List<dynamic>> searchWords(String word) async{
     return await _wordsProvider.searchWords(word);
   }
@@ -24,12 +35,11 @@ class Controller extends GetxController{
   Future<List<dynamic>> getWords(List<dynamic> word_json_list) async {
     return await _wordsProvider.getWords(word_json_list);
   }
-  Future<bool> chat(String userId, String message) async{
-    return await _userProvider.chat(userId, message);
+  Future<bool> chat(String username, String message) async{
+    return await _userProvider.chat(username, message);
   }
   Future<bool> signin(String username, String password) async{
     if (await _userProvider.signin(username, password)){
-      await CacheHelper.setData('userId', username);
       return true;
     }else{
       return false;
@@ -37,19 +47,23 @@ class Controller extends GetxController{
   }
   Future<bool> signup(String username, String password) async{
     if (await _userProvider.signup(username, password)){
-      await CacheHelper.setData('userId', username);
       return true;
     }else{
       return false;
     }
   }
   Future<bool> signout() async{
-    if(await CacheHelper.hasData('userId')){
-      await CacheHelper.setData('userId', null);
-      return true;
-    }else{
-      return false;
+    if(await CacheHelper.hasData('username')){
+      await CacheHelper.setData('username', null);
     }
+    if(await CacheHelper.hasData('access_token')){
+      await CacheHelper.setData('access_token', null);
+    }
+    if(await CacheHelper.hasData('expires_at')){
+      await CacheHelper.setData('expires_at', null);
+    }
+    return true;
+    
   }
 }
 
@@ -108,19 +122,30 @@ class WordsProvider extends GetConnect {
 
 
 class UserProvider extends GetConnect {
-  Future<bool> chat(String userId, String message) async{
+
+  Future<bool> chat(String username, String message) async{
     // String baseUrl='$HTTP_SERVER_HOST/chat';
     // Uri url = Uri.parse(baseUrl).replace(
     //   queryParameters: <String, String>{
-    //     'userId': userId,
+    //     'username': username,
     //     'message': message
     //   },
     // );
     Uri url = Uri.parse('$HTTP_SERVER_HOST/chat');
     Map data = {};
-    data['userId'] = userId;
+    data['username'] = username;
     data['message'] = message;
-    final response = await post(url.toString(), data);
+    String  access_token = "";
+    if (await CacheHelper.hasData('access_token')){
+      if(await CacheHelper.getData('access_token') != null){
+        access_token = await CacheHelper.getData('access_token');
+      }
+    }
+    Map<String,String> hs = {};
+    if (access_token != ""){
+      hs['X-access-token'] = access_token;
+    }
+    final response = await post(url.toString(), data, headers: hs, contentType: 'application/json');
     if (response.statusCode == 204) {
       return true;
     } else {
@@ -134,7 +159,11 @@ class UserProvider extends GetConnect {
     data['username'] = username;
     data['password'] = password;
     final response = await post(url.toString(), data);
-    if (response.statusCode == 204) {
+    if (response.statusCode == 200) {
+      Map<String, dynamic> rsp = Map<String, dynamic>.from(response.body);
+      await CacheHelper.setData('username', username);
+      await CacheHelper.setData('access_token', rsp['access_token'] as String);
+      await CacheHelper.setData('expires_at', rsp['expires_at'] as int);
       return true;
     } else {
       return false;
@@ -146,7 +175,11 @@ class UserProvider extends GetConnect {
     data['username'] = username;
     data['password'] = password;
     final response = await post(url.toString(), data);
-    if (response.statusCode == 204) {
+    if (response.statusCode == 200) {
+      Map<String, dynamic> rsp = Map<String, dynamic>.from(response.body);
+      await CacheHelper.setData('username', username);
+      await CacheHelper.setData('access_token', rsp['access_token'] as String);
+      await CacheHelper.setData('expires_at', rsp['expires_at'] as int);
       return true;
     } else {
       return false;
