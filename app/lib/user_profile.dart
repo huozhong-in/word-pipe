@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:app/controller.dart';
 import 'package:app/sign_in.dart';
+import 'package:app/MessageController.dart';
 
 
 
@@ -15,6 +16,7 @@ import 'package:app/sign_in.dart';
 class UserProfile extends StatelessWidget {
   UserProfile({Key? key}) : super(key: key);
   final Controller c = Get.find();
+  final MessageController messageController = Get.put(MessageController());
   late String username = DEFAULT_AYONYMOUS_USER_ID;
 
   @override
@@ -54,6 +56,8 @@ class UserProfile extends StatelessWidget {
                           ElevatedButton(
                             onPressed: () async {
                               await c.signout();
+                              // 登出后清空消息列表
+                              messageController.messages.clear();
                               Get.offAll(SignIn());
                             },
                             child: Text('Sign Out'),

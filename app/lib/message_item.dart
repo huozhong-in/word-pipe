@@ -12,7 +12,7 @@ class MessageItem extends StatelessWidget {
   Widget build(BuildContext context) {
     // 根据类型选择不同的 Widget 渲染
     switch (message.type) {
-      case WordPipeMessageType.reserved:
+      case WordPipeMessageType.reserved: 
         return const Text("reserved");
       case WordPipeMessageType.text:
         return MessageBubble(username: message.username, dataList: message.dataList, type: message.type);

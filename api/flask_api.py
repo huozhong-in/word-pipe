@@ -264,7 +264,7 @@ def chat():
         return make_response('JSON data required', 500)
     
     tic = time.perf_counter()
-
+    print(username, message)
     # 给每一个登录用户分配一个channel，用于SSE推送
     channel: str = SSE_MSG_DEFAULT_CHANNEL
     if request.headers.get('X-access-token'):
@@ -361,7 +361,7 @@ def get_root_by_word(message: str) -> json:
 @app.route('/api/avatar-Javris')
 def get_image():
     # 读取图片数据
-    img = Image.open(Path(Path(__file__).parent.absolute() / 'assets/avatar-Jarvis.jpg'))
+    img = Image.open(Path(Path(__file__).parent.absolute() / 'assets/robot.jpg'))
     img_byte_arr = BytesIO()
     img.save(img_byte_arr, format='JPEG')
     img_byte_arr.seek(0)
