@@ -278,7 +278,7 @@ def chat():
             return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
         channel = username
     
-    if message.startswith('/word '):
+    if message.startswith('/root '):
         back_data: json = {}
         back_data = get_root_by_word(message)
         def publish_func1():
@@ -291,22 +291,22 @@ def chat():
         thread = threading.Thread(target=publish_func1)
         thread.start()
 
-    elif message.startswith('/root '):
-        root: str = message.split('/root ')[1]
-        back_data: json = {}
-        dataList = wordroot[root]['example']
-        back_data['username'] = "Jarvis"
-        back_data['type'] = 102
-        back_data['dataList'] = [{root: dataList}]
-        def publish_func2():
-            id = generate_time_based_client_id(prefix=username)
-            print("chat() publish id:", id)
-            time.sleep(1)  # 延迟一秒
-            with app.app_context():
-                sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
+    # elif message.startswith('/config '):
+    #     root: str = message.split('/config ')[1]
+    #     back_data: json = {}
+    #     dataList = wordroot[root]['example']
+    #     back_data['username'] = "Jarvis"
+    #     back_data['type'] = 102
+    #     back_data['dataList'] = [{root: dataList}]
+    #     def publish_func2():
+    #         id = generate_time_based_client_id(prefix=username)
+    #         print("chat() publish id:", id)
+    #         time.sleep(1)  # 延迟一秒
+    #         with app.app_context():
+    #             sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
          
-        thread = threading.Thread(target=publish_func2)
-        thread.start()
+    #     thread = threading.Thread(target=publish_func2)
+    #     thread.start()
 
     elif message.startswith('/help '):
         pass

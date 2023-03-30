@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+final bool kDebugMode = false;
 
-final String SSE_SERVER_HOST = "http://127.0.0.1";
+
+final String SSE_SERVER_HOST = kDebugMode ? "http://127.0.0.1" : "https://wordpipe.huozhong.in";
 final String SSE_SERVER_PATH = "/api/stream";
 final String SSE_MSG_TYPE = "prod"; // prod, dev, test
 final String SSE_MSG_DEFAULT_CHANNEL = "users.social";
 
-final String HTTP_SERVER_HOST = "http://127.0.0.1/api";
+final String HTTP_SERVER_HOST = kDebugMode ? "http://127.0.0.1/api" : "https://wordpipe.huozhong.in/api";
 
 final String DEFAULT_AYONYMOUS_USER_ID = "anonymous";
 

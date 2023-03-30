@@ -26,6 +26,7 @@ class Home extends StatelessWidget {
   late String _currentWord = ""; // 文本框中输入光标所在的单词
   late int _leftOrRight = 0; // 此变量用于记录当按下键盘左右键时，光标应向左移动还是向右移动，-1表示向左，1表示向右，0表示未移动
   late final Map<String, String> _wordDetail = <String, String>{}.obs;
+  RxBool _isShowSlashMenu = false.obs;
 
   void _handleSubmitted(String text) {
     if(text.trim() == ""){
@@ -55,7 +56,16 @@ class Home extends StatelessWidget {
     if (text.trim() == ""){
       _matchWords.clear();
       _indexHighlight = 0;
+      _isShowSlashMenu.value = false;
       return;
+    }
+    if (text == "/"){
+      _matchWords.clear();
+      _indexHighlight = 0;
+      _isShowSlashMenu.value = true;
+      return;
+    }else{
+      _isShowSlashMenu.value = false;
     }
     // 获取光标的位置。
     // 因捕获键盘事件在前，_textControll.selection.start和end变化在后，
@@ -427,7 +437,7 @@ class Home extends StatelessWidget {
                                           ),
                                       ),
                                       Text(
-                                        '↑↓ to choose word / ⏎ to confirm',
+                                        '↑↓ to choose word | ⏎ to confirm',
                                         style: TextStyle(fontSize: 14),
                                         textAlign: TextAlign.right,
                                       ),
@@ -498,6 +508,45 @@ class Home extends StatelessWidget {
                           ),
                         ),
                       ),
+                      Obx(() => Visibility(
+                        visible: _isShowSlashMenu.value, 
+                        child: Positioned(
+                          left: 20,
+                          bottom: 0,
+                          child: Container(
+                            height: 200,
+                            width: 200,
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                            decoration: BoxDecoration(
+                              color: Colors.white70,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                topRight: Radius.circular(16),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.5),
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: ListView(
+                              children:[
+                                ListTile(
+                                  title: Text('/root␣'),
+                                ),
+                                ListTile(
+                                  title: Text('/config␣'),
+                                ),
+                                ListTile(
+                                  title: Text('/help␣'),
+                                ),
+                              ]
+                            ),
+                          ),
+                        ))
+                      )
                     ],
                   )
               ),
