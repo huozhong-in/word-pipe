@@ -124,7 +124,7 @@ def prefix_search() -> Response:
     tic = time.perf_counter()
 
     global trie    
-    r = trie.keys(k)[0:20]
+    r = trie.keys(k)[0:50]
     result = dict()
     result["result"] = list(r)
     x = list()

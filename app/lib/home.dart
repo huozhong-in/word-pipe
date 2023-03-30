@@ -27,6 +27,7 @@ class Home extends StatelessWidget {
   late int _leftOrRight = 0; // 此变量用于记录当按下键盘左右键时，光标应向左移动还是向右移动，-1表示向左，1表示向右，0表示未移动
   late final Map<String, String> _wordDetail = <String, String>{}.obs;
   RxBool _isShowSlashMenu = false.obs;
+  ScrollController _scrollController = ScrollController();
 
   void _handleSubmitted(String text) {
     if(text.trim() == ""){
@@ -113,7 +114,7 @@ class Home extends StatelessWidget {
         r.then((value){
           try{
             List<dynamic> n = value[0]['result'];
-            build_matchWords_list(n.map((e) => e.toString()).toList());
+            build_matchWords_list(n.map((e) => e.toString()).toList(), '');
           }catch(e){
             log("_handleMatchWords() " + e.toString());
           }
@@ -125,13 +126,24 @@ class Home extends StatelessWidget {
     }
   }
 
-  void build_matchWords_list(List<String> words){
+  void build_matchWords_list(List<String> words, String skey){
     _matchWords.clear();
     int i = 0;
     for (String element in words) {
       // 用isSelected变量告知前端是否高亮显示当前单词
       bool fullMatch = (element.toLowerCase() == _currentWord.toLowerCase());
-      _matchWords.insert(_matchWords.length, MatchWords(text: element, fullMatch: fullMatch, isSelected: element == words[_indexHighlight]));
+      _matchWords.insert(_matchWords.length, 
+        MatchWords(text: element, fullMatch: fullMatch, isSelected: element == words[_indexHighlight], 
+          onTap:() {
+            // 当用户点击某个单词时，将点击的单词加到文本框中
+            print(element);
+            // _matchWords.clear();
+            // _indexHighlight = 0;
+            // myEnterKeyPress(i);
+            // _commentFocus.requestFocus();
+          },
+        )
+      );
       // 获取列表中被高亮单词的详细信息，放入_wordDetail中，即在右侧显示音标、定义和翻译等信息
       if(i == _indexHighlight){
         Future<List<dynamic>> r = c.getWord(element);
@@ -147,9 +159,56 @@ class Home extends StatelessWidget {
             log("build_matchWords_list($element) " + e.toString());
           }
         });
-      }      
+      }
       i++;
     }
+    
+
+    // 当用键盘　↑　↓　时，需要重新计算高亮单词的位置和滚动距离，保证高亮项始终在可视区域内
+    final double listItemHeight = 20;
+    final double listViewHeight = 350;
+    final double listViewTopPadding = 20;
+    final double listViewBottomPadding = 20;
+
+    int newIndexHighlight;
+    double newScrollOffset;
+    if (skey == 'arrowUp') {
+      // 计算新的高亮元素和滚动距离
+      newIndexHighlight = _indexHighlight - 1;
+      newScrollOffset = _scrollController.offset - listItemHeight;
+      if (newScrollOffset < 0) {
+        newScrollOffset = 0;
+      }
+      if (newIndexHighlight < 0) {
+        newIndexHighlight = 0;
+      }
+    } else if (skey == 'arrowDown') {
+      // 计算新的高亮元素和滚动距离
+      newIndexHighlight = _indexHighlight + 1;
+      newScrollOffset = _scrollController.offset + listItemHeight;
+      if (newScrollOffset > _scrollController.position.maxScrollExtent) {
+        newScrollOffset = _scrollController.position.maxScrollExtent;
+      }
+      if (newIndexHighlight >= _matchWords.length) {
+        newIndexHighlight = _matchWords.length - 1;
+      }
+    } else {
+      return;
+    }
+    // 判断新的高亮元素是否接近列表顶部或底部，需要滚动列表以保持高亮元素在视野内
+    final double newListItemTop = newIndexHighlight * listItemHeight;
+    final double newListItemBottom = (newIndexHighlight + 1) * listItemHeight;
+    final double newScrollTop = newListItemTop - listViewTopPadding;
+    final double newScrollBottom = newListItemBottom + listViewBottomPadding;
+    if (newScrollTop < _scrollController.offset) {
+      _scrollController.animateTo(newScrollTop,
+          duration: Duration(milliseconds: 500), curve: Curves.ease);
+    } else if (newScrollBottom > _scrollController.offset + listViewHeight) {
+      _scrollController.animateTo(newScrollBottom - listViewHeight,
+          duration: Duration(milliseconds: 500), curve: Curves.ease);
+    }
+
+
   }
 
 
@@ -171,6 +230,31 @@ class Home extends StatelessWidget {
     return [0, 0];
   }
 
+  // void myEnterKeyPress(int whichItem){
+  //   // 当前光标位置
+  //   int cursorStart = _textController.selection.start;
+  //   print(cursorStart);
+  //   // 取得当前光标所在单词的起始位置和结束位置
+  //   List<int> currentWordIndexRange = get_word_index_range_in_text(_textController.text, cursorStart);
+  //   // 如果从接口中查询到的匹配单词列表不为空
+  //   if (_matchWords.isNotEmpty){ 
+  //     // log("_matchWords.length:${_matchWords.length}");
+  //     if(currentWordIndexRange != [0,0]){
+  //       String words_behind = _textController.text.substring(currentWordIndexRange[1], _textController.text.length);
+  //       String words_before = _textController.text.substring(0, currentWordIndexRange[0]);
+  //       // log("words_before:$words_before");
+  //       // log("words_behind:$words_behind");
+  //       // log("_currentWord:${_currentWord}");
+  //       if(_currentWord[0] == _currentWord[0].toUpperCase()){
+  //         _textController.text = "${words_before}${_matchWords[whichItem].text.capitalizeFirst}${words_behind}";
+  //       }else{
+  //         _textController.text = "${words_before}${_matchWords[whichItem].text}${words_behind}";
+  //       }
+  //     }
+  //     // 光标移到_matchWords[_indexGrey].text和words_behind之间
+  //     _textController.selection = TextSelection(baseOffset: currentWordIndexRange[0]+_matchWords[whichItem].text.length, extentOffset: currentWordIndexRange[0]+_matchWords[_indexHighlight].text.length) ;
+  //   }
+  // }
 
   Widget _myTextFild(){
     return Focus(
@@ -226,7 +310,7 @@ class Home extends StatelessWidget {
               _indexHighlight -= 1;
             }
             List<String> t = _matchWords.map((e) => e.text).toList();
-            build_matchWords_list(t);
+            build_matchWords_list(t, 'arrowUp');
             return KeyEventResult.handled;
           }
           // 列表到底后从顶端继续循环
@@ -241,7 +325,7 @@ class Home extends StatelessWidget {
               _indexHighlight += 1;
             }
             List<String> t = _matchWords.map((e) => e.text).toList();
-            build_matchWords_list(t);
+            build_matchWords_list(t,'arrowDown');
             return KeyEventResult.handled;
           }
           // 光标向左移动，截取光标左侧单词的子串，匹配单词列表
@@ -431,14 +515,14 @@ class Home extends StatelessWidget {
                                         'Live vocabulary helper',
                                         style: TextStyle(
                                           fontSize: 16, 
-                                          fontWeight: FontWeight.bold,
-                                          fontFamily: GoogleFonts.getFont('Roboto').fontFamily,
+                                          fontWeight: FontWeight.w600,
+                                          fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
                                           fontFamilyFallback: ['Arial']
                                           ),
                                       ),
                                       Text(
-                                        '↑↓ to choose word | ⏎ to confirm',
-                                        style: TextStyle(fontSize: 14),
+                                        '↑↓ to choose word\n⏎ to confirm',
+                                        style: TextStyle(fontSize: 10),
                                         textAlign: TextAlign.right,
                                       ),
                                     ],
@@ -452,15 +536,42 @@ class Home extends StatelessWidget {
                                       Flexible( 
                                         flex: 1,
                                         fit: FlexFit.tight,
-                                        child: Obx(() {
-                                          return ListView.builder(
-                                          itemBuilder: (_, int index) => _matchWords[index],
-                                          reverse: false,
-                                          itemCount: _matchWords.length,
-                                          shrinkWrap: true,
-                                          primary: true
-                                        );
-                                        },),
+                                        child: SizedBox(
+                                          height: 350,
+                                          child: GetPlatform.isMobile
+                                          ? Obx(
+                                            () => ListView.builder(
+                                              itemBuilder: (_, int index) => InkWell(
+                                                onDoubleTap: () {
+                                                  print('isMobile:You double tapped on ${_matchWords[index].text}');
+                                                },
+                                                child: _matchWords[index],
+                                              ),
+                                              reverse: false,
+                                              itemCount: _matchWords.length,
+                                              shrinkWrap: true,
+                                              primary: true,
+                                            ),
+                                          )
+                                          : SingleChildScrollView(
+                                            controller: _scrollController,
+                                            scrollDirection: Axis.vertical,
+                                            child: Obx(
+                                              () => ListView.builder(
+                                                itemBuilder: (_, int index) => InkWell(
+                                                  onDoubleTap: () {
+                                                    print('isDesktop:You double tapped on ${_matchWords[index].text}');
+                                                  },
+                                                  child: _matchWords[index],
+                                                ),
+                                                reverse: false,
+                                                itemCount: _matchWords.length,
+                                                shrinkWrap: true,
+                                                primary: true,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                       Flexible(
                                         flex: 2,
@@ -704,22 +815,37 @@ TextSpan _addHighlightToPos(Map<String, String> wordDetail) {
 }
 
 class MatchWords extends StatelessWidget {
-  const MatchWords({super.key, required this.text, required this.fullMatch, required this.isSelected});
+  const MatchWords({
+    Key? key,
+    required this.text,
+    required this.fullMatch,
+    required this.isSelected,
+    required this.onTap,
+  }) : super(key: key);
 
   final String text;
   final bool fullMatch;
   final bool isSelected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final TextStyle textStyle = TextStyle(
-      color: Colors.black87,
-      backgroundColor: isSelected ? Colors.greenAccent: Colors.transparent,
-      fontSize: 12,
-      fontWeight: fullMatch ? FontWeight.bold : FontWeight.normal,
-      fontFamily: GoogleFonts.getFont('Roboto').fontFamily,
-      fontFamilyFallback: const ['Arial']
+        color: Colors.black87,
+        backgroundColor:
+            isSelected ? Colors.greenAccent : Colors.transparent,
+        fontSize: 12,
+        fontWeight: fullMatch ? FontWeight.bold : FontWeight.normal,
+        fontFamily: GoogleFonts.getFont('Roboto').fontFamily,
+        fontFamilyFallback: const ['Arial']);
+
+    return SizedBox(
+      height: 20,
+      child: InkWell(
+        onTap: onTap,
+        child: Text(text, style: textStyle),
+      ),
     );
-    return Text(text, style: textStyle);
   }
 }
+
