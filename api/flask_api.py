@@ -325,7 +325,7 @@ def get_root_by_word(message: str) -> json:
     TODO example里单词可能有大写或带空格的情况，如"-ite2"
     '''
     
-    message = message.split('/word ')[1]
+    message = message.split('/root ')[1]
     dataList: list = list()
     import re
     # message= 'This is a long-time example with hyphenated-words, including some non-alpha character...'

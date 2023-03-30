@@ -4,8 +4,6 @@
 
 `dart pub add url_launcher` 或 `flutter pub add url_launcher`
 
-`flutter pub run flutter_native_splash:create`
-
 `flutter pub run flutter_launcher_icons:main`
 
 ## TODO
