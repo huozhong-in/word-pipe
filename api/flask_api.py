@@ -22,6 +22,7 @@ from io import BytesIO
 from PIL import Image
 from user import User,UserDB
 from flask_cors import CORS
+import requests
 
 
 app = Flask(__name__)
@@ -418,6 +419,48 @@ def signin():
     if r == {}:
         return make_response(jsonify({"errcode":50004,"errmsg":"Username Or Password is incorrect"}), 500)
     return make_response(jsonify(r), 200)
+
+@app.route('/api/openai/<path:path>', methods=['POST'])
+def openai_proxy(path):
+    # 判断X-access-token是否同用户名对的上且没过期
+    access_token = request.headers.get('X-access-token')
+    if access_token == None:
+        return jsonify({'message': 'Access denied'}), 403
+    try:
+        data: dict = request.get_json()
+        username: str = data.get('username')
+        model: str = data.get('model')
+        messages: str = data.get('messages')
+    except:
+        return make_response(jsonify({"errcode":50002,"errmsg":"JSON data required"}), 500)
+    if userDB.check_access_token(user_name=username, access_token=access_token) == False:
+        return jsonify({'message': 'Access denied'}), 403
+    
+    # 发起请求到api.openai.com
+    url = f'https://api.openai.com/{path}'
+
+    headers: dict = {}
+    if os.environ.get('OPENAI_API_KEY') == None:
+        return jsonify({'message': 'OpenAI API key not found'}), 500
+    
+    headers = {
+        'Authorization': 'Bearer ' + os.environ['OPENAI_API_KEY'],
+        'Content-Type': "application/json",
+    }
+    # 'Accept': "text/event-stream",
+    # "Connection": "keep-alive"
+    
+    j: json = {}
+    j['model'] = model
+    j['messages'] = messages
+    
+    if os.environ.get('DEBUG_MODE') != None:
+        resp = requests.request(request.method, url, headers=headers, json=j, proxies=PROXIES)
+    else:
+        resp = requests.request(request.method, url, headers=headers, json=j)
+    
+    return jsonify(resp.json())
+        
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=9000)

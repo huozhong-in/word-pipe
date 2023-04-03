@@ -104,6 +104,18 @@ class UserDB:
         else:
             return {}
     
+    def check_access_token(self, user_name, access_token) -> bool:
+        user = self.get_user_by_username(user_name)
+        if user is not None:
+            if user.access_token == access_token:
+                return True
+            else:
+                return False
+        else:
+            return False
+    
+    # Update
+
     def modify_password(self, user_name, old_password, new_password):
         user = self.get_user_by_username(user_name)
         if user is not None:
@@ -117,7 +129,6 @@ class UserDB:
         else:
             return False
 
-    # Update
     def update_user_by_uuid(self, uuid, **kwargs):
         user = self.get_user_by_uuid( uuid)
         if user is not None:

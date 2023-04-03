@@ -21,9 +21,15 @@ SQLITE_DB_PATH = Path(Path(__file__).parent.absolute() / 'db/')
 SQLITE_DB_NAME = "wordpipe.db"
 DB_URI = "sqlite:///" + str(SQLITE_DB_PATH / SQLITE_DB_NAME)
 
-
 # ----- USER CONFIG -----
 DEFAULT_AYONYMOUS_USER_ID: str = "anonymous"
+
+# ----- PROXY CONFIG -----
+PROXIES = {
+    "http": "127.0.0.1:7890",
+    "https": "127.0.0.1:7890",
+    "socks5": "127.0.0.1:7890"
+}
 
 def generate_random_avatar(user_name: str) -> bool:
     random_avatar = pa.Avatar.random()

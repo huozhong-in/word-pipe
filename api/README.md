@@ -7,4 +7,22 @@
 `conda create -n wordpipe python=3.10`
 
 
-`sudo gunicorn flask_api:app --worker-class gevent --bind 127.0.0.1:80`
+`sudo gunicorn flask_api:app --worker-class gevent --bind 127.0.0.1:80 --env DEBUG_MODE=1 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 300`
+
+
+`vim /etc/systemd/system/wordpipe.service`
+```
+[Unit]
+Description=Gunicorn instance to serve wordpipe
+After=network.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/root/word-pipe/api
+Environment="PATH=/root/miniconda3/envs/wordpipe/bin"
+ExecStart=/root/miniconda3/envs/wordpipe/bin/gunicorn flask_api:app --worker-class gevent --bind 127.0.0.1:9000 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 300
+
+[Install]
+WantedBy=multi-user.target
+```

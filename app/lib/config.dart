@@ -1,8 +1,9 @@
+import 'dart:core';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-final bool kDebugMode = true;
-
+import 'package:flutter/foundation.dart' show kDebugMode;
+// final bool kDebugMode = true;
+// final bool isDebug = bool.fromEnvironment('DEBUG', defaultValue: false);
 
 final String SSE_SERVER_HOST = kDebugMode ? "http://127.0.0.1" : "https://wordpipe.huozhong.in";
 final String SSE_SERVER_PATH = "/api/stream";
@@ -14,6 +15,8 @@ final String HTTP_SERVER_HOST = kDebugMode ? "http://127.0.0.1/api" : "https://w
 final String DEFAULT_AYONYMOUS_USER_ID = "anonymous";
 
 final AVATAR_FILE_DIR = "avatar";
+
+final String SHELF_PROXY_HOST = "https://rewardhunter.net";
 
 // 1表示普通文本，3表示图片，34表示语音，43表示视频，47表示表情包，48表示位置，49是卡片消息(文件/视频号/引用/其他),10000表示撤回消息
 class WordPipeMessageType{

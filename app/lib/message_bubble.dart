@@ -47,19 +47,19 @@ class MessageBubblePainter extends CustomPainter {
 }
 
 class MessageBubble extends StatelessWidget {
-  final String username;
+  final String sender;
   final dynamic dataList;
   final int type;
 
   MessageBubble({
     super.key,
-    required this.username,
+    required this.sender,
     required this.dataList,
     required this.type,
   });
 
   final Controller c = Get.find();
-  bool get isMe => username == Get.find<MessageController>().getUsername() || username == DEFAULT_AYONYMOUS_USER_ID;
+  bool get isMe => sender == Get.find<MessageController>().getUsername() || sender == DEFAULT_AYONYMOUS_USER_ID;
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +209,7 @@ class MessageBubble extends StatelessWidget {
                           decoration: TextDecoration.underline),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () async {
-                              await c.chat(username, "/word $example");
+                              await c.chat(Get.find<MessageController>().getUsername(), "/root $example");
                             },
                       )
                     );
@@ -256,7 +256,7 @@ class MessageBubble extends StatelessWidget {
               decoration: TextDecoration.underline),
           recognizer: TapGestureRecognizer()
             ..onTap = () async {
-              await c.chat(username, "/word $value");
+              await c.chat(Get.find<MessageController>().getUsername(), "/root $value");
             },
         )),
       ],

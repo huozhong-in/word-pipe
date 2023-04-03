@@ -543,7 +543,9 @@ class Home extends StatelessWidget {
                                             () => ListView.builder(
                                               itemBuilder: (_, int index) => InkWell(
                                                 onDoubleTap: () {
-                                                  print('isMobile:You double tapped on ${_matchWords[index].text}');
+                                                  ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
+                                                    customSnackBar(content: _matchWords[index].text),
+                                                  );
                                                 },
                                                 child: _matchWords[index],
                                               ),
@@ -811,7 +813,7 @@ TextSpan _addHighlightToPos(Map<String, String> wordDetail) {
     return TextSpan(children: children,style: TextStyle(fontSize: 14,color: Colors.blue,fontFamily: GoogleFonts.getFont('Roboto').fontFamily,fontFamilyFallback: ['Arial']),);
   }else{
     return TextSpan(text: "");
-  }    
+  }
 }
 
 class MatchWords extends StatelessWidget {
