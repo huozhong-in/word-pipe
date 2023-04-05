@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import 'package:app/controller.dart';
 import 'package:flutter/material.dart';
-// import 'package:desktop_window/desktop_window.dart'as window_size;
 import 'package:app/home.dart';
 // import 'dart:io' show Platform;
 

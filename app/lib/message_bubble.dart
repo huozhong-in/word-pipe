@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:app/MessageController.dart';
 import 'package:app/controller.dart';
 import 'package:flutter/material.dart';
@@ -6,46 +5,12 @@ import 'package:app/config.dart';
 import 'package:get/get.dart';
 import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:app/MessageBubblePainter.dart';
 
-class MessageBubblePainter extends CustomPainter {
-  final bool isMe;
-  final Color bubbleColor;
 
-  MessageBubblePainter({required this.isMe, required this.bubbleColor});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = bubbleColor;
-    final path = Path();
-    const tailWidth = 5.0;
-    const tailHeight = 10.0;
-    const borderRadius = 5.0;
-
-    if (isMe) {
-      path.addRRect(
-          RRect.fromLTRBR(0, 0, size.width - tailWidth, size.height, const Radius.circular(borderRadius)));
-      path.lineTo(size.width - tailWidth, tailHeight);
-      path.lineTo(size.width, tailHeight + tailHeight / 2);
-      path.lineTo(size.width - tailWidth, tailHeight * 2);
-      path.close();
-    } else {
-      path.addRRect(
-          RRect.fromLTRBR(tailWidth, 0, size.width, size.height, const Radius.circular(borderRadius)));
-      path.lineTo(tailWidth, tailHeight);
-      path.lineTo(0, tailHeight + tailHeight / 2);
-      path.lineTo(tailWidth, tailHeight * 2);
-      path.close();
-    }
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
-}
-
+// ignore: must_be_immutable
 class MessageBubble extends StatelessWidget {
   final String sender;
   final dynamic dataList;
@@ -59,7 +24,28 @@ class MessageBubble extends StatelessWidget {
   });
 
   final Controller c = Get.find();
-  bool get isMe => sender == Get.find<MessageController>().getUsername() || sender == DEFAULT_AYONYMOUS_USER_ID;
+  final MessageController messageController = Get.find<MessageController>();
+  bool get isMe => sender == messageController.getUsername() || sender == DEFAULT_AYONYMOUS_USER_ID;
+  
+  //   List<InlineSpan> spans = [];
+  //   RegExp exp = RegExp(r'(\[.*?\])');
+  //   List<String> texts = text.split(exp);
+  //   for (var i = 0; i < texts.length; i++) {
+  //     if (texts[i].startsWith('[') && texts[i].endsWith(']')) {
+  //       String emoji = texts[i].substring(1, texts[i].length - 1);
+  //       spans.add(WidgetSpan(
+  //         child: SvgPicture.asset(
+  //           'assets/emoji/$emoji.svg',
+  //           width: 20,
+  //           height: 20,
+  //         ),
+  //       ));
+  //     } else {
+  //       spans.add(TextSpan(text: texts[i]));
+  //     }
+  //   }
+  //   return spans;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +89,7 @@ class MessageBubble extends StatelessWidget {
                     child: CachedNetworkImage(
                       width: 40,
                       height: 40,
-                      imageUrl: "${HTTP_SERVER_HOST}/avatar-Javris",
+                      imageUrl: "${HTTP_SERVER_HOST}/avatar-Jarvis",
                       imageBuilder: (context, imageProvider) => Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(3),
@@ -164,13 +150,17 @@ class MessageBubble extends StatelessWidget {
       ),
     );
   }
-  // todo pending 的效果，因为跟机器人的对话实质是下任务，所以要有回执，有回复就占用回执的位置显示出来
-  // todo 机器人的回复，要有一个loading的效果，因为机器人的回复是异步的，所以要有loading的效果，使用SSE实现
+  
   TextSpan templateDispatch(BuildContext context) {
-    if(type==WordPipeMessageType.word2root){
+    if(type == WordPipeMessageType.word2root){
+      // 通过单词查词根
       return templateWord2Root(context);
-    }else if(type==WordPipeMessageType.root2word){
+    }else if(type == WordPipeMessageType.root2word){
+      // 通过词根查单词
       return templateRoot2Word(context);
+    }else if(type == WordPipeMessageType.stream){
+      // 因为机器人的回复是异步且流式，当消息陆续到达，逐一显示
+      return templateStream(context);
     }else{
       return templateText(context);
     }
@@ -234,17 +224,6 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-
-
-  TextSpan templateText(BuildContext context) {
-    return TextSpan(
-      style: DefaultTextStyle.of(context).style,
-      children: <InlineSpan>[
-        TextSpan(text: dataList[0] as String),
-      ],
-    );
-  }
-
   TextSpan templateRoot2Word(BuildContext context) {
     return TextSpan(
       style: DefaultTextStyle.of(context).style,
@@ -256,9 +235,22 @@ class MessageBubble extends StatelessWidget {
               decoration: TextDecoration.underline),
           recognizer: TapGestureRecognizer()
             ..onTap = () async {
-              await c.chat(Get.find<MessageController>().getUsername(), "/root $value");
+              await c.chat(messageController.getUsername(), "/root $value");
             },
         )),
+      ],
+    );
+  }
+
+  TextSpan templateText(BuildContext context) {
+    return TextSpan(text: dataList[0] as String);
+  }
+
+  TextSpan templateStream(BuildContext context) {
+    return TextSpan(
+      style: DefaultTextStyle.of(context).style,
+      children: <InlineSpan>[
+        TextSpan(text: dataList[0] as String),
       ],
     );
   }

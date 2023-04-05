@@ -1,13 +1,13 @@
-// import 'dart:convert';
-// import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:app/config.dart';
 import 'package:app/cache_helper.dart';
-import 'dart:convert';
+import 'dart:async';
+
 
 class Controller extends GetxController{
   final WordsProvider _wordsProvider = WordsProvider();
   final UserProvider _userProvider = UserProvider();
+
   
   Future<String> getUserName() async{
     if (await CacheHelper.hasData('username')){
@@ -63,9 +63,10 @@ class Controller extends GetxController{
       await CacheHelper.setData('expires_at', null);
     }
     return true;
-    
   }
+
 }
+
 
 
 class WordsProvider extends GetConnect {
@@ -149,6 +150,18 @@ class UserProvider extends GetConnect {
     if (response.statusCode == 204) {
       return true;
     } else {
+      if (response.statusCode == 401){
+        // signout. ugly code
+        if(await CacheHelper.hasData('username')){
+          await CacheHelper.setData('username', null);
+        }
+        if(await CacheHelper.hasData('access_token')){
+          await CacheHelper.setData('access_token', null);
+        }
+        if(await CacheHelper.hasData('expires_at')){
+          await CacheHelper.setData('expires_at', null);
+        }
+      }
       return false;
     }
   }

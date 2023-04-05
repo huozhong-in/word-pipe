@@ -8,3 +8,4 @@ sqlalchemy
 # mysql-connector-python
 python_avatars
 PyJWT
+requests

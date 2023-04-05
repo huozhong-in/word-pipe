@@ -4,12 +4,14 @@ import 'package:get/get.dart';
 import 'package:app/controller.dart';
 import 'package:app/MessageController.dart';
 import 'package:app/message_item.dart';
+import 'package:app/message_bubble.dart';
 
 class MessageView extends StatelessWidget {
   MessageView({required Key key }) : super(key: key);
   
   final Controller c = Get.find();
-  final MessageController messageController = Get.put(MessageController());
+  final MessageController messageController = Get.find<MessageController>();
+  
 
   @override
   Widget build(BuildContext context) {
@@ -30,16 +32,19 @@ class MessageView extends StatelessWidget {
     });
 
 
-    return Obx(
-        () => ListView.builder(
-          itemCount: messageController.messages.length,
-          itemBuilder: (context, index) {
-            final message = messageController.messages[index];
-            return MessageItem(message: message);
-          },
-          // reverse: true,
-          shrinkWrap: true,
-        ),
+    return Obx(() {
+      final messages = messageController.messages;
+      return ListView.builder(
+        itemCount: messages.length,
+        itemBuilder: (context, index) {
+          final message = messages[index];
+          // return MessageItem(
+          //   message: message,
+          // );
+          return MessageBubble(key: message.key, sender: message.username, dataList: message.dataList, type: message.type);
+        },
+        shrinkWrap: true,
       );
+    });
   }
 }

@@ -14,7 +14,8 @@ from flask import (
     render_template, 
     url_for, 
     send_file,
-    g)
+    g,
+    stream_with_context)
 from flask_sse import sse
 from stardict import *
 from config import *
@@ -23,6 +24,7 @@ from PIL import Image
 from user import User,UserDB
 from flask_cors import CORS
 import requests
+import openai
 
 
 app = Flask(__name__)
@@ -359,7 +361,7 @@ def get_root_by_word(message: str) -> json:
     print(back_data)
     return back_data
 
-@app.route('/api/avatar-Javris')
+@app.route('/api/avatar-Jarvis')
 def get_image():
     # 读取图片数据
     img = Image.open(Path(Path(__file__).parent.absolute() / 'assets/robot.jpg'))
@@ -460,7 +462,32 @@ def openai_proxy(path):
         resp = requests.request(request.method, url, headers=headers, json=j)
     
     return jsonify(resp.json())
+
+@app.route('/api/openai/v1/chat/completions', methods=['POST'])
+def openai_chat():
+    if os.environ.get('OPENAI_API_KEY') == None:
+        return jsonify({'message': 'OpenAI API key not found'}), 500
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+
+    model = request.json['model']
+    messages = request.json['messages']
+    
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=messages,
+        temperature=0,
+        stream=True
+    )
+
+    def generate():
+        start_time = time.time()
+        for chunk in response:
+            chunk_time = time.time() - start_time
+            print(f"Message received {chunk_time:.2f} seconds after request:")
+            yield json.dumps(chunk) + '\n'
         
+    return Response(stream_with_context(generate()), content_type='application/json')
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=9000)

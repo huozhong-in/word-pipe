@@ -16,7 +16,6 @@ final String DEFAULT_AYONYMOUS_USER_ID = "anonymous";
 
 final AVATAR_FILE_DIR = "avatar";
 
-final String SHELF_PROXY_HOST = "https://rewardhunter.net";
 
 // 1表示普通文本，3表示图片，34表示语音，43表示视频，47表示表情包，48表示位置，49是卡片消息(文件/视频号/引用/其他),10000表示撤回消息
 class WordPipeMessageType{
@@ -31,6 +30,8 @@ class WordPipeMessageType{
   static const int location = 48;
   static const int card = 49;
   static const int recall = 10000;
+  static const int typing = 10001;
+  static const int stream = 10002;
 }
 
 

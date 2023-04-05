@@ -18,7 +18,7 @@ import 'package:app/MessageModel.dart';
 class Home extends StatelessWidget {
   Home({super.key});
   final Controller c = Get.find();
-
+  final MessageController messageController = Get.put(MessageController());
   final List<MatchWords> _matchWords = <MatchWords>[].obs;
   final TextEditingController _textController = TextEditingController();
   final FocusNode _commentFocus = FocusNode();
@@ -42,9 +42,10 @@ class Home extends StatelessWidget {
           _textController.clear();
           _matchWords.clear();
           _indexHighlight = 0;
-          //ugly code，因为系统中存在两个Controller，没有更好的隔离方法。按理说MessageController应该是MVC中的，而不是在这里直接能调用到
-          final MessageController messageController = Get.put(MessageController());
-          messageController.addMessage(MessageModel(dataList: [text.trim()], type: WordPipeMessageType.text, username: value));
+          messageController.addMessage(MessageModel(dataList: [text.trim()], type: WordPipeMessageType.text, username: value, key: UniqueKey()));
+          if(text.trim().substring(0,1) != "/"){
+            messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
+          }
         }
       });    
 
@@ -132,15 +133,14 @@ class Home extends StatelessWidget {
     for (String element in words) {
       // 用isSelected变量告知前端是否高亮显示当前单词
       bool fullMatch = (element.toLowerCase() == _currentWord.toLowerCase());
+      int cur_index = i;
       _matchWords.insert(_matchWords.length, 
         MatchWords(text: element, fullMatch: fullMatch, isSelected: element == words[_indexHighlight], 
           onTap:() {
-            // 当用户点击某个单词时，将点击的单词加到文本框中
-            print(element);
-            // _matchWords.clear();
-            // _indexHighlight = 0;
-            // myEnterKeyPress(i);
-            // _commentFocus.requestFocus();
+            // 当用户点击某个单词时:查词；TODO: 将点击的单词加到文本框适当位置
+            _indexHighlight = cur_index;
+            build_matchWords_list(words, '');
+            _commentFocus.requestFocus();
           },
         )
       );
@@ -230,31 +230,6 @@ class Home extends StatelessWidget {
     return [0, 0];
   }
 
-  // void myEnterKeyPress(int whichItem){
-  //   // 当前光标位置
-  //   int cursorStart = _textController.selection.start;
-  //   print(cursorStart);
-  //   // 取得当前光标所在单词的起始位置和结束位置
-  //   List<int> currentWordIndexRange = get_word_index_range_in_text(_textController.text, cursorStart);
-  //   // 如果从接口中查询到的匹配单词列表不为空
-  //   if (_matchWords.isNotEmpty){ 
-  //     // log("_matchWords.length:${_matchWords.length}");
-  //     if(currentWordIndexRange != [0,0]){
-  //       String words_behind = _textController.text.substring(currentWordIndexRange[1], _textController.text.length);
-  //       String words_before = _textController.text.substring(0, currentWordIndexRange[0]);
-  //       // log("words_before:$words_before");
-  //       // log("words_behind:$words_behind");
-  //       // log("_currentWord:${_currentWord}");
-  //       if(_currentWord[0] == _currentWord[0].toUpperCase()){
-  //         _textController.text = "${words_before}${_matchWords[whichItem].text.capitalizeFirst}${words_behind}";
-  //       }else{
-  //         _textController.text = "${words_before}${_matchWords[whichItem].text}${words_behind}";
-  //       }
-  //     }
-  //     // 光标移到_matchWords[_indexGrey].text和words_behind之间
-  //     _textController.selection = TextSelection(baseOffset: currentWordIndexRange[0]+_matchWords[whichItem].text.length, extentOffset: currentWordIndexRange[0]+_matchWords[_indexHighlight].text.length) ;
-  //   }
-  // }
 
   Widget _myTextFild(){
     return Focus(
@@ -362,8 +337,8 @@ class Home extends StatelessWidget {
           },
           textInputAction: TextInputAction.newline,
           style: TextStyle(fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, fontWeight: FontWeight.w400),
-          maxLines: 3,
-          minLines: 3,
+          maxLines: GetPlatform.isMobile ? 1 : 3,
+          minLines: GetPlatform.isMobile ? 1 : 3,
           decoration: InputDecoration(
             hintText: '/ OR words',
             hintStyle: TextStyle(color: Colors.grey, fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, fontWeight: FontWeight.w400),
@@ -371,9 +346,7 @@ class Home extends StatelessWidget {
                 color: Colors.grey,
                 hoverColor: Colors.black54,
                 onPressed: () {
-                  ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
-                    customSnackBar(content: "暂未开放"),
-                  );
+                  // messageController.getChatCompletion('gpt-3.5-turbo', 'What is hallucinate?');
                 }, 
                 icon: const Icon(Icons.mic_rounded)
               ),
@@ -592,14 +565,14 @@ class Home extends StatelessWidget {
                                                     children: <TextSpan>[
                                                       TextSpan(
                                                         text: _wordDetail['phonetic']!=null && _wordDetail['phonetic']!=""?"\\${_wordDetail['phonetic']}\\":"",
-                                                        style: const TextStyle(fontSize: 16)
+                                                      style: TextStyle(fontSize: 16, fontFamily: 'NotoSansSC')
                                                       ),
                                                       const TextSpan(text: "\n"),
                                                       _addHighlightToTags(_wordDetail),
                                                       const TextSpan(text: "\n"),
                                                       TextSpan(
                                                         text: _wordDetail['translation']!=null && _wordDetail['translation']!=""?_wordDetail['translation'] as String:"",
-                                                        style: const TextStyle(backgroundColor: Colors.greenAccent)
+                                                        style: const TextStyle(backgroundColor: Colors.greenAccent, fontFamily: 'NotoSansSC')
                                                       ),
                                                       const TextSpan(text: "\n"),
                                                       _addHighlightToPos(_wordDetail),
@@ -801,6 +774,7 @@ TextSpan _addHighlightToPos(Map<String, String> wordDetail) {
         text: wordList[0].replaceFirst('n', '名词').replaceFirst('v', '动词').replaceFirst('j', '形容词').replaceFirst('r', '副词')
         .replaceFirst('m', '数词').replaceFirst('q', '量词').replaceFirst('p', '介词').replaceFirst('c', '连词')
         .replaceFirst('u', '助词').replaceFirst('y', '语气词').replaceFirst('e', '叹词').replaceFirst('o', '拟声词'),
+        style: const TextStyle(fontFamily: 'NotoSansSC'),
       ));
       if(wordList.length>1){
         children.add(TextSpan(
