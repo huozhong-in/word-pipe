@@ -35,7 +35,7 @@ class MessageController extends GetxController {
   }
   
   void direct_to_openai(String prompt){
-    OpenAI.apiKey = "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";
+    OpenAI.apiKey = "sk-xxx";
     OpenAI.baseUrl = 'https://rewardhunter.net';
     Stream<OpenAIStreamChatCompletionModel> chatStream = OpenAI.instance.chat.createStream(
       model: "gpt-3.5-turbo",
