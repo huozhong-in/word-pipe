@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:app/controller.dart';
 import 'package:app/MessageController.dart';
-import 'package:app/message_item.dart';
 import 'package:app/message_bubble.dart';
 
 class MessageView extends StatelessWidget {
@@ -12,10 +11,8 @@ class MessageView extends StatelessWidget {
   final Controller c = Get.find();
   final MessageController messageController = Get.find<MessageController>();
   
-
   @override
   Widget build(BuildContext context) {
-    // 通过这种方式将MVC中的Controller和程序框架的Controller隔离开来
     Future<String> Username = c.getUserName();
     Username.then((value) {
       messageController.setUsername(value);
@@ -38,10 +35,12 @@ class MessageView extends StatelessWidget {
         itemCount: messages.length,
         itemBuilder: (context, index) {
           final message = messages[index];
-          // return MessageItem(
-          //   message: message,
-          // );
-          return MessageBubble(key: message.key, sender: message.username, dataList: message.dataList, type: message.type);
+          return MessageBubble(
+            key: message.key,
+            sender: message.username,
+            dataList: message.dataList,
+            type: message.type,
+          );
         },
         shrinkWrap: true,
       );

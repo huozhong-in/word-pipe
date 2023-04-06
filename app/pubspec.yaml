@@ -46,11 +46,11 @@ dependencies:
   shared_preferences_foundation: ^2.1.5
   sqflite: ^2.2.6
   url_launcher_macos: ^3.0.4
-  desktop_window: ^0.4.0
   font_awesome_flutter: ^10.4.0
   cached_network_image: ^3.2.3
   flutter_svg: ^2.0.4
   lottie: ^2.3.1
+  dart_openai: ^1.9.1
 
 dev_dependencies:
   flutter_test:

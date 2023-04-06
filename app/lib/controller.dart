@@ -26,6 +26,24 @@ class Controller extends GetxController{
     }
     return "";
   }
+  Future<String> getApiKey() async{
+    if (await CacheHelper.hasData('apiKey')){
+      if(await CacheHelper.getData('apiKey') != null){
+        Future<String> apiKey = await CacheHelper.getData('apiKey');
+        return apiKey;
+      }
+    }
+    return "";
+  }
+  Future<String> getBaseUrl() async{
+    if (await CacheHelper.hasData('baseUrl')){
+      if(await CacheHelper.getData('baseUrl') != null){
+        Future<String> baseUrl = await CacheHelper.getData('baseUrl');
+        return baseUrl;
+      }
+    }
+    return "";
+  }
   Future<List<dynamic>> searchWords(String word) async{
     return await _wordsProvider.searchWords(word);
   }
@@ -177,6 +195,8 @@ class UserProvider extends GetConnect {
       await CacheHelper.setData('username', username);
       await CacheHelper.setData('access_token', rsp['access_token'] as String);
       await CacheHelper.setData('expires_at', rsp['expires_at'] as int);
+      await CacheHelper.setData('apiKey', rsp['apiKey'] as String);
+      await CacheHelper.setData('baseUrl', rsp['baseUrl'] as String);
       return true;
     } else {
       return false;

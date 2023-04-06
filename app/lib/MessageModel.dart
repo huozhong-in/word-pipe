@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class MessageModel {
   final String username;
-  final int type;
-  final dynamic dataList;
-  final Key key; // 新增key属性
+  final RxList<dynamic> dataList;
+  final RxInt type; // 修改为RxInt类型
+  final Key key;
 
   MessageModel({
-    required this.dataList,
-    required this.type,
     required this.username,
-    required this.key, // 添加key的构造函数
-  });
+    required this.dataList,
+    required int type, // 修改构造函数参数类型为int
+    required this.key,
+  }) : type = type.obs; // 在构造函数中将type转换为RxInt
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     return MessageModel(
@@ -19,15 +20,6 @@ class MessageModel {
       type: json['type'],
       dataList: json['dataList'],
       key: UniqueKey(), // 自动分配一个UniqueKey
-    );
-  }
-
-  MessageModel copyWith({dynamic dataList, int? type, String? username, Key? key}) {
-    return MessageModel(
-      dataList: dataList ?? this.dataList,
-      type: type ?? this.type,
-      username: username ?? this.username,
-      key: key ?? this.key, // 将key属性也支持修改
     );
   }
 }

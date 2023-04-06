@@ -3,6 +3,7 @@ import 'package:app/MessageModel.dart';
 import 'package:app/message_bubble.dart';
 import 'package:app/typing_bubble.dart';
 import 'package:app/config.dart';
+import 'package:get/get.dart';
 
 class MessageItem extends StatelessWidget {
   final MessageModel message;
@@ -12,7 +13,7 @@ class MessageItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 根据类型选择不同的 Widget 渲染，大部分需要气泡样式的消息都转到 MessageBubble 中处理
-    switch (message.type) {
+    switch (message.type as int) {
       case WordPipeMessageType.reserved: 
         // 保留
         return const Text("reserved");

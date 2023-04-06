@@ -42,7 +42,7 @@ class Home extends StatelessWidget {
           _textController.clear();
           _matchWords.clear();
           _indexHighlight = 0;
-          messageController.addMessage(MessageModel(dataList: [text.trim()], type: WordPipeMessageType.text, username: value, key: UniqueKey()));
+          messageController.addMessage(MessageModel(dataList: RxList([text.trim()]), type: WordPipeMessageType.text, username: value, key: UniqueKey()));
           if(text.trim().substring(0,1) != "/"){
             messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
           }

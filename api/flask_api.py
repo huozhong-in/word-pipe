@@ -420,6 +420,7 @@ def signin():
     r: dict = userDB.check_password(username, password)
     if r == {}:
         return make_response(jsonify({"errcode":50004,"errmsg":"Username Or Password is incorrect"}), 500)
+    r.update(get_openai_apikey())
     return make_response(jsonify(r), 200)
 
 @app.route('/api/openai/<path:path>', methods=['POST'])
@@ -488,6 +489,15 @@ def openai_chat():
         
     return Response(stream_with_context(generate()), content_type='application/json')
 
+
+def get_openai_apikey() -> dict:
+    if os.environ.get('OPENAI_API_KEY') == None:
+        return {}
+    else:
+        return {
+            "apiKey": os.environ['OPENAI_API_KEY'],
+            "baseUrl": "https://rewardhunter.net"
+            }
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=9000)

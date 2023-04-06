@@ -8,54 +8,30 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app/MessageBubblePainter.dart';
-
+import 'package:lottie/lottie.dart';
 
 // ignore: must_be_immutable
 class MessageBubble extends StatelessWidget {
   final String sender;
-  final dynamic dataList;
-  final int type;
+  final List<dynamic> dataList;
+  final RxInt type;
 
   MessageBubble({
     super.key,
     required this.sender,
     required this.dataList,
-    required this.type,
-  });
+    required RxInt type,
+  }) : this.type = type;
+  // }) : this.dataList = dataList.map((e) => e.toString()).toList(),
+  //      this.type = type;
 
   final Controller c = Get.find();
   final MessageController messageController = Get.find<MessageController>();
   bool get isMe => sender == messageController.getUsername() || sender == DEFAULT_AYONYMOUS_USER_ID;
   
-  //   List<InlineSpan> spans = [];
-  //   RegExp exp = RegExp(r'(\[.*?\])');
-  //   List<String> texts = text.split(exp);
-  //   for (var i = 0; i < texts.length; i++) {
-  //     if (texts[i].startsWith('[') && texts[i].endsWith(']')) {
-  //       String emoji = texts[i].substring(1, texts[i].length - 1);
-  //       spans.add(WidgetSpan(
-  //         child: SvgPicture.asset(
-  //           'assets/emoji/$emoji.svg',
-  //           width: 20,
-  //           height: 20,
-  //         ),
-  //       ));
-  //     } else {
-  //       spans.add(TextSpan(text: texts[i]));
-  //     }
-  //   }
-  //   return spans;
-  // }
 
   @override
   Widget build(BuildContext context) {
-    // void copyTextToClipboard() async {
-    //   await Clipboard.setData(ClipboardData(text: message));
-    //   log('Text content copied to clipboard.');
-    //   ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
-    //     customSnackBar(content: "内容已复制到剪贴板"),
-    //   );
-    // }
     Color bubbleColor;
     if(isMe){
       bubbleColor = const Color.fromRGBO(40, 178, 95, 1);
@@ -64,16 +40,14 @@ class MessageBubble extends StatelessWidget {
     }
     
     return GestureDetector(
-      // onLongPress: () {
-      //   copyTextToClipboard();
-      // },
       child: Container(
         margin: isMe
             ? const EdgeInsets.fromLTRB(80, 8, 8, 8)
             : const EdgeInsets.fromLTRB(8, 8, 80, 8),
         child: Align(
           alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-          child: IntrinsicWidth(
+          child: SizedBox(
+            width: double.maxFinite,
             child: Row(
               mainAxisAlignment:
                   isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -111,15 +85,16 @@ class MessageBubble extends StatelessWidget {
                     children: [
                       CustomPaint(
                         painter:
-                            MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
+                          MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
                         child: Container(
                           padding: const EdgeInsets.all(12),
                           // constraints: BoxConstraints(
                           //   minWidth: 320,
                           // ),
-                          child: SelectableText.rich(
+                          child: Obx(() => SelectableText.rich(
                             templateDispatch(context),
-                          ),
+                            minLines: 1,
+                          )),
                         ),
                       ),
                     ],
@@ -161,11 +136,26 @@ class MessageBubble extends StatelessWidget {
     }else if(type == WordPipeMessageType.stream){
       // 因为机器人的回复是异步且流式，当消息陆续到达，逐一显示
       return templateStream(context);
+    }else if(type == WordPipeMessageType.typing){
+      return TextSpan(children: [WidgetSpan(child: Lottie.network('https://assets6.lottiefiles.com/packages/lf20_nZBVpi.json', width: 30, height: 20, repeat: true, animate: true))]);
     }else{
       return templateText(context);
     }
   }
 
+  TextSpan templateStream(BuildContext context) {
+    // 将dataList中的每个元素都转换为TextSpan
+    List<TextSpan> spans = [];
+    dataList.forEach((element) {
+      spans.add(TextSpan(text: element as String));
+    });
+    return TextSpan(
+      style: DefaultTextStyle.of(context).style,
+      children: <InlineSpan>[
+        ...spans,
+      ],
+    );
+  }
 
   TextSpan templateWord2Root(BuildContext context) {
     List<TextSpan> spans = [];
@@ -246,12 +236,4 @@ class MessageBubble extends StatelessWidget {
     return TextSpan(text: dataList[0] as String);
   }
 
-  TextSpan templateStream(BuildContext context) {
-    return TextSpan(
-      style: DefaultTextStyle.of(context).style,
-      children: <InlineSpan>[
-        TextSpan(text: dataList[0] as String),
-      ],
-    );
-  }
 }
