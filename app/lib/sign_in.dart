@@ -54,19 +54,6 @@ class SignIn extends StatelessWidget {
               children: [
                 Container(
                   padding: EdgeInsets.only(top: 30),
-                  // alignment: Alignment.center,
-                  child: Text(
-                    "Sign In",
-                    style: textFontStyle.copyWith(fontSize: 32, fontWeight: FontWeight.bold),
-                  )
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: EdgeInsets.only(top: 2),
                   child: Text('Word Pipe',
                     style: TextStyle(
                       color: Colors.black54,

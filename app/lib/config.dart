@@ -1,6 +1,10 @@
 import 'dart:core';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pointycastle/export.dart';
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart' show kDebugMode;
 // final bool kDebugMode = true;
 // final bool isDebug = bool.fromEnvironment('DEBUG', defaultValue: false);
@@ -120,4 +124,34 @@ SnackBar customSnackBar({required String content}) {
       style: const TextStyle(color: Colors.blueGrey, letterSpacing: 0.5),
     ),
   );
+}
+
+String decrypt(String encryptedString) {
+  int offset = 0;
+  // 先将加密后的字符串解码为字节数组
+  Uint8List bytes = base64.decode(encryptedString);
+  // 对每个字节进行解密
+  List<int> decryptedBytes = bytes.map((byte) {
+    // 解密字节
+    int decryptedByte = byte - offset;
+    // 确保解密后的字节在0~255范围内
+    if (decryptedByte < 0) {
+      decryptedByte += 256;
+    }
+    return decryptedByte;
+  }).toList();
+  
+  // 使用AESFastEngine解密
+  BlockCipher cipher = AESEngine()
+    ..init(false, KeyParameter(Uint8List.fromList("0123456789abcdef".codeUnits)));
+
+  Uint8List plainText = Uint8List(decryptedBytes.length);
+
+  while (offset < decryptedBytes.length) {
+    offset += cipher.processBlock(
+        Uint8List.fromList(decryptedBytes), offset, plainText, offset);
+  }
+
+  // 返回解密后的字符串
+  return utf8.decode(plainText).trim();
 }

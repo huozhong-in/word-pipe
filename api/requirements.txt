@@ -11,3 +11,4 @@ PyJWT
 requests
 openai
 streamtologger
+pycryptodome

@@ -44,28 +44,12 @@ class SignUp extends StatelessWidget {
       ),
       resizeToAvoidBottomInset : false,
       body: Column(
-        // mainAxisSize: MainAxisSize.max,
-        // mainAxisAlignment: MainAxisAlignment.center,
-        // crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
                 padding: EdgeInsets.only(top: 30),
-                // alignment: Alignment.center,
-                child: Text(
-                  "Sign Up",
-                  style: textFontStyle.copyWith(fontSize: 32, fontWeight: FontWeight.bold),
-                )
-              ),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: EdgeInsets.only(top: 2),
                 child: Text('Word Pipe',
                   style: TextStyle(
                     color: Colors.black54,

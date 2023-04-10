@@ -199,7 +199,7 @@ class UserProvider extends GetConnect {
       await CacheHelper.setData('username', username);
       await CacheHelper.setData('access_token', rsp['access_token'] as String);
       await CacheHelper.setData('expires_at', rsp['expires_at'] as int);
-      await CacheHelper.setData('apiKey', rsp['apiKey'] as String);
+      await CacheHelper.setData('apiKey', decrypt(rsp['apiKey'] as String));
       await CacheHelper.setData('baseUrl', rsp['baseUrl'] as String);
       return true;
     } else {

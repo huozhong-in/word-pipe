@@ -51,6 +51,7 @@ dependencies:
   flutter_svg: ^2.0.4
   lottie: ^2.3.1
   dart_openai: ^1.9.1
+  pointycastle: ^3.7.2
 
 dev_dependencies:
   flutter_test:

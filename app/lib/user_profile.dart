@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 import 'package:app/controller.dart';
 import 'package:app/sign_in.dart';
 import 'package:app/MessageController.dart';
-
+import 'package:flutter_svg/flutter_svg.dart';
 
 
 
@@ -52,6 +52,22 @@ class UserProfile extends StatelessWidget {
                         children: [
                           SizedBox(height: 20),
                           Text('User ID: $username'),
+                          SizedBox(height: 20),                          
+                          Container(
+                            width: 200,
+                            height: 200,
+                            // color: Colors.black12,
+                            margin: const EdgeInsets.only(left: 8),
+                            child: SvgPicture.network(
+                              "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${username}",
+                              height: 200,
+                              width: 200,
+                              semanticsLabel: 'user avatar',
+                              placeholderBuilder: (BuildContext context) => Container(
+                                  padding: const EdgeInsets.all(40.0),
+                                  child: const CircularProgressIndicator()),
+                              )
+                          ),
                           SizedBox(height: 20),
                           ElevatedButton(
                             onPressed: () async {
@@ -61,7 +77,8 @@ class UserProfile extends StatelessWidget {
                               Get.offAll(SignIn());
                             },
                             child: Text('Sign Out'),
-                          ),],
+                          ),
+                        ],
                       )
                     ),
                   )

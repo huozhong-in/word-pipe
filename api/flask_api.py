@@ -30,6 +30,9 @@ import requests
 import openai
 import logging
 import streamtologger
+from Crypto.Cipher import AES
+import base64
+
 
 app = Flask(__name__)
 CORS(app)
@@ -443,12 +446,14 @@ def signin():
     if r == {}:
         return make_response(jsonify({"errcode":50004,"errmsg":"Username Or Password is incorrect"}), 500)
     r.update(get_openai_apikey())
+    response: Response = make_response(jsonify(r), 200)
+    response.headers['Cache-Control'] = 'no-cache'
     return make_response(jsonify(r), 200)
 
 @app.route('/api/openai/<path:path>', methods=['POST'])
 def openai_proxy(path):
     '''
-    实现需要验证access_token的openai的代理，
+    实现需要验证access_token的openai的代理，不支持stream
     '''
     # 判断X-access-token是否同用户名对的上且没过期
     access_token = request.headers.get('X-access-token')
@@ -494,21 +499,23 @@ def openai_proxy(path):
 @app.route('/api/openai/v1/chat/completions', methods=['POST'])
 def openai_chat():
     '''
-    代理OpenAI Chat API，供flutter的openai包调用。
+    代理OpenAI Chat API，供flutter的openai包调用。支持stream
     '''
     # 通过环境变量获取openai的API key
     if os.environ.get('OPENAI_API_KEY') == None:
         return jsonify({'message': 'OpenAI API key not found'}), 500
     openai.api_key = os.getenv("OPENAI_API_KEY")
-
+    # openai.api_base = "https://api.openai.com/v1/"
     model = request.json['model']
     messages = request.json['messages']
-    
+    stream: bool = False
+    if request.headers.get('Accept') != None and request.headers.get('Accept') == 'text/event-stream':
+        stream = True
     response = openai.ChatCompletion.create(
         model=model,
         messages=messages,
         temperature=0,
-        stream=True
+        stream=stream
     )
 
     def generate():
@@ -518,7 +525,10 @@ def openai_chat():
             print(f"Message received {chunk_time:.2f} seconds after request:")
             yield json.dumps(chunk) + '\n'
         
-    return Response(stream_with_context(generate()), content_type='application/json')
+    if stream:
+        return Response(stream_with_context(generate()), content_type='application/json')
+    else:
+        return make_response(jsonify(response), 200)
 
 
 def get_openai_apikey() -> dict:
@@ -529,9 +539,21 @@ def get_openai_apikey() -> dict:
         return {}
     else:
         return {
-            "apiKey": os.environ['OPENAI_API_KEY'],
-            "baseUrl": "https://rewardhunter.net"
+            "apiKey": encrypt(os.environ['OPENAI_API_KEY']),
+            "baseUrl": "https://wordpipe.huozhong.in/api/openai" #"https://rewardhunter.net"
             }
+
+# 使用 base64 编码
+def encrypt(text):
+    key = '0123456789abcdef' # 密钥，必须为16、24或32字节
+    cipher = AES.new(key.encode(), AES.MODE_ECB)
+    text = text.encode('utf-8')
+    # 补齐16字节的整数倍
+    text += b" " * (16 - len(text) % 16)
+    # 加密
+    ciphertext = cipher.encrypt(text)
+    # 转为 base64 编码
+    return base64.b64encode(ciphertext).decode()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=9000)
