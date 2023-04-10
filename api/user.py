@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import StaticPool
 from config import *
+from promo import PromoDB
 
 Base: declarative_base = declarative_base()
 
@@ -42,20 +43,30 @@ class UserDB:
         Base.metadata.create_all(self.engine)
 
     # Create
-    def create_user_by_username(self, user_name='', password='', last_ip='') -> dict:
+    def create_user_by_username(self, user_name='', password='', last_ip='', promo = '') -> dict:
         if self.get_user_by_username(user_name):
             return {}
         if user_name == DEFAULT_AYONYMOUS_USER_ID:
             return {}
         myuuid: str = str(uuid.uuid4())
-        pass_word = hashlib.sha256(str(myuuid+password).encode('utf-8')).hexdigest()
+        pass_word: str = hashlib.sha256(str(myuuid+password).encode('utf-8')).hexdigest()
         ctime: int = int(time.time())
         try:
             generate_random_avatar(user_name)
             access_token, expire_at = self.generate_access_token(user_name)
-            user = User(uuid=myuuid, user_name=user_name, password=pass_word, last_ip=last_ip, ctime=ctime, access_token=access_token, access_token_expire_at=expire_at)
-            self.session.add(user)
-            self.session.commit()
+            if promo != '':
+                promoDB = PromoDB()
+                r: bool = promoDB.bind_promo(promo=promo, bind_userid=myuuid)
+                if r:
+                    user = User(uuid=myuuid, user_name=user_name, password=pass_word, last_ip=last_ip, ctime=ctime, access_token=access_token, access_token_expire_at=expire_at)
+                    self.session.add(user)
+                    self.session.commit()
+                else:
+                    return {}
+            else:
+                user = User(uuid=myuuid, user_name=user_name, password=pass_word, last_ip=last_ip, ctime=ctime, access_token=access_token, access_token_expire_at=expire_at)
+                self.session.add(user)
+                self.session.commit()
         except Exception as e:
             print(e)
             return {}
@@ -191,7 +202,26 @@ class UserDB:
             return access_token, expire_at
         else:
             return None
+        
+    def get_promos_by_username(self, user_name: str) -> dict:
+        user = self.get_user_by_username(user_name)
+        if user == None:
+            return None
+        user_id= user.uuid
+        promoDB = PromoDB()
+        result = promoDB.get_promos_by_userid(userid=user_id, bind_filter=False)
+        if len(result)> 0:
+        # convert promo's bind_userid to user's name    
+            for promo in result:
+                user = self.get_user_by_uuid(promo.bind_userid)
+                if user != None:
+                    promo.bind_userid = user.user_name
+
+        return result
+
 
 if __name__ == '__main__':
     db = UserDB()
-    db.refresh_access_token('dio')
+    # db.refresh_access_token('dio')
+    for promo in db.get_promos_by_username('dio'):
+        print(promo.promo, promo.bind_userid, promo.gen_by)

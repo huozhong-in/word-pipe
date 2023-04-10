@@ -18,7 +18,7 @@ class MessageModel {
     return MessageModel(
       username: json['username'],
       type: json['type'],
-      dataList: json['dataList'],
+      dataList: RxList(json['dataList']),
       key: UniqueKey(), // 自动分配一个UniqueKey
     );
   }

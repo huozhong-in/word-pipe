@@ -7,7 +7,6 @@ import 'dart:async';
 class Controller extends GetxController{
   final WordsProvider _wordsProvider = WordsProvider();
   final UserProvider _userProvider = UserProvider();
-
   
   Future<String> getUserName() async{
     if (await CacheHelper.hasData('username')){
@@ -70,6 +69,13 @@ class Controller extends GetxController{
       return false;
     }
   }
+  Future<bool> signup_with_promo(String username, String password, String promo) async{
+    if (await _userProvider.signup_with_promo(username, password, promo)){
+      return true;
+    }else{
+      return false;
+    }
+  }
   Future<bool> signout() async{
     if(await CacheHelper.hasData('username')){
       await CacheHelper.setData('username', null);
@@ -82,9 +88,7 @@ class Controller extends GetxController{
     }
     return true;
   }
-
 }
-
 
 
 class WordsProvider extends GetConnect {
@@ -218,5 +222,21 @@ class UserProvider extends GetConnect {
       return false;
     }
   }
-  
+  Future<bool> signup_with_promo(String username, String password, String promo) async{
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signup_with_promo');
+    Map data = {};
+    data['username'] = username;
+    data['password'] = password;
+    data['promo'] = promo;
+    final response = await post(url.toString(), data);
+    if (response.statusCode == 200) {
+      Map<String, dynamic> rsp = Map<String, dynamic>.from(response.body);
+      await CacheHelper.setData('username', username);
+      await CacheHelper.setData('access_token', rsp['access_token'] as String);
+      await CacheHelper.setData('expires_at', rsp['expires_at'] as int);
+      return true;
+    } else {
+      return false;
+    }
+  }
 }

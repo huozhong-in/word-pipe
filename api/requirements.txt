@@ -9,3 +9,5 @@ sqlalchemy
 python_avatars
 PyJWT
 requests
+openai
+streamtologger

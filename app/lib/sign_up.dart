@@ -18,10 +18,12 @@ class SignUp extends StatelessWidget {
   final FocusNode _usernameFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
   final FocusNode _passwordFocusNode2 = FocusNode();
+  final FocusNode _promoFocusNode = FocusNode();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameField = TextEditingController();
   final TextEditingController _passwordField = TextEditingController();
   final TextEditingController _passwordField2 = TextEditingController();
+  final TextEditingController _promoField = TextEditingController();
   RxBool _obscureText = true.obs;
   RxBool _obscureText2 = true.obs;
 
@@ -221,7 +223,7 @@ class SignUp extends StatelessWidget {
                       // hintStyle: TextStyle(
                       //   color: Colors.grey,
                       // ),
-                      labelText: "password aggain",
+                      labelText: "password again",
                       labelStyle: TextStyle(
                         color: Colors.black54,
                       ),
@@ -266,7 +268,27 @@ class SignUp extends StatelessWidget {
                     validator: (value) => _passwordField.text == _passwordField2.text ? null : "passwords don't match",
                   );
                   })
-                  
+                ),
+                SizedBox(height: MediaQuery.of(context).size.height / 35,),
+                Container(
+                  width: MediaQuery.of(context).size.width / 1.3,
+                  height: 70,
+                  child: 
+                    TextFormField(
+                      style: const TextStyle(color: Colors.black87),
+                      textAlignVertical: TextAlignVertical.bottom,
+                      controller: _promoField,
+                      focusNode: _promoFocusNode,
+                      keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.done,
+                      decoration: InputDecoration(
+                        labelText: "invite code",
+                        labelStyle: TextStyle(
+                          color: Colors.redAccent,
+                        ),
+                        prefixIcon: Icon(Icons.person_add_alt_1, color: Colors.redAccent,),
+                    )
+                  )
                 ),
                 Container(
                   width: MediaQuery.of(context).size.width / 1.3,
@@ -304,10 +326,13 @@ class SignUp extends StatelessWidget {
                       _passwordFocusNode.unfocus();
                       _passwordFocusNode2.unfocus();
                       if (_formKey.currentState!.validate()) {
-                        if (await c.signup(_usernameField.text, _passwordField.text)){
+                        if (await c.signup_with_promo(_usernameField.text, _passwordField.text, _promoField.text)){
                           Get.offAll(UserProfile());
                         }else{
-                          print("await c.signup...error");
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: const Text('Please check your invite code is correct'),
+                            duration: const Duration(seconds: 2),
+                          ));
                         }
                       }else{
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

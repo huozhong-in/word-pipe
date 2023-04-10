@@ -22,6 +22,10 @@ class MessageController extends GetxController {
 
   void updateMessage(int index, List<dynamic> newDataList) {
     final message = messages[index];
+    // remove dataList[0] if dataList[0] == '...'
+    if (message.dataList[0] == '...'){
+      message.dataList.removeAt(0);
+    }
     message.dataList.value = List<String>.from(newDataList);
     update();
   }
@@ -121,7 +125,7 @@ class MessageController extends GetxController {
           Map<String, dynamic> json = Map<String, dynamic>.from(jsonDecode(message));
           messages.add(MessageModel.fromJson(json));
         } catch (e) {
-          log('sse message format error: $e');
+          log('sse message error: $e');
         }
       });
     } catch (e) {

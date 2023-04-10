@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import json
 import threading
 import time
@@ -25,10 +28,23 @@ from user import User,UserDB
 from flask_cors import CORS
 import requests
 import openai
-
+import logging
+import streamtologger
 
 app = Flask(__name__)
 CORS(app)
+
+# logging
+logging.basicConfig(
+    filename='logs/api_{starttime}.log'.format(starttime=time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))),
+    filemode='a',
+    level=logging.DEBUG,
+    format='%(levelname)s:%(asctime)s:%(message)s'
+)
+stderr_logger = logging.getLogger('STDERR')
+streamtologger.redirect(target="logs/print.log", append=False, header_format="[{timestamp:%Y-%m-%d %H:%M:%S} - {level:5}] ")
+
+# for SSE nginx configuration https://serverfault.com/questions/801628/for-server-sent-events-sse-what-nginx-proxy-configuration-is-appropriate
 app.config["REDIS_URL"] = REDIS_URL
 @sse.after_request
 def add_header(response):
@@ -38,9 +54,8 @@ def add_header(response):
     response.headers['Content-Type'] = 'text/event-stream'
     return response
 app.register_blueprint(sse, url_prefix=SSE_SERVER_PATH, headers={'X-Accel-Buffering': 'no'})
-## for SSE nginx configuration https://serverfault.com/questions/801628/for-server-sent-events-sse-what-nginx-proxy-configuration-is-appropriate
 
-## load json
+# load json
 vocab_file = Path(Path(__file__).parent.absolute() / 'db/vocab.json')
 vocab = set()
 with vocab_file.open() as f:
@@ -49,7 +64,7 @@ print(data.keys())
 vocab = set(data['JUNIOR']).union(set(data['SENIOR'])).union(set(data['IELTS'])).union(set(data['TOEFL'])).union(set(data['GRE'])).union(set(data['TOEIC']))
 print(f'total: {len(vocab)} words.')
 
-## marisa-trie for prefix search
+# marisa-trie for prefix search
 trie = marisa_trie.Trie(vocab, order=marisa_trie.LABEL_ORDER)
 
 # parse wordroot.txt
@@ -96,26 +111,12 @@ def generate_time_based_client_id(prefix='client_'):
 
 @app.route('/api/test', methods = ['GET'])
 def test() -> Response:    
-    # import re
-    # input_str = 'This is a long-time example with hyphenated-words, including some non-alpha character...'
-    # exp = r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b'
-    # matches = re.finditer(exp, input_str)
-
-    # for match in matches:
-    #     word = match.group(0)
-    #     start_index = match.start()
-    #     end_index = match.end()
-    #     print(f'Found "{word}" at position {start_index}-{end_index}')
-    random_user_name = f"test{random.randint(0, 1000)}"
-    user = userDB.create_user_by_username(user_name=random_user_name, password='test117')
-    
-    return make_response(jsonify(user.uuid), 200)
+    return make_response(jsonify(), 200)
 
 @app.route('/api/s', methods = ['GET'])
 def prefix_search() -> Response:
     '''
     从vocab.json中搜索前缀，
-
     '''
     
     if not request.args.get('k'):
@@ -149,7 +150,6 @@ def prefix_search() -> Response:
 def point_search():
     '''
     查询单词的意思，返回一个结果
-
     '''
     if not request.args.get('k'):
         return make_response(jsonify({}), 200)
@@ -172,7 +172,6 @@ def point_search():
 def match_words():
     """
     通过sw精确匹配单词，返回多个结果
-
     """
     if not request.args.get('k'):
         return make_response(jsonify({}), 200)
@@ -192,7 +191,6 @@ def match_words():
 def query_batch():
     """
     批量查询单词的意思，传入多个单词（不是sw）返回结果包括全部字段
-
     """
     if request.method != 'POST':
         return make_response('Please use POST method', 500)
@@ -219,7 +217,6 @@ def favicon():
 def sse_test():
     """
     渲染SSE测试页面
-    
     """
     sse_url = url_for('sse.stream', channel=SSE_MSG_DEFAULT_CHANNEL, _external=False)
     return render_template('sse-test.html', sse_url=sse_url)
@@ -228,7 +225,6 @@ def sse_test():
 def publish_test():
     """
     SSE测试页面的发布测试
-
     """
     if request.method != 'POST':
         return make_response('Please use POST method', 500)
@@ -251,7 +247,6 @@ def publish_test():
 def chat():
     '''
     通过对话的方式，将用户查询的字符串拆分成单个单词，分别查找词根词缀。
-
     - 可能命中多个词根词缀，所以要有list结构
     - TODO 单词是动词的话只有原型，将lemma.en.txt的内容实现转成键值对，拼接到结果中，供前端显示
     - 给出相同词根的其他单词。TODO 按频次倒序。 TODO 只出现在选定范围（四六雅思）内的词
@@ -323,7 +318,6 @@ def chat():
 def get_root_by_word(message: str) -> json:
     '''
     根据单词查找词根词缀
-
     print(word2root['tactful']) # 输出 ["-ful1","tact, tang, ting, tig"]
     TODO example里单词可能有大写或带空格的情况，如"-ite2"
     '''
@@ -400,6 +394,34 @@ def signup():
     r: dict = userDB.create_user_by_username(user_name=username, password=password)
     if r == {}:
         return make_response(jsonify({"errcode": 50006,"errmsg": 'User create failed'}), 500)
+    r.update(get_openai_apikey())
+    return make_response(jsonify(r), 200)
+
+@app.route('/api/user/signup_with_promo', methods = ['POST'])
+def signup_with_promo():
+    '''
+    用户用邀请码注册
+    '''
+    if request.method != 'POST':
+        return make_response(jsonify({"errcode":50001,"errmsg":"Please use POST method"}), 500)
+    try:
+        data: dict = request.get_json()
+        username: str = data.get('username')
+        password: str = data.get('password')
+        promo: str = data.get('promo')
+    except:
+        return make_response(jsonify({"errcode":50002,"errmsg":"JSON data required"}), 500)
+    if username == None or password == None or promo == None:
+        return make_response('Please provide username, password and promo code.', 500)
+    if promo == '':
+        return make_response('Please provide promo code.', 500)
+    user: User = userDB.get_user_by_username(username)
+    if user != None:
+        return make_response(jsonify({"errcode":50005,"errmsg":"User already exists"}), 500)
+    r: dict = userDB.create_user_by_username(user_name=username, password=password, promo=promo)
+    if r == {}:
+        return make_response(jsonify({"errcode": 50006,"errmsg": 'User create failed'}), 500)
+    r.update(get_openai_apikey())
     return make_response(jsonify(r), 200)
 
 @app.route('/api/user/signin', methods = ['POST'])
@@ -425,6 +447,9 @@ def signin():
 
 @app.route('/api/openai/<path:path>', methods=['POST'])
 def openai_proxy(path):
+    '''
+    实现需要验证access_token的openai的代理，
+    '''
     # 判断X-access-token是否同用户名对的上且没过期
     access_token = request.headers.get('X-access-token')
     if access_token == None:
@@ -442,10 +467,11 @@ def openai_proxy(path):
     # 发起请求到api.openai.com
     url = f'https://api.openai.com/{path}'
 
-    headers: dict = {}
+    # 通过环境变量获取openai的API key
     if os.environ.get('OPENAI_API_KEY') == None:
         return jsonify({'message': 'OpenAI API key not found'}), 500
     
+    headers: dict = {}
     headers = {
         'Authorization': 'Bearer ' + os.environ['OPENAI_API_KEY'],
         'Content-Type': "application/json",
@@ -457,6 +483,7 @@ def openai_proxy(path):
     j['model'] = model
     j['messages'] = messages
     
+    # 开发环境需要走本地代理服务器才能访问到openai API
     if os.environ.get('DEBUG_MODE') != None:
         resp = requests.request(request.method, url, headers=headers, json=j, proxies=PROXIES)
     else:
@@ -466,6 +493,10 @@ def openai_proxy(path):
 
 @app.route('/api/openai/v1/chat/completions', methods=['POST'])
 def openai_chat():
+    '''
+    代理OpenAI Chat API，供flutter的openai包调用。
+    '''
+    # 通过环境变量获取openai的API key
     if os.environ.get('OPENAI_API_KEY') == None:
         return jsonify({'message': 'OpenAI API key not found'}), 500
     openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -491,6 +522,9 @@ def openai_chat():
 
 
 def get_openai_apikey() -> dict:
+    '''
+    用户登录成功后，返回openai的API key给客户端
+    '''
     if os.environ.get('OPENAI_API_KEY') == None:
         return {}
     else:

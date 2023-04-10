@@ -403,7 +403,7 @@ class Home extends StatelessWidget {
           children: <Widget>[
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.6),
+                color: Colors.green.withOpacity(0.7),
               ),
               child: Text(
                 'Settings',
