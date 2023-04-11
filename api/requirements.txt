@@ -5,7 +5,7 @@ gunicorn
 gevent
 flask_sse
 sqlalchemy
-# mysql-connector-python
+mysql-connector-python
 python_avatars
 PyJWT
 requests

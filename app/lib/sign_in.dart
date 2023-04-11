@@ -36,12 +36,12 @@ class SignIn extends StatelessWidget {
           centerTitle: true,
           backgroundColor: Colors.green.withOpacity(0.6),
           automaticallyImplyLeading: false,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              Get.offAll(Home());
-            },
-          )
+          // leading: IconButton(
+          //   icon: Icon(Icons.arrow_back),
+          //   onPressed: () {
+          //     Get.offAll(Home());
+          //   },
+          // )
         ),
         resizeToAvoidBottomInset : false,
         body: Column(
@@ -242,7 +242,7 @@ class SignIn extends StatelessWidget {
                         _usernameFocusNode.unfocus();
                         _passwordFocusNode.unfocus();
                         if (_formKey.currentState!.validate() && await c.signin(_usernameField.text, _passwordField.text)) {
-                            Get.offAll(UserProfile());
+                            Get.offAll(Home());
                         }else{
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                             content: const Text('Please check your username or password length'),

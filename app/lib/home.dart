@@ -1,6 +1,7 @@
 
 import 'dart:math' as math;
 import 'package:app/config.dart';
+import 'package:app/sign_in.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -46,6 +47,12 @@ class Home extends StatelessWidget {
           if(text.trim().substring(0,1) != "/"){
             messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
           }
+        }else{
+          Get.snackbar("Error", "Failed to send message, please Sign In again.");
+          // 三秒后跳转到登录页面
+          Future.delayed(Duration(seconds: 3), () {
+            Get.offAll(SignIn());
+          });
         }
       });    
 

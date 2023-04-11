@@ -14,20 +14,25 @@ class MessageView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Future<String> Username = c.getUserName();
-    Username.then((value) {
-      messageController.setUsername(value);
+    Username.then((u) {
+      messageController.setUsername(u);
       try{
         messageController.closeSSE();
       }catch(e){
         // print(e);
       }
-      if (value == DEFAULT_AYONYMOUS_USER_ID){
+
+      if (u == ""){
         messageController.handleSSE(SSE_MSG_DEFAULT_CHANNEL);
       }else{
-        messageController.handleSSE(value);
+        messageController.handleSSE(u);
       }
+      // 加载服务器端历史消息
+      messageController.chatRecord.fetchMessages(u, 0).then((value2) {
+      });
     });
 
+    
 
     return Obx(() {
       final messages = messageController.messages;

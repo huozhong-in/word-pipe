@@ -14,7 +14,7 @@ class Controller extends GetxController{
         return await CacheHelper.getData('username');
       }
     }
-    return DEFAULT_AYONYMOUS_USER_ID;
+    return "";
   }
   Future<String> getAccessToken() async{
     if (await CacheHelper.hasData('access_token')){
@@ -173,7 +173,7 @@ class UserProvider extends GetConnect {
       return true;
     } else {
       if (response.statusCode == 401){
-        // signout. ugly code
+        // signout
         if(await CacheHelper.hasData('username')){
           await CacheHelper.setData('username', null);
         }

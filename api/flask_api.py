@@ -25,6 +25,7 @@ from config import *
 from io import BytesIO
 from PIL import Image
 from user import User,UserDB
+from chat_record import ChatRecord,ChatRecordDB
 from flask_cors import CORS
 import requests
 import openai
@@ -32,12 +33,15 @@ import logging
 import streamtologger
 from Crypto.Cipher import AES
 import base64
+from queue import Queue
 
 
 app = Flask(__name__)
 CORS(app)
 
 # logging
+if not os.path.exists('logs'):
+    os.mkdir('logs')
 logging.basicConfig(
     filename='logs/api_{starttime}.log'.format(starttime=time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))),
     filemode='a',
@@ -86,23 +90,28 @@ for key, value in wordroot.items():
 
 # init user db
 userDB = UserDB()
+crdb = ChatRecordDB()
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     # 请求上下文结束时自动释放 session
     # g.session.close()
     userDB.session.close()
+    crdb.session.close()
 
 @app.before_request
 def before_request():
     # 请求开始时将连接和 session 绑定到请求上下文
     g.db = userDB.engine.connect()
     g.session = userDB.session
+    g.db2= crdb.engine.connect()
+    g.session2 = crdb.session
 
 @app.after_request
 def after_request(response):
     # 请求结束时断开连接
     g.db.close()
+    g.db2.close()
     return response
 
 
@@ -269,7 +278,7 @@ def chat():
     # 给每一个登录用户分配一个channel，用于SSE推送
     channel: str = SSE_MSG_DEFAULT_CHANNEL
     if request.headers.get('X-access-token'):
-        print('X-access-token: ', request.headers['X-access-token'])
+        # print('X-access-token: ', request.headers['X-access-token'])
         u: User = userDB.get_user_by_username(username)
         if u is None:
             return make_response('', 500)
@@ -279,12 +288,13 @@ def chat():
             return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
         channel = username
     
+
     if message.startswith('/root '):
         back_data: json = {}
         back_data = get_root_by_word(message)
         def publish_func1():
             id = generate_time_based_client_id(prefix=username)
-            print("chat() publish id:", id)
+            print("chat() /root publish id:", id)
             time.sleep(1)  # 延迟一秒
             with app.app_context():
                 sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
@@ -355,7 +365,7 @@ def get_root_by_word(message: str) -> json:
     back_data['username'] = "Jarvis"
     back_data['type'] = 101
     back_data['dataList'] = dataList
-    print(back_data)
+    # print(back_data)
     return back_data
 
 @app.route('/api/avatar-Jarvis')
@@ -453,82 +463,70 @@ def signin():
 @app.route('/api/openai/<path:path>', methods=['POST'])
 def openai_proxy(path):
     '''
-    实现需要验证access_token的openai的代理，不支持stream
+    代理到OpenAI的请求，并将聊天记录存入数据库
     '''
-    # 判断X-access-token是否同用户名对的上且没过期
-    access_token = request.headers.get('X-access-token')
-    if access_token == None:
-        return jsonify({'message': 'Access denied'}), 403
-    try:
-        data: dict = request.get_json()
-        username: str = data.get('username')
-        model: str = data.get('model')
-        messages: str = data.get('messages')
-    except:
-        return make_response(jsonify({"errcode":50002,"errmsg":"JSON data required"}), 500)
-    if userDB.check_access_token(user_name=username, access_token=access_token) == False:
-        return jsonify({'message': 'Access denied'}), 403
-    
-    # 发起请求到api.openai.com
-    url = f'https://api.openai.com/{path}'
+    api_url = f'https://api.openai.com/{path}'
+    headers = {key: value for (key, value) in request.headers if key != 'Host'}
+    data = request.get_data()
+    params = request.args
 
-    # 通过环境变量获取openai的API key
-    if os.environ.get('OPENAI_API_KEY') == None:
-        return jsonify({'message': 'OpenAI API key not found'}), 500
-    
-    headers: dict = {}
-    headers = {
-        'Authorization': 'Bearer ' + os.environ['OPENAI_API_KEY'],
-        'Content-Type': "application/json",
-    }
-    # 'Accept': "text/event-stream",
-    # "Connection": "keep-alive"
-    
-    j: json = {}
-    j['model'] = model
-    j['messages'] = messages
-    
+    # record message to database
+    username = request.json['user']
+    messages = request.json['messages']
+    crdb = ChatRecordDB()
+    myuuid: str = userDB.get_user_by_username(username).uuid
+    cr = ChatRecord(msgFrom=myuuid, msgTo='Jarvis', msgCreateTime=int(time.time()), msgContent=json.dumps(messages), msgStatus=1, msgType=1, msgSource=1, msgDest=0)
+    crdb.insert_chat_record(cr)
+
     # 开发环境需要走本地代理服务器才能访问到openai API
     if os.environ.get('DEBUG_MODE') != None:
-        resp = requests.request(request.method, url, headers=headers, json=j, proxies=PROXIES)
+        response = requests.post(api_url, headers=headers, data=data, params=params, stream=True, proxies=PROXIES)
     else:
-        resp = requests.request(request.method, url, headers=headers, json=j)
+        response = requests.post(api_url, headers=headers, data=data, params=params, stream=True)
     
-    return jsonify(resp.json())
-
-@app.route('/api/openai/v1/chat/completions', methods=['POST'])
-def openai_chat():
-    '''
-    代理OpenAI Chat API，供flutter的openai包调用。支持stream
-    '''
-    # 通过环境变量获取openai的API key
-    if os.environ.get('OPENAI_API_KEY') == None:
-        return jsonify({'message': 'OpenAI API key not found'}), 500
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-    # openai.api_base = "https://api.openai.com/v1/"
-    model = request.json['model']
-    messages = request.json['messages']
-    stream: bool = False
-    if request.headers.get('Accept') != None and request.headers.get('Accept') == 'text/event-stream':
-        stream = True
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=messages,
-        temperature=0,
-        stream=stream
-    )
-
+    # 队列是线程安全的，所以利用它拼接流式的聊天记录
+    completion_text_queue = Queue()
+    
     def generate():
-        start_time = time.time()
-        for chunk in response:
-            chunk_time = time.time() - start_time
-            print(f"Message received {chunk_time:.2f} seconds after request:")
-            yield json.dumps(chunk) + '\n'
-        
-    if stream:
-        return Response(stream_with_context(generate()), content_type='application/json')
-    else:
-        return make_response(jsonify(response), 200)
+        # chunk可能包含多个用换行分割的json。然后再用'data:'分割
+        buffer = b''
+        for chunk in response.iter_content(chunk_size=1024):
+            buffer += chunk
+            while b'\n' in buffer:
+                line, buffer = buffer.split(b'\n', 1)
+                if b'data:' in line:
+                    data = line.decode('utf-8').split('data:')[1].strip()
+                    if data == '[DONE]':
+                        completion_text_queue.put('[DONE]')
+                        break
+                    j = json.loads(data)
+                    delta = j.get('choices')[0].get('delta') if j.get('choices') else None
+                    if delta is not None and delta.get('content') is not None:
+                        completion_text_queue.put(delta.get('content'))
+                        print(delta.get('content'))
+                    # elif delta is not None and delta.get('finish_reason') is not None and delta.get('finish_reason') == 'stop':
+                    #     print('finish_reason: stop')
+                    #     completion_text_queue.put("[DONE]")
+            yield chunk
+
+    rsp = Response(generate(), headers=dict(response.headers))
+
+    def fn_thread(completion_text_queue: Queue, username: str):
+        completion_text: str = ''
+        while True:
+            c = completion_text_queue.get()
+            if c == '[DONE]':
+                break
+            else:
+                completion_text += c
+        crdb = ChatRecordDB()
+        myuuid: str = userDB.get_user_by_username(username).uuid
+        cr = ChatRecord(msgFrom='Jarvis', msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=completion_text, msgStatus=0, msgType=1, msgSource=1, msgDest=1)
+        crdb.insert_chat_record(cr)
+    
+    thread = threading.Thread(target=fn_thread, args=(completion_text_queue, username))
+    thread.start()
+    return rsp
 
 
 def get_openai_apikey() -> dict:
@@ -540,20 +538,52 @@ def get_openai_apikey() -> dict:
     else:
         return {
             "apiKey": encrypt(os.environ['OPENAI_API_KEY']),
-            "baseUrl": "https://wordpipe.huozhong.in/api/openai" #"https://rewardhunter.net"
+            "baseUrl": "http://127.0.0.1/api/openai" if os.environ.get('DEBUG_MODE') != None else "https://wordpipe.huozhong.in/api/openai"
             }
 
-# 使用 base64 编码
 def encrypt(text):
     key = '0123456789abcdef' # 密钥，必须为16、24或32字节
     cipher = AES.new(key.encode(), AES.MODE_ECB)
     text = text.encode('utf-8')
     # 补齐16字节的整数倍
     text += b" " * (16 - len(text) % 16)
-    # 加密
     ciphertext = cipher.encrypt(text)
     # 转为 base64 编码
     return base64.b64encode(ciphertext).decode()
+
+@app.route('/api/user/chat-records', methods = ['POST'])
+def load_chat_records():
+    data: dict = request.get_json()
+    username: str = data.get('username')
+    if request.headers.get('X-access-token'):
+        u: User = userDB.get_user_by_username(username)
+        if u is None:
+            return make_response('', 500)
+        if u.access_token != request.headers['X-access-token']:
+            return make_response('', 500)
+        if u.access_token_expire_at < int(time.time()):
+            return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
+    try:
+        last_id: int = data.get('last_id', 0)
+    except Exception as e:
+        return make_response('', 500)
+    
+    crdb = ChatRecordDB()
+    r: list = []
+    for cr in crdb.get_chat_record(u.uuid, last_id):
+        r.append({
+            'pk_chat_record': cr.pk_chat_record,
+            'msgFrom': cr.msgFrom,
+            'msgTo': cr.msgTo,
+            'msgCreateTime': cr.msgCreateTime,
+            'msgContent': cr.msgContent,
+            'msgStatus': cr.msgStatus,
+            'msgType': cr.msgType,
+            'msgSource': cr.msgSource,
+            'msgDest': cr.msgDest
+        })
+
+    return make_response(jsonify(r), 200)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=9000)

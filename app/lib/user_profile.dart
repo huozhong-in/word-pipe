@@ -17,7 +17,7 @@ class UserProfile extends StatelessWidget {
   UserProfile({Key? key}) : super(key: key);
   final Controller c = Get.find();
   final MessageController messageController = Get.put(MessageController());
-  late String username = DEFAULT_AYONYMOUS_USER_ID;
+  late String username = "";
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,7 @@ class UserProfile extends StatelessWidget {
             return Text('Error initializing.');
           } else if (snapshot.connectionState ==
               ConnectionState.done) {
-            if (username != DEFAULT_AYONYMOUS_USER_ID) {
+            if (username != "") {
                 return MaterialApp(
                   debugShowCheckedModeBanner: false,
                   home: Scaffold(
@@ -120,7 +120,7 @@ class UserProfile extends StatelessWidget {
   Future<bool> checkUserLogin() async {
     // 异步方法检查用户登录状态，返回true表示已登录，false表示未登录
     Future<bool> result = Future.value(false);
-    if (username == DEFAULT_AYONYMOUS_USER_ID) {
+    if (username == "") {
       result = Future.value(false);
     } else {
       result = Future.value(true);

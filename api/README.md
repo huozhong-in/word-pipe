@@ -7,7 +7,7 @@
 `conda create -n wordpipe python=3.10`
 `conda activate wordpipe`
 `pip install -r requirements.txt`
-`sudo gunicorn flask_api:app --worker-class gevent --bind 127.0.0.1:80 --env DEBUG_MODE=1 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 300`
+`sudo gunicorn flask_api:app --workers=1 --worker-class=gevent --worker-connections=1000 --bind 127.0.0.1:80 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 300`
 
 
 `vim /etc/systemd/system/wordpipe.service`
@@ -21,7 +21,7 @@ User=root
 Group=root
 WorkingDirectory=/root/word-pipe/api
 Environment="PATH=/root/miniconda3/envs/wordpipe/bin"
-ExecStart=/root/miniconda3/envs/wordpipe/bin/gunicorn flask_api:app --worker-class gevent --bind 127.0.0.1:9000 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 300
+ExecStart=/root/miniconda3/envs/wordpipe/bin/gunicorn flask_api:app --workers=1 --worker-class=gevent --worker-connections=1000 --bind 127.0.0.1:9000 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 300
 
 [Install]
 WantedBy=multi-user.target

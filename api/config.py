@@ -31,6 +31,14 @@ PROXIES = {
     "socks5": "127.0.0.1:7890"
 }
 
+MYSQL_CONFIG = {
+  'user': 'root',
+  'password': 'dswybs-yoqoo',
+  'host': '127.0.0.1',
+  'database': 'wordpipe',
+  'raise_on_warnings': True
+}
+
 def generate_random_avatar(user_name: str) -> bool:
     random_avatar = pa.Avatar.random()
     avatar_save_path = Path(Path(__file__).parent.absolute() / 'assets/avatar/')

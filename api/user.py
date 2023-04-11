@@ -46,8 +46,6 @@ class UserDB:
     def create_user_by_username(self, user_name='', password='', last_ip='', promo = '') -> dict:
         if self.get_user_by_username(user_name):
             return {}
-        if user_name == DEFAULT_AYONYMOUS_USER_ID:
-            return {}
         myuuid: str = str(uuid.uuid4())
         pass_word: str = hashlib.sha256(str(myuuid+password).encode('utf-8')).hexdigest()
         ctime: int = int(time.time())
@@ -190,7 +188,7 @@ class UserDB:
     def generate_access_token(self, user_name) -> tuple:
         payload = {
             'user_name': user_name,
-            'exp': int(time.time()) + 3600 * 24
+            'exp': int(time.time()) + 3600 * 24 * 30 # 30 days
         }
         access_token = jwt.encode(payload, 't0uKan5h1x!aO90U', algorithm='HS256')
         return access_token, payload['exp']

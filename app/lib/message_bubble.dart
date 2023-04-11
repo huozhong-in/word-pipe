@@ -27,7 +27,7 @@ class MessageBubble extends StatelessWidget {
 
   final Controller c = Get.find();
   final MessageController messageController = Get.find<MessageController>();
-  bool get isMe => sender == messageController.getUsername() || sender == DEFAULT_AYONYMOUS_USER_ID;
+  bool get isMe => sender == messageController.getUsername();
   
 
   @override

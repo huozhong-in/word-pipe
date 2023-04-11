@@ -16,8 +16,6 @@ final String SSE_MSG_DEFAULT_CHANNEL = "users.social";
 
 final String HTTP_SERVER_HOST = kDebugMode ? "http://127.0.0.1/api" : "https://wordpipe.huozhong.in/api";
 
-final String DEFAULT_AYONYMOUS_USER_ID = "anonymous";
-
 final AVATAR_FILE_DIR = "avatar";
 
 
