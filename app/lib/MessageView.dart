@@ -1,3 +1,4 @@
+import 'package:app/MessageModel.dart';
 import 'package:app/config.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -5,6 +6,7 @@ import 'package:app/controller.dart';
 import 'package:app/MessageController.dart';
 import 'package:app/message_bubble.dart';
 
+// ignore: must_be_immutable
 class MessageView extends StatelessWidget {
   MessageView({required Key key }) : super(key: key);
   
@@ -13,42 +15,59 @@ class MessageView extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
-    Future<String> Username = c.getUserName();
-    Username.then((u) {
-      messageController.setUsername(u);
-      try{
-        messageController.closeSSE();
-      }catch(e){
-        // print(e);
-      }
-
-      if (u == ""){
-        messageController.handleSSE(SSE_MSG_DEFAULT_CHANNEL);
-      }else{
-        messageController.handleSSE(u);
-      }
-      // 加载服务器端历史消息
-      messageController.chatRecord.fetchMessages(u, 0).then((value2) {
-      });
-    });
-
     
+    // void _scrollToBottom() {
+    //   _scrollController.animateTo(
+    //     _scrollController.position.minScrollExtent,
+    //     duration: const Duration(milliseconds: 300),
+    //     curve: Curves.easeOut,
+    //   );
+    // }
 
-    return Obx(() {
-      final messages = messageController.messages;
-      return ListView.builder(
-        itemCount: messages.length,
+    Future<void> getChatHistory() async {
+      c.getUserName().then((user_name){
+        if (user_name != ""){
+          if (messageController.messsage_view_first_build == true){
+            messageController.handleSSE(user_name);
+            messageController.chatHistory(user_name, messageController.lastSegmentBeginId);
+          }
+        }
+      });
+    }
+    
+    Widget _buildListView() {
+      return Obx(() {
+        return ListView.builder(
+        controller: messageController.scrollController,
+        itemCount: messageController.messages.length,
         itemBuilder: (context, index) {
-          final message = messages[index];
+          MessageModel message = messageController.messages[index];
+          print("_buildListView(index ${index}): ${message.username} ${message.dataList} ${message.type}");
           return MessageBubble(
             key: message.key,
             sender: message.username,
+            sender_uuid: message.uuid,
             dataList: message.dataList,
             type: message.type,
           );
         },
         shrinkWrap: true,
+        reverse: true,
       );
-    });
+    }); 
+    }
+
+    return FutureBuilder<void>(
+      future: getChatHistory(),
+      builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return const Center(child: Text('Failed to load messages.'));
+        } else {
+          return _buildListView();
+        }
+      },
+    );
   }
 }

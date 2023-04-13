@@ -34,6 +34,7 @@ class WordPipeMessageType{
   static const int recall = 10000;
   static const int typing = 10001;
   static const int stream = 10002;
+  static const int chathistory = 10003;
 }
 
 
@@ -70,6 +71,9 @@ class CustomColors {
   static const Color firebaseGrey =  Color(0xFFECEFF1);
   static const Color googleBackground = Color(0xFF4285F4);
 }
+
+// define mobile layout and desktop layout width
+const double MOBILE_LAYOUT_WIDTH = 600;
 
 var textFontStyle = TextStyle(
   color: Colors.black,

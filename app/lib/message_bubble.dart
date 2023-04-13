@@ -13,12 +13,14 @@ import 'package:lottie/lottie.dart';
 // ignore: must_be_immutable
 class MessageBubble extends StatelessWidget {
   final String sender;
+  final String sender_uuid;
   final List<dynamic> dataList;
   final RxInt type;
 
   MessageBubble({
     super.key,
     required this.sender,
+    required this.sender_uuid,
     required this.dataList,
     required RxInt type,
   }) : this.type = type;
@@ -27,103 +29,128 @@ class MessageBubble extends StatelessWidget {
 
   final Controller c = Get.find();
   final MessageController messageController = Get.find<MessageController>();
-  bool get isMe => sender == messageController.getUsername();
+  String username = "";
+  bool isMe = false;
   
 
   @override
   Widget build(BuildContext context) {
-    Color bubbleColor;
-    if(isMe){
-      bubbleColor = const Color.fromRGBO(40, 178, 95, 1);
-    }else{
-      bubbleColor = Colors.green[200]!;
+    Future<void> setIsMe() async {
+      c.getUUID().then((_uuid) {
+        isMe = _uuid == sender_uuid;
+      });
+      c.getUserName().then((_username) {
+        username = _username;
+      });
     }
     
-    return GestureDetector(
-      child: Container(
-        margin: isMe
-            ? const EdgeInsets.fromLTRB(80, 8, 8, 8)
-            : const EdgeInsets.fromLTRB(8, 8, 80, 8),
-        child: Align(
-          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-          child: SizedBox(
-            width: double.maxFinite,
-            child: Row(
-              mainAxisAlignment:
-                  isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (!isMe) ...[
-                  // Left avatar
-                  Container(
-                    width: 50,
-                    height: 50,
-                    color: Colors.black12,
-                    margin: const EdgeInsets.only(right: 8),
-                    child: CachedNetworkImage(
-                      width: 40,
-                      height: 40,
-                      imageUrl: "${HTTP_SERVER_HOST}/avatar-Jarvis",
-                      imageBuilder: (context, imageProvider) => Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(3),
-                          image: DecorationImage(
-                              image: imageProvider,
-                              fit: BoxFit.cover,
-                              // colorFilter:
-                              //     ColorFilter.mode(Colors.red, BlendMode.colorBurn)
-                              ),
+    Widget _buildItem(){
+      Color bubbleColor;
+      if(isMe){
+        bubbleColor = const Color.fromRGBO(40, 178, 95, 1);
+      }else{
+        bubbleColor = Colors.green[200]!;
+      }
+      
+      return GestureDetector(
+        child: Container(
+          margin: isMe
+              ? const EdgeInsets.fromLTRB(80, 8, 8, 8)
+              : const EdgeInsets.fromLTRB(8, 8, 80, 8),
+          child: Align(
+            alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+            child: SizedBox(
+              width: double.maxFinite,
+              child: Row(
+                mainAxisAlignment:
+                    isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!isMe) ...[
+                    // Left avatar
+                    Container(
+                      width: 50,
+                      height: 50,
+                      color: Colors.black12,
+                      margin: const EdgeInsets.only(right: 8),
+                      child: CachedNetworkImage(
+                        width: 40,
+                        height: 40,
+                        imageUrl: "${HTTP_SERVER_HOST}/avatar-Jarvis",
+                        imageBuilder: (context, imageProvider) => Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(3),
+                            image: DecorationImage(
+                                image: imageProvider,
+                                fit: BoxFit.cover,
+                                // colorFilter:
+                                //     ColorFilter.mode(Colors.red, BlendMode.colorBurn)
+                                ),
+                          ),
                         ),
+                        placeholder: (context, url) => CircularProgressIndicator(),
+                        errorWidget: (context, url, error) => Icon(Icons.error),
                       ),
-                      placeholder: (context, url) => CircularProgressIndicator(),
-                      errorWidget: (context, url, error) => Icon(Icons.error),
+                    ),
+                  ],
+                  Flexible(
+                    child: Stack(
+                      children: [
+                        CustomPaint(
+                          painter:
+                            MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            // constraints: BoxConstraints(
+                            //   minWidth: 320,
+                            // ),
+                            child: Obx(() => SelectableText.rich(
+                              templateDispatch(context),
+                              minLines: 1,
+                            )),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                  if (isMe) ...[
+                    // Right avatar
+                    Container(
+                      width: 50,
+                      height: 50,
+                      // color: Colors.black12,
+                      margin: const EdgeInsets.only(left: 8),
+                      child: SvgPicture.network(
+                        "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${username}",
+                        height: 40,
+                        width: 40,
+                        semanticsLabel: 'user avatar',
+                        placeholderBuilder: (BuildContext context) => Container(
+                            padding: const EdgeInsets.all(40.0),
+                            child: const CircularProgressIndicator()),
+                        )
+                    ),
+                  ],
                 ],
-                Flexible(
-                  child: Stack(
-                    children: [
-                      CustomPaint(
-                        painter:
-                          MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          // constraints: BoxConstraints(
-                          //   minWidth: 320,
-                          // ),
-                          child: Obx(() => SelectableText.rich(
-                            templateDispatch(context),
-                            minLines: 1,
-                          )),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isMe) ...[
-                  // Right avatar
-                  Container(
-                    width: 50,
-                    height: 50,
-                    // color: Colors.black12,
-                    margin: const EdgeInsets.only(left: 8),
-                    child: SvgPicture.network(
-                      "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${Get.find<MessageController>().getUsername()}",
-                      height: 40,
-                      width: 40,
-                      semanticsLabel: 'user avatar',
-                      placeholderBuilder: (BuildContext context) => Container(
-                          padding: const EdgeInsets.all(40.0),
-                          child: const CircularProgressIndicator()),
-                      )
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
         ),
-      ),
+      );
+    }
+    return FutureBuilder<void>(
+      future: setIsMe(),
+      builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return const Center(child: Text('Failed to load messages.'));
+        } else {
+          return _buildItem();
+        }
+      },
     );
+    
   }
   
   TextSpan templateDispatch(BuildContext context) {
@@ -138,6 +165,8 @@ class MessageBubble extends StatelessWidget {
       return templateStream(context);
     }else if(type == WordPipeMessageType.typing){
       return TextSpan(children: [WidgetSpan(child: Lottie.network('https://assets6.lottiefiles.com/packages/lf20_nZBVpi.json', width: 30, height: 20, repeat: true, animate: true))]);
+    }else if(type == WordPipeMessageType.chathistory){
+      return templateChatHistory(context);
     }else{
       return templateText(context);
     }
@@ -189,7 +218,7 @@ class MessageBubble extends StatelessWidget {
                           decoration: TextDecoration.underline),
                           recognizer: TapGestureRecognizer()
                             ..onTap = () async {
-                              await c.chat(Get.find<MessageController>().getUsername(), "/root $example");
+                              await c.chat(username, "/root $example");
                             },
                       )
                     );
@@ -225,7 +254,7 @@ class MessageBubble extends StatelessWidget {
               decoration: TextDecoration.underline),
           recognizer: TapGestureRecognizer()
             ..onTap = () async {
-              await c.chat(messageController.getUsername(), "/root $value");
+              await c.chat(await c.getUserName(), "/root $value");
             },
         )),
       ],
@@ -236,4 +265,14 @@ class MessageBubble extends StatelessWidget {
     return TextSpan(text: dataList[0] as String);
   }
 
+  TextSpan templateChatHistory(BuildContext context){
+    List<TextSpan> spans = [];
+    dataList.forEach((element) {
+      spans.add(TextSpan(text: element as String));
+    });
+    return TextSpan(
+      style: DefaultTextStyle.of(context).style,
+      children: spans,
+    );
+  }
 }

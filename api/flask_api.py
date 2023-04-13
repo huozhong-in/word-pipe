@@ -5,7 +5,6 @@ import json
 import threading
 import time
 import hashlib
-import random
 from pathlib import Path
 import marisa_trie
 from flask import (
@@ -18,7 +17,7 @@ from flask import (
     url_for, 
     send_file,
     g,
-    stream_with_context)
+)
 from flask_sse import sse
 from stardict import *
 from config import *
@@ -28,12 +27,13 @@ from user import User,UserDB
 from chat_record import ChatRecord,ChatRecordDB
 from flask_cors import CORS
 import requests
-import openai
+# import openai
 import logging
 import streamtologger
 from Crypto.Cipher import AES
 import base64
 from queue import Queue
+import codecs
 
 
 app = Flask(__name__)
@@ -90,28 +90,27 @@ for key, value in wordroot.items():
 
 # init user db
 userDB = UserDB()
-crdb = ChatRecordDB()
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     # 请求上下文结束时自动释放 session
     # g.session.close()
     userDB.session.close()
-    crdb.session.close()
+    # crdb.session.close()
 
 @app.before_request
 def before_request():
     # 请求开始时将连接和 session 绑定到请求上下文
     g.db = userDB.engine.connect()
     g.session = userDB.session
-    g.db2= crdb.engine.connect()
-    g.session2 = crdb.session
+    # g.db2= crdb.engine.connect()
+    # g.session2 = crdb.session
 
 @app.after_request
 def after_request(response):
     # 请求结束时断开连接
     g.db.close()
-    g.db2.close()
+    # g.db2.close()
     return response
 
 
@@ -302,23 +301,6 @@ def chat():
         thread = threading.Thread(target=publish_func1)
         thread.start()
 
-    # elif message.startswith('/config '):
-    #     root: str = message.split('/config ')[1]
-    #     back_data: json = {}
-    #     dataList = wordroot[root]['example']
-    #     back_data['username'] = "Jarvis"
-    #     back_data['type'] = 102
-    #     back_data['dataList'] = [{root: dataList}]
-    #     def publish_func2():
-    #         id = generate_time_based_client_id(prefix=username)
-    #         print("chat() publish id:", id)
-    #         time.sleep(1)  # 延迟一秒
-    #         with app.app_context():
-    #             sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
-         
-    #     thread = threading.Thread(target=publish_func2)
-    #     thread.start()
-
     elif message.startswith('/help '):
         pass
 
@@ -363,8 +345,10 @@ def get_root_by_word(message: str) -> json:
             
     back_data: json = {}
     back_data['username'] = "Jarvis"
+    back_data['uuid'] = "Jarvis"
     back_data['type'] = 101
     back_data['dataList'] = dataList
+    back_data['createTime'] = int(time.time())
     # print(back_data)
     return back_data
 
@@ -473,10 +457,14 @@ def openai_proxy(path):
     # record message to database
     username = request.json['user']
     messages = request.json['messages']
+    # for msg in messages:
+    #     # convert '[{"role": "user", "content": "\u559d\u666e\u6d31\u8336\u6709\u4ec0\u4e48\u6709\u4ec0\u4e48\u597d\u5904\uff1f"}]' to '[{"role": "user", "content": "喝普洱茶有什么有什么好处？"}]'
+    #     msg['content'] = codecs.encode(msg['content'], "utf-8")
     crdb = ChatRecordDB()
     myuuid: str = userDB.get_user_by_username(username).uuid
-    cr = ChatRecord(msgFrom=myuuid, msgTo='Jarvis', msgCreateTime=int(time.time()), msgContent=json.dumps(messages), msgStatus=1, msgType=1, msgSource=1, msgDest=0)
+    cr = ChatRecord(msgFrom=myuuid, msgTo='Jarvis', msgCreateTime=int(time.time()), msgContent=json.dumps(messages, ensure_ascii=False), msgType=1)
     crdb.insert_chat_record(cr)
+    crdb.close()
 
     # 开发环境需要走本地代理服务器才能访问到openai API
     if os.environ.get('DEBUG_MODE') != None:
@@ -504,9 +492,9 @@ def openai_proxy(path):
                     if delta is not None and delta.get('content') is not None:
                         completion_text_queue.put(delta.get('content'))
                         print(delta.get('content'))
-                    # elif delta is not None and delta.get('finish_reason') is not None and delta.get('finish_reason') == 'stop':
-                    #     print('finish_reason: stop')
-                    #     completion_text_queue.put("[DONE]")
+                    elif delta is not None and delta.get('finish_reason') is not None and delta.get('finish_reason') == 'stop':
+                        print('finish_reason: stop')
+                        completion_text_queue.put("[DONE]")
             yield chunk
 
     rsp = Response(generate(), headers=dict(response.headers))
@@ -519,10 +507,11 @@ def openai_proxy(path):
                 break
             else:
                 completion_text += c
-        crdb = ChatRecordDB()
         myuuid: str = userDB.get_user_by_username(username).uuid
-        cr = ChatRecord(msgFrom='Jarvis', msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=completion_text, msgStatus=0, msgType=1, msgSource=1, msgDest=1)
+        crdb = ChatRecordDB()
+        cr = ChatRecord(msgFrom='Jarvis', msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=completion_text, msgType=1)
         crdb.insert_chat_record(cr)
+        crdb.close()
     
     thread = threading.Thread(target=fn_thread, args=(completion_text_queue, username))
     thread.start()
@@ -551,7 +540,7 @@ def encrypt(text):
     # 转为 base64 编码
     return base64.b64encode(ciphertext).decode()
 
-@app.route('/api/user/chat-records', methods = ['POST'])
+@app.route('/api/user/chat-history', methods = ['POST'])
 def load_chat_records():
     data: dict = request.get_json()
     username: str = data.get('username')
@@ -564,25 +553,27 @@ def load_chat_records():
         if u.access_token_expire_at < int(time.time()):
             return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
     try:
-        last_id: int = data.get('last_id', 0)
+        last_id: int = data.get('last_id', -1)
     except Exception as e:
         return make_response('', 500)
     
-    crdb = ChatRecordDB()
+
     r: list = []
-    for cr in crdb.get_chat_record(u.uuid, last_id):
+    crdb = ChatRecordDB()
+    for cr in crdb.get_chat_record(u.uuid, last_id, limit=30):
         r.append({
             'pk_chat_record': cr.pk_chat_record,
             'msgFrom': cr.msgFrom,
-            'msgTo': cr.msgTo,
+            'msgFromUUID': userDB.get_user_by_username(cr.msgFrom).uuid if userDB.get_user_by_username(cr.msgFrom) is not None else 'Jarvis', # TODO Jarvis没有UUID，要在数据库中生成一条记录
+            # 'msgTo': cr.msgTo,
             'msgCreateTime': cr.msgCreateTime,
             'msgContent': cr.msgContent,
-            'msgStatus': cr.msgStatus,
-            'msgType': cr.msgType,
-            'msgSource': cr.msgSource,
-            'msgDest': cr.msgDest
+            # 'msgStatus': cr.msgStatus,
+            # 'msgType': cr.msgType,
+            # 'msgSource': cr.msgSource,
+            # 'msgDest': cr.msgDest
         })
-
+    crdb.close()
     return make_response(jsonify(r), 200)
 
 if __name__ == '__main__':

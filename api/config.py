@@ -36,7 +36,7 @@ MYSQL_CONFIG = {
   'password': 'dswybs-yoqoo',
   'host': '127.0.0.1',
   'database': 'wordpipe',
-  'raise_on_warnings': True
+  'raise_on_warnings': True,
 }
 
 def generate_random_avatar(user_name: str) -> bool:

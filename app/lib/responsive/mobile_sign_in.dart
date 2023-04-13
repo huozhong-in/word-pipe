@@ -3,17 +3,16 @@ import 'package:google_fonts/google_fonts.dart';
 // import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:app/config.dart';
-import 'package:app/home.dart';
+import 'package:app/responsive/desktop_home.dart';
 import 'package:app/controller.dart';
 import 'package:app/validator.dart';
-import 'package:app/user_profile.dart';
-import 'package:app/sign_up.dart';
+import 'package:app/responsive/sign_up.dart';
 // import 'package:app/reset_password.dart';
 
 
 // ignore: must_be_immutable
-class SignIn extends StatelessWidget {
-  SignIn({super.key});
+class MobileSignIn extends StatelessWidget {
+  MobileSignIn({super.key});
   final Controller c = Get.find();
 
   final FocusNode _usernameFocusNode = FocusNode();
@@ -237,12 +236,13 @@ class SignIn extends StatelessWidget {
                         ],
                       ),
                     ),
+                    constraints: BoxConstraints(maxWidth: context.width / 2),
                     child: ElevatedButton(
                       onPressed: () async {
                         _usernameFocusNode.unfocus();
                         _passwordFocusNode.unfocus();
                         if (_formKey.currentState!.validate() && await c.signin(_usernameField.text, _passwordField.text)) {
-                            Get.offAll(Home());
+                            Get.offAll(DesktopHome());
                         }else{
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                             content: const Text('Please check your username or password length'),

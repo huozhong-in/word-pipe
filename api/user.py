@@ -106,7 +106,7 @@ class UserDB:
             if user.password == pass_word:
                 # update access_token
                 access_token, expire_at = self.refresh_access_token(user_name)
-                r: dict = {"access_token": access_token,"expires_at": expire_at}
+                r: dict = {"access_token": access_token,"expires_at": expire_at, "uuid": user.uuid}
                 return r
             else:
                 return {}

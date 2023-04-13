@@ -40,29 +40,29 @@ class ChatRecordDB:
 
     def get_chat_record(self, user_id: str, last_chat_record_id: int, limit: int=50):
         result: list = []
-        if last_chat_record_id == 0:
+        if last_chat_record_id == -1:
             # 获取我发出或我收到的最新的50条消息，按照主键自增ID倒序排列
             result = self.session.query(ChatRecord).filter(or_(ChatRecord.msgFrom == user_id, ChatRecord.msgTo == user_id)).order_by(ChatRecord.pk_chat_record.desc()).limit(limit).all()
         else:
             result = self.session.query(ChatRecord).filter(or_(ChatRecord.msgFrom == user_id,  ChatRecord.msgTo == user_id), ChatRecord.pk_chat_record < last_chat_record_id).order_by(ChatRecord.pk_chat_record.desc()).limit(limit).all()
-        self.session.close()
-        self.cnx.close()
         return result
 
     def insert_chat_record(self, chat_record: ChatRecord):
         self.session.add(chat_record)
         self.session.commit()
+    
+    def close(self):
         self.session.close()
         self.cnx.close()
-    
-    
 
 if __name__ == '__main__':
     crdb = ChatRecordDB()
     create_time = int(time.time())
-    cr = ChatRecord( msgFrom='dio', msgTo='Jarvis', msgCreateTime=create_time, msgContent='123test', msgStatus=1, msgType=1, msgSource=1, msgDest=1)
+    cr = ChatRecord( msgFrom='dio', msgTo='Jarvis', msgCreateTime=create_time, msgContent='北冰洋冰层厚度？', msgStatus=1, msgType=1, msgSource=1, msgDest=1)
     crdb.insert_chat_record(cr)
-    r = crdb.get_chat_record('dio', 0, 60)
+    # r = crdb.get_chat_record('Jarvis', -1)
+    # print(r)
+    crdb.close()
     # 反转打印
-    for i in r[::-1]:
-        print(i.pk_chat_record)
+    # for i in r[::-1]:
+    #     print(i.pk_chat_record)

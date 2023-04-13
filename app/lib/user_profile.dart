@@ -1,12 +1,12 @@
 import 'package:app/config.dart';
-import 'package:app/home.dart';
+import 'package:app/responsive/desktop_home.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
 // import 'package:google_fonts/google_fonts.dart';
 // import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:app/controller.dart';
-import 'package:app/sign_in.dart';
+import 'package:app/responsive/mobile_sign_in.dart';
 import 'package:app/MessageController.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -43,7 +43,7 @@ class UserProfile extends StatelessWidget {
                       leading: IconButton(
                         icon: Icon(Icons.arrow_back),
                         onPressed: () {
-                          Get.offAll(Home());
+                          Get.offAll(DesktopHome());
                         },
                       )
                     ),
@@ -74,7 +74,8 @@ class UserProfile extends StatelessWidget {
                               await c.signout();
                               // 登出后清空消息列表
                               messageController.messages.clear();
-                              Get.offAll(SignIn());
+                              messageController.closeSSE();
+                              Get.offAll(MobileSignIn());
                             },
                             child: Text('Sign Out'),
                           ),
@@ -85,7 +86,7 @@ class UserProfile extends StatelessWidget {
                 );
             }else{
               return MaterialApp(
-                home: SignIn(),
+                home: MobileSignIn(),
               );
             }
           }

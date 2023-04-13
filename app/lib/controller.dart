@@ -16,6 +16,14 @@ class Controller extends GetxController{
     }
     return "";
   }
+  Future<String> getUUID() async{
+    if (await CacheHelper.hasData('uuid')){
+      if(await CacheHelper.getData('uuid') != null){
+        return await CacheHelper.getData('uuid');
+      }
+    }
+    return "";
+  }
   Future<String> getAccessToken() async{
     if (await CacheHelper.hasData('access_token')){
       if(await CacheHelper.getData('access_token') != null){
@@ -196,11 +204,7 @@ class UserProvider extends GetConnect {
     final response = await post(url.toString(), data);
     if (response.statusCode == 200) {
       Map<String, dynamic> rsp = Map<String, dynamic>.from(response.body);
-      await CacheHelper.setData('username', username);
-      await CacheHelper.setData('access_token', rsp['access_token'] as String);
-      await CacheHelper.setData('expires_at', rsp['expires_at'] as int);
-      await CacheHelper.setData('apiKey', decrypt(rsp['apiKey'] as String));
-      await CacheHelper.setData('baseUrl', rsp['baseUrl'] as String);
+      await setLocalStorge(username, rsp);
       return true;
     } else {
       return false;
@@ -214,9 +218,7 @@ class UserProvider extends GetConnect {
     final response = await post(url.toString(), data);
     if (response.statusCode == 200) {
       Map<String, dynamic> rsp = Map<String, dynamic>.from(response.body);
-      await CacheHelper.setData('username', username);
-      await CacheHelper.setData('access_token', rsp['access_token'] as String);
-      await CacheHelper.setData('expires_at', rsp['expires_at'] as int);
+      await setLocalStorge(username, rsp);
       return true;
     } else {
       return false;
@@ -231,12 +233,18 @@ class UserProvider extends GetConnect {
     final response = await post(url.toString(), data);
     if (response.statusCode == 200) {
       Map<String, dynamic> rsp = Map<String, dynamic>.from(response.body);
-      await CacheHelper.setData('username', username);
-      await CacheHelper.setData('access_token', rsp['access_token'] as String);
-      await CacheHelper.setData('expires_at', rsp['expires_at'] as int);
+      await setLocalStorge(username, rsp);
       return true;
     } else {
       return false;
     }
+  }
+  Future<void> setLocalStorge(String username, Map<String, dynamic> rsp) async {
+    await CacheHelper.setData('username', username);
+    await CacheHelper.setData('access_token', rsp['access_token'] as String);
+    await CacheHelper.setData('expires_at', rsp['expires_at'] as int);
+    await CacheHelper.setData('uuid', rsp['uuid'] as String);
+    await CacheHelper.setData('apiKey', decrypt(rsp['apiKey'] as String));
+    await CacheHelper.setData('baseUrl', rsp['baseUrl'] as String);
   }
 }

@@ -1,8 +1,7 @@
 import 'dart:developer';
 import 'dart:async';
 import 'package:universal_html/html.dart' as html;
-import 'package:get/get.dart';
-import 'package:app/controller.dart';
+
 
 class SSEClient {
   Uri baseUri;
@@ -15,7 +14,7 @@ class SSEClient {
   // 创建一个StreamController，用于广播特定事件类型的消息
   final StreamController<String> _messageController = StreamController<String>.broadcast();
 
-  SSEClient(this.baseUri, this.eventType, this.channel, {int retryInterval = 1000})
+  SSEClient._(this.baseUri, this.eventType, this.channel, {int retryInterval = 1000})
       : _retryInterval = retryInterval,
         _isReconnecting = false {
     // 添加channel参数到URL
@@ -26,8 +25,13 @@ class SSEClient {
     );
     _connect(url);
   }
-
-  final Controller c = Get.find();
+  // getter
+  static SSEClient? _instance;
+  
+  static SSEClient getInstance(Uri baseUri, String eventType, String channel, {int retryInterval = 1000}) {
+    _instance ??= SSEClient._(baseUri, eventType, channel, retryInterval: retryInterval);
+    return _instance!;
+  }
   
   void _connect(Uri url) {
     
@@ -85,7 +89,8 @@ void main() {
   String eventType = 'broadcasting';
   String channel = 'users.social';
 
-  SSEClient sseClient = SSEClient(url, eventType, channel);
+  // 获取单例实例
+  SSEClient sseClient = SSEClient.getInstance(url, eventType, channel);
 
   // 订阅消息流
   sseClient.messages.listen((message) {
@@ -95,3 +100,4 @@ void main() {
   // 当需要停止监听时，可以调用 `sseClient.close()` 方法。
   // sseClient.close();
 }
+

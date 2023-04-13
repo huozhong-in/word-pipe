@@ -16,7 +16,7 @@
   - [x] 用户名+密码方式注册，暂不提供找回密码
   - [x] 规划PUBSUB type/channel，增加多用户支持。eventType="prod/dev/test" channel="hash(user_uuid+pass)" 
   - [x] 注册需邀请码
-  - [x] 强制登录，匿名无法使用
+  - [x] 强制登录，匿名无法使用。登录页做宽度适配
   - [ ] 聊天记录。加载最后50条，下拉继续加载。【聊天记录的价值在哪，人们翻看回溯是为什么，能否提供有特色的聊天回顾功能，总结、提醒、标注、收藏？再利用、成就感】
   - [ ] 翻译（ChatGPT），默认是英英或快捷键或左侧菜单？【大模型背后的理解、推理能力也至关重要】
   - [ ] 新消息来后，底部增加提示，点击跳转
@@ -50,7 +50,7 @@
   - [x] 移动Web体验，滑动，选词，上屏
   - [x] 支持鼠标点击单词
   - [ ] 响应式设计，MVP需要适配PC Web和mobile Web的宽度以及操作。
-  - [ ] 所有字体和样式整理，统一管理、规范使用。（google NotoSansSC字体被墙）
+  - [ ] 所有字体和样式整理，统一管理、规范使用。（google NotoSansSC字体被墙Failed to load font Noto Sans at https://fonts.gstatic.com/s/notosans/v27/o-0IIpQlx3QUlC5A4PNb4j5Ba_2c7A.ttf）
   - [ ] 动效
   - [ ] 支持在界面上按上下键（文本框无焦点时）
   - [ ] wordmatch里按下Tab键，可选lemma

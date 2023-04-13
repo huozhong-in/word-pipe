@@ -21,7 +21,12 @@ class MessageItem extends StatelessWidget {
         // 正在输入。机器人收到任务后，立即回复一个loading的效果当作占位符，等待后续信息到达
         return TypingBubble(key: message.key, sender: message.username, dataList: message.dataList);
       default:
-        return MessageBubble(key: message.key, sender: message.username, dataList: message.dataList, type: message.type);
+        return MessageBubble(
+          key: message.key, 
+          sender: message.username, 
+          sender_uuid: message.uuid,
+          dataList: message.dataList, 
+          type: message.type);
     }
   }
 }

@@ -9,21 +9,59 @@ import 'package:app/config.dart';
 import 'package:dart_openai/openai.dart';
 import 'dart:developer';
 
-class MessageController extends GetxController {
+class MessageController extends GetxController{
   final messages = <MessageModel>[].obs;
-  late String username = "";
-  SSEClient? sseClient;
-  ChatRecord chatRecord = ChatRecord();
+  
+  late final SSEClient sseClient;
+  bool sse_connected = false;
+  
+  bool messsage_view_first_build = true;
+  int lastSegmentBeginId = -1;
 
+  RxBool _isLoading = false.obs;
+  // set setLoading(bool value) => _isLoading.value = value;
+  bool get isLoading => _isLoading.value;
+
+  final scrollController = ScrollController();
   @override
   void onInit() {
     super.onInit();
-    
+    scrollController.addListener(_scrollListener);
+  }
+
+  @override
+  void onClose() {
+    scrollController.removeListener(_scrollListener);
+    sseClient.close();
+    super.onClose();
+  }
+
+  Future<void> _scrollListener() async {
+    if (scrollController.offset == scrollController.position.maxScrollExtent &&
+        !scrollController.position.outOfRange) {
+        _isLoading.value = true;
+        String curr_user = "";
+        if (await CacheHelper.hasData('username')){
+          if(await CacheHelper.getData('username') != null){
+            curr_user = await CacheHelper.getData('username');
+          }
+        }
+        if (curr_user != ""){
+          chatHistory(curr_user, lastSegmentBeginId);
+        }
+    }
+  }
+
+  Future<void> chatHistory(String username, int last_id) async {
+    ChatRecord chatRecord = ChatRecord();
+    messsage_view_first_build = false;
+    lastSegmentBeginId = await chatRecord.chatHistory(username, last_id);
+    // print(lastSegmentBeginId);
   }
 
   int addMessage(MessageModel message) {
-    messages.add(message);
-    return messages.length - 1;
+    messages.insert(0, message);
+    return 0;
   }
 
   void updateMessage(int index, List<dynamic> newDataList) {
@@ -34,8 +72,6 @@ class MessageController extends GetxController {
     message.dataList.value = List<String>.from(newDataList);
     update();
   }
-
-
 
   Future<void> getChatCompletion(String model, String prompt) async {
     String curr_user = "";
@@ -82,6 +118,8 @@ class MessageController extends GetxController {
       dataList: RxList(['...']),
       type: WordPipeMessageType.stream,
       username: "Jarvis",
+      uuid: "Jarvis",
+      createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       key: UniqueKey(),
     ));
     
@@ -103,7 +141,7 @@ class MessageController extends GetxController {
       OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];
       final content = choice.delta.content;
       if(content != null){
-        print(content);
+        // print(content);
         final message = messages[needUpdate];
         message.dataList.add(content);
         updateMessage(needUpdate, message.dataList);
@@ -111,43 +149,36 @@ class MessageController extends GetxController {
     });
   }
 
-  void setUsername(String username) {
-    this.username = username;
-  }
-  String getUsername() {
-    return this.username;
-  }
-
   void handleSSE(String channel) async {
     try {
-      Uri url = Uri.parse(SSE_SERVER_HOST + SSE_SERVER_PATH);
-      String eventType = SSE_MSG_TYPE;
-      sseClient = SSEClient(url, eventType, channel);
-
+      sseClient = SSEClient.getInstance(Uri.parse(SSE_SERVER_HOST + SSE_SERVER_PATH), SSE_MSG_TYPE, channel);
+      if (sse_connected == false){
+        sseClient.messages.listen((message) {
+          log('from SSE Server: $message');
+          try {
+            Map<String, dynamic> json = Map<String, dynamic>.from(jsonDecode(message));
+            messages.add(MessageModel.fromJson(json));
+            sse_connected = true;
+          } catch (e) {
+            log('sse message error: $e');
+            // sse_connected = false;
+          }
+        });  
+      }
       // 订阅消息流
-      sseClient?.messages.listen((message) {
-        log('from SSE Server: $message');
-        try {
-          Map<String, dynamic> json = Map<String, dynamic>.from(jsonDecode(message));
-          messages.add(MessageModel.fromJson(json));
-        } catch (e) {
-          log('sse message error: $e');
-        }
-      });
+      
     } catch (e) {
       log('handleSSE error: $e');
+      sse_connected = false;
     }
   }
 
   // 关闭 SSE 连接，以便可以重新订阅其他频道
   void closeSSE(){
-    if (sseClient != null) {
-      sseClient?.close();
-    }
+    sseClient.close();
   }
 
-  
-  
+
 }
 
 class ChatRecord extends GetConnect {
@@ -156,15 +187,15 @@ class ChatRecord extends GetConnect {
     
   }
 
-  Future<void> fetchMessages(String username, int last_id) async {
+  Future<int> chatHistory(String username, int last_id) async {
     // 从 API 获取数据并解析 JSON，此处仅为示例
     // List<Map<String, dynamic>> jsonResponse = [
     //   {"username": "user1", "text": "Text 1", "type": "text"},
     //   {"username": "user2", "text": "Text 2", "type": "link"},
     //   {"username": "user3", "text": "Text 3", "type": "reserved"},
     // ];
-    
-    Uri url = Uri.parse('$HTTP_SERVER_HOST/api/user/chat-records');
+    int ret = 0;
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/chat-history');
     Map data = {};
     data['username'] = username;
     data['last_id'] = last_id;
@@ -175,14 +206,39 @@ class ChatRecord extends GetConnect {
       }
     }
     Map<String,String> hs = {};
-    if (access_token != ""){
-      hs['X-access-token'] = access_token;
-    }
+    hs['X-access-token'] = access_token;
     final response = await post(url.toString(), data, headers: hs, contentType: 'application/json');
     if (response.statusCode == 200) {
-      List<MessageModel> newMessages = response.body.map((json) => MessageModel.fromJson(json)).toList();
+      
+      List<dynamic>json = List<dynamic>.from(response.body);
       MessageController messageController = Get.find<MessageController>();
-      messageController.messages.addAll(newMessages);
+      messageController._isLoading.value = false;
+      json.forEach((element ) {
+        Map<String, dynamic> e = element as Map<String, dynamic>;
+        ret = e['pk_chat_record'] as int;
+        String msgFrom = e['msgFrom'].toString();
+        // String msgTo = e['msgTo'].toString();
+        String msgFromUUID = e['msgFromUUID'].toString();
+        // String msgToUUID = e['msgToUUID'].toString();
+        int msgCreateTime = e['msgCreateTime'] as int;
+        String msgContent = e['msgContent'].toString();
+        // int msgType = e['msgType'].toInt();
+        // print("msgFrom:" + msgFrom);
+        // print("msgCreatTime:" + msgCreateTime.toString());
+        // print("msgContent:" + msgContent);
+        // print("msgType:" + msgType.toString());
+        messageController.messages.add(
+          MessageModel(
+            username: msgFrom, 
+            uuid: msgFromUUID,
+            createTime: msgCreateTime, 
+            dataList: RxList([msgContent]), 
+            type: WordPipeMessageType.chathistory, 
+            key: UniqueKey()
+            )
+          );
+      });   
     }
+    return ret;
   }
 }

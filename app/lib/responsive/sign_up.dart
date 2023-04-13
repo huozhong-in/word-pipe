@@ -1,4 +1,4 @@
-import 'package:app/home.dart';
+import 'package:app/responsive/desktop_home.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
@@ -6,7 +6,7 @@ import 'package:app/config.dart';
 import 'package:app/controller.dart';
 import 'package:app/validator.dart';
 import 'package:app/user_profile.dart';
-import 'package:app/sign_in.dart';
+import 'package:app/responsive/mobile_sign_in.dart';
 
 
 // ignore: must_be_immutable
@@ -35,12 +35,12 @@ class SignUp extends StatelessWidget {
         centerTitle: true,
         backgroundColor: Colors.green.withOpacity(0.6),
         automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Get.offAll(Home());
-          },
-        )
+        // leading: IconButton(
+        //   icon: Icon(Icons.arrow_back),
+        //   onPressed: () {
+        //     Get.offAll(DesktopHome());
+        //   },
+        // )
       ),
       resizeToAvoidBottomInset : false,
       body: Column(
@@ -280,7 +280,7 @@ class SignUp extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: TextButton(
                     onPressed: () {
-                      Get.offAll(SignIn());
+                      Get.offAll(MobileSignIn());
                     },
                     child: Text("Already have an account?",
                       style: TextStyle(fontSize: 12,fontWeight: FontWeight.bold, color: Colors.green[900]),
