@@ -52,11 +52,12 @@ class MessageController extends GetxController{
     }
   }
 
-  Future<void> chatHistory(String username, int last_id) async {
+  Future<int> chatHistory(String username, int last_id) async {
     ChatRecord chatRecord = ChatRecord();
     messsage_view_first_build = false;
     lastSegmentBeginId = await chatRecord.chatHistory(username, last_id);
     // print(lastSegmentBeginId);
+    return lastSegmentBeginId;
   }
 
   int addMessage(MessageModel message) {
@@ -157,7 +158,7 @@ class MessageController extends GetxController{
           log('from SSE Server: $message');
           try {
             Map<String, dynamic> json = Map<String, dynamic>.from(jsonDecode(message));
-            messages.add(MessageModel.fromJson(json));
+            messages.insert(0, MessageModel.fromJson(json));
             sse_connected = true;
           } catch (e) {
             log('sse message error: $e');
@@ -194,7 +195,7 @@ class ChatRecord extends GetConnect {
     //   {"username": "user2", "text": "Text 2", "type": "link"},
     //   {"username": "user3", "text": "Text 3", "type": "reserved"},
     // ];
-    int ret = 0;
+    int ret = -1;
     Uri url = Uri.parse('$HTTP_SERVER_HOST/user/chat-history');
     Map data = {};
     data['username'] = username;

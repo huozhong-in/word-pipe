@@ -29,7 +29,22 @@ class MessageView extends StatelessWidget {
         if (user_name != ""){
           if (messageController.messsage_view_first_build == true){
             messageController.handleSSE(user_name);
-            messageController.chatHistory(user_name, messageController.lastSegmentBeginId);
+            Future<int> _lastSegmentBeginId = messageController.chatHistory(user_name, messageController.lastSegmentBeginId);
+            // Welcome message to new user!
+            _lastSegmentBeginId.then((lastId) => {
+              if (lastId == -1){
+                messageController.addMessage(
+                  MessageModel(
+                    dataList: RxList(['“Huh? Whoa, whoa, whoa, whoa, whoa.”']), 
+                    type: WordPipeMessageType.text, 
+                    username: 'Jarvis', 
+                    uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
+                    createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+                    key: UniqueKey(), 
+                  )
+                )
+              }
+            });
           }
         }
       });
@@ -42,7 +57,7 @@ class MessageView extends StatelessWidget {
         itemCount: messageController.messages.length,
         itemBuilder: (context, index) {
           MessageModel message = messageController.messages[index];
-          print("_buildListView(index ${index}): ${message.username} ${message.dataList} ${message.type}");
+          // print("_buildListView(index ${index}): ${message.username} ${message.dataList} ${message.type}");
           return MessageBubble(
             key: message.key,
             sender: message.username,

@@ -1,15 +1,31 @@
 
+import 'package:http/http.dart' as http;
 
-void main() {
-  String input = 'This is a long-time example with hyphenated-words, including some non-alpha character...';
-  RegExp exp = RegExp(r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b');
 
-  Iterable<RegExpMatch> matches = exp.allMatches(input);
+Future<String> imageTypes(String url) async {
+    var response = await http.head(Uri.parse(url));
+    if (response.statusCode != 200){
+      return "not exists";
+    }
+    response.headers.forEach((key, value) {
+      print(key + " : " + value);
+    });
+    if(response.headers['content-type'] != null){
+      if(response.headers['content-type']!.contains('jpeg')){
+        return "jpeg";
+      }else if(response.headers['content-type']!.contains('png')){
+        return "png";
+      }else if(response.headers['content-type']!.contains('svg')){
+        return "svg";
+      }   
+    }
+    return "not exists";
+}
 
-  for (RegExpMatch match in matches) {
-    String? word = match.group(0);
-    int startIndex = match.start;
-    int endIndex = match.end;
-    print('Found "$word" at position $startIndex-$endIndex');
+void main() async{
+  if (await imageTypes("http://127.0.0.1/api/avatar/Jarvis")=="jpeg"){
+    print('exists');
+  }else{
+    print('not exists');
   }
 }

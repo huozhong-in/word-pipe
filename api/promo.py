@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 import random
 import string
-from sqlalchemy import create_engine, Column, Integer, String
+import mysql.connector
+# from mysql.connector import errorcode
+from sqlalchemy import create_engine, Column, Integer, String, or_
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.pool import StaticPool
+# from sqlalchemy.pool import StaticPool
 from config import *
 
 
@@ -21,7 +23,11 @@ class Promo(Base):
 
 class PromoDB():
     def __init__(self):
-        self.engine = create_engine(DB_URI, echo=False, poolclass=StaticPool, connect_args={'check_same_thread': False})
+        # self.engine = create_engine(DB_URI, echo=False, poolclass=StaticPool, connect_args={'check_same_thread': False})
+        connect_args = MYSQL_CONFIG
+        self.cnx = mysql.connector.connect(**connect_args)
+        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}/{MYSQL_CONFIG["database"]}')
+    
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
         Base.metadata.create_all(self.engine)
@@ -67,10 +73,10 @@ class PromoDB():
             return False
         return True
         
-    def get_promos_by_userid(self, userid, bind_filter:bool=True) -> list:
+    def get_promos_by_userid(self, userid, no_owner_only:bool=True) -> list:
         result: list = []
         try:
-            if bind_filter:
+            if no_owner_only:
                 result = self.session.query(Promo).filter_by(gen_by=userid).filter(Promo.bind_userid == None).all()
                 print(len(result))
             else:
@@ -82,14 +88,4 @@ class PromoDB():
         return result
     
 if __name__ == '__main__':
-    # promoDB = PromoDB()
-    # userDB = UserDB()
-    
-    # user_id = userDB.get_user_by_username('dio').uuid
-    # promoDB.create_promo(10, user_id)
-    # for promo in  promoDB.get_promos_by_userid(user_id, bind_filter=True):
-    #     print(promo.promo, promo.bind_userid)
-
-    # user_id = userDB.get_user_by_username('Bonny').uuid
-    # promoDB.bind_promo('DZNpRD', user_id)
     pass

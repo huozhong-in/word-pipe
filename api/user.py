@@ -2,9 +2,11 @@ import jwt
 import time
 import uuid
 import hashlib
+import mysql.connector
+# from mysql.connector import errorcode
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.pool import StaticPool
+# from sqlalchemy.pool import StaticPool
 from config import *
 from promo import PromoDB
 
@@ -37,7 +39,11 @@ class User(Base):
 
 class UserDB:
     def __init__(self):
-        self.engine = create_engine(DB_URI, echo=False, poolclass=StaticPool, connect_args={'check_same_thread': False})
+        # self.engine = create_engine(DB_URI, echo=False, poolclass=StaticPool, connect_args={'check_same_thread': False})
+        connect_args = MYSQL_CONFIG
+        self.cnx = mysql.connector.connect(**connect_args)
+        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}/{MYSQL_CONFIG["database"]}')
+        
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
         Base.metadata.create_all(self.engine)
@@ -69,7 +75,7 @@ class UserDB:
             print(e)
             return {}
         
-        return {"access_token": access_token,"expires_at": expire_at}
+        return {"access_token": access_token,"expires_at": expire_at, "uuid": user.uuid}
 
     def create_user_by_email(self, email='', password='', last_ip=''):
         myuuid: str = str(uuid.uuid4())
@@ -125,16 +131,21 @@ class UserDB:
     
     # Update
 
-    def modify_password(self, user_name, old_password, new_password):
+    def modify_password(self, user_name, old_password, new_password, force=False):
         user = self.get_user_by_username(user_name)
         if user is not None:
-            pass_word = hashlib.sha256(user.uuid+old_password).hexdigest()
-            if user.password == pass_word:
-                user.password = hashlib.sha256(user.uuid+new_password).hexdigest()
+            if force:
+                user.password = hashlib.sha256(str(user.uuid+new_password).encode('utf-8')).hexdigest()
                 self.session.commit()
                 return True
             else:
-                return False
+                pass_word = hashlib.sha256(str(user.uuid+old_password).encode('utf-8')).hexdigest()
+                if user.password == pass_word:
+                    user.password = hashlib.sha256(str(user.uuid+new_password).encode('utf-8')).hexdigest()
+                    self.session.commit()
+                    return True
+                else:
+                    return False
         else:
             return False
 
@@ -207,7 +218,7 @@ class UserDB:
             return None
         user_id= user.uuid
         promoDB = PromoDB()
-        result = promoDB.get_promos_by_userid(userid=user_id, bind_filter=False)
+        result = promoDB.get_promos_by_userid(userid=user_id, no_owner_only=False)
         if len(result)> 0:
         # convert promo's bind_userid to user's name    
             for promo in result:
@@ -219,7 +230,17 @@ class UserDB:
 
 
 if __name__ == '__main__':
-    db = UserDB()
-    # db.refresh_access_token('dio')
-    for promo in db.get_promos_by_username('dio'):
-        print(promo.promo, promo.bind_userid, promo.gen_by)
+    userDB = UserDB()
+    # promoDB = PromoDB()
+
+    # userDB.create_user_by_username('Bonny', '')
+    # userDB.refresh_access_token('Dio')
+    # user_id = userDB.get_user_by_username('Bonny').uuid
+    # promoDB.bind_promo('eAZftT', user_id)
+    userDB.modify_password('Bonny','', '123qwe789', force=True)
+    
+    # user_id = userDB.get_user_by_username('Dio').uuid
+    # # promoDB.create_promo(100, user_id)
+    # for promo in  promoDB.get_promos_by_userid(user_id, no_owner_only=False):
+    #     print(promo.promo, promo.bind_userid, promo.gen_by)
+

@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:app/controller.dart';
 import 'package:app/MessageView.dart';
+import 'package:app/user_profile.dart';
 import 'dart:developer';
 
 // ugly code
@@ -57,7 +58,15 @@ class DesktopHome extends StatelessWidget {
             messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
           }
         }else{
-          Get.snackbar("Error", "Failed to send message, please Sign In again.");
+          Get.snackbar("Error", "Failed to send message, please Sign In again.",
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.black54,
+            colorText: Colors.white,
+            margin: const EdgeInsets.all(8),
+            borderRadius: 8,
+            duration: const Duration(seconds: 2),
+            icon: const Icon(Icons.error, color: Colors.white),
+          );
           // 三秒后跳转到登录页面
           Future.delayed(Duration(seconds: 3), () {
             Get.offAll(MobileSignIn());
@@ -354,14 +363,14 @@ class DesktopHome extends StatelessWidget {
           decoration: InputDecoration(
             hintText: '/ OR words',
             hintStyle: TextStyle(color: Colors.grey),
-            prefixIcon: IconButton(
-                color: Colors.grey,
-                hoverColor: Colors.black54,
-                onPressed: () {
-                  // messageController.getChatCompletion('gpt-3.5-turbo', 'What is hallucinate?');
-                }, 
-                icon: const Icon(Icons.mic_rounded)
-              ),
+            // prefixIcon: IconButton(
+            //     color: Colors.grey,
+            //     hoverColor: Colors.black54,
+            //     onPressed: () {
+            //       // messageController.getChatCompletion('gpt-3.5-turbo', 'What is hallucinate?');
+            //     }, 
+            //     icon: const Icon(Icons.mic_rounded)
+            //   ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(10),),
               borderSide: BorderSide(
@@ -399,7 +408,7 @@ class DesktopHome extends StatelessWidget {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text('Word Pipe ${context.width}',
+        title: Text('Word Pipe',
           style: TextStyle(
             color: Colors.black54,
             fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
@@ -412,42 +421,46 @@ class DesktopHome extends StatelessWidget {
       body: Center(
         child: Row(
           children: [
-            // Container(
-            //   width: 150,
-            //   color: Colors.greenAccent[100],
-            //   child: ListView(
-            //     padding: EdgeInsets.zero,
-            //     children: <Widget>[
-            //       ListTile(
-            //         leading: Icon(Icons.message),
-            //         title: Text('Messages', style: TextStyle(fontSize: 12)),
-            //         minLeadingWidth: 0,
-            //         minVerticalPadding: 0,
-            //       ),
-            //       ListTile(
-            //         leading: Icon(Icons.account_circle),
-            //         title: Text('Profile', style: TextStyle(fontSize: 12)),
-            //         minLeadingWidth: 0,
-            //         minVerticalPadding: 0,
-            //         onTap: () => Get.offAll(UserProfile()),
-            //       ),
-            //       ListTile(
-            //         leading: Icon(Icons.settings),
-            //         title: Text('Settings', style: TextStyle(fontSize: 12)),
-            //         minLeadingWidth: 0,
-            //         minVerticalPadding: 0,
-            //         onTap: () => Get.offAll(UserProfile()),
-            //       ),
-            //       Divider(),
-            //       ListTile(
-            //         leading: Icon(Icons.info),
-            //         title: Text('About Us', style: TextStyle(fontSize: 12)),
-            //         minLeadingWidth: 0,
-            //         minVerticalPadding: 0,
-            //       ),
-            //     ],
-            //   ),
-            // ),
+            Container(
+              width: 150,
+              constraints: BoxConstraints(
+                maxWidth: 150,
+                minWidth: 150,
+              ),
+              color: Colors.greenAccent[100],
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  ListTile(
+                    leading: Icon(Icons.message),
+                    title: Text('Messages', style: TextStyle(fontSize: 12)),
+                    minLeadingWidth: 0,
+                    minVerticalPadding: 0,
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.account_circle),
+                    title: Text('Profile', style: TextStyle(fontSize: 12)),
+                    minLeadingWidth: 0,
+                    minVerticalPadding: 0,
+                    onTap: () => Get.offAll(UserProfile()),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.settings),
+                    title: Text('Settings', style: TextStyle(fontSize: 12)),
+                    minLeadingWidth: 0,
+                    minVerticalPadding: 0,
+                    onTap: () => Get.offAll(UserProfile()),
+                  ),
+                  Divider(),
+                  ListTile(
+                    leading: Icon(Icons.info),
+                    title: Text('About WordPipe', style: TextStyle(fontSize: 12)),
+                    minLeadingWidth: 0,
+                    minVerticalPadding: 0,
+                  ),
+                ],
+              ),
+            ),
             Expanded(
               child: Column(
                 children: [
@@ -530,8 +543,14 @@ class DesktopHome extends StatelessWidget {
                                                   () => ListView.builder(
                                                     itemBuilder: (_, int index) => InkWell(
                                                       onDoubleTap: () {
-                                                        ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
-                                                          customSnackBar(content: _matchWords[index].text),
+                                                        Get.snackbar("select word", _matchWords[index].text,
+                                                          snackPosition: SnackPosition.TOP,
+                                                          backgroundColor: Colors.black54,
+                                                          colorText: Colors.white,
+                                                          margin: const EdgeInsets.all(8),
+                                                          borderRadius: 8,
+                                                          duration: const Duration(seconds: 2),
+                                                          icon: const Icon(Icons.copy, color: Colors.white),
                                                         );
                                                       },
                                                       child: _matchWords[index],
@@ -579,14 +598,14 @@ class DesktopHome extends StatelessWidget {
                                                           children: <TextSpan>[
                                                             TextSpan(
                                                               text: _wordDetail['phonetic']!=null && _wordDetail['phonetic']!=""?"\\${_wordDetail['phonetic']}\\":"",
-                                                            style: TextStyle(fontSize: 16, fontFamily: 'NotoSansSC')
+                                                            style: TextStyle(fontSize: 16)
                                                             ),
                                                             const TextSpan(text: "\n"),
                                                             _addHighlightToTags(_wordDetail),
                                                             const TextSpan(text: "\n"),
                                                             TextSpan(
                                                               text: _wordDetail['translation']!=null && _wordDetail['translation']!=""?_wordDetail['translation'] as String:"",
-                                                              style: const TextStyle(backgroundColor: Colors.greenAccent, fontFamily: 'NotoSansSC')
+                                                              style: const TextStyle(backgroundColor: Colors.greenAccent)
                                                             ),
                                                             const TextSpan(text: "\n"),
                                                             _addHighlightToPos(_wordDetail),
@@ -614,8 +633,8 @@ class DesktopHome extends StatelessWidget {
                                 left: 20,
                                 bottom: 0,
                                 child: Container(
-                                  height: 200,
-                                  width: 200,
+                                  height: 150,
+                                  width: 220,
                                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                                   decoration: BoxDecoration(
                                     color: Colors.white70,
@@ -634,13 +653,10 @@ class DesktopHome extends StatelessWidget {
                                   child: ListView(
                                     children:[
                                       ListTile(
-                                        title: Text('/root␣'),
+                                        title: Text('/root␣word 查词根'),
                                       ),
                                       ListTile(
-                                        title: Text('/config␣'),
-                                      ),
-                                      ListTile(
-                                        title: Text('/help␣'),
+                                        title: Text('/config␣[未实现]'),
                                       ),
                                     ]
                                   ),
@@ -685,22 +701,28 @@ class DesktopHome extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        // Ink(
-                        //   decoration: const ShapeDecoration(
-                        //     color: Colors.lightBlue,
-                        //     shape: CircleBorder(),
-                        //   ),
-                        //   child: IconButton(
-                        //     color: Colors.grey,
-                        //     hoverColor: Colors.black54,
-                        //     onPressed: () {
-                        //       ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
-                        //         customSnackBar(content: "暂未开放"),
-                        //       );
-                        //     }, 
-                        //     icon: const Icon(Icons.mic_rounded)
-                        //   ),
-                        // ),
+                        Ink(
+                          decoration: const ShapeDecoration(
+                            color: Colors.lightBlue,
+                            shape: CircleBorder(),
+                          ),
+                          child: IconButton(
+                            color: Colors.grey,
+                            hoverColor: Colors.black54,
+                            onPressed: () {
+                              Get.snackbar("not yet open", "not yet open",
+                                snackPosition: SnackPosition.TOP,
+                                backgroundColor: Colors.black54,
+                                colorText: Colors.white,
+                                margin: const EdgeInsets.all(8),
+                                borderRadius: 8,
+                                duration: const Duration(seconds: 2),
+                                icon: const Icon(Icons.close, color: Colors.white),
+                              );
+                            }, 
+                            icon: const Icon(Icons.mic_rounded)
+                          ),
+                        ),
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.only(left: 10),
@@ -805,7 +827,6 @@ TextSpan _addHighlightToPos(Map<String, String> wordDetail) {
         text: wordList[0].replaceFirst('n', '名词').replaceFirst('v', '动词').replaceFirst('j', '形容词').replaceFirst('r', '副词')
         .replaceFirst('m', '数词').replaceFirst('q', '量词').replaceFirst('p', '介词').replaceFirst('c', '连词')
         .replaceFirst('u', '助词').replaceFirst('y', '语气词').replaceFirst('e', '叹词').replaceFirst('o', '拟声词'),
-        style: const TextStyle(fontFamily: 'NotoSansSC'),
       ));
       if(wordList.length>1){
         children.add(TextSpan(
@@ -843,8 +864,7 @@ class MatchWords extends StatelessWidget {
             isSelected ? Colors.greenAccent : Colors.transparent,
         fontSize: 12,
         fontWeight: fullMatch ? FontWeight.bold : FontWeight.normal,
-        fontFamily: GoogleFonts.getFont('Roboto').fontFamily,
-        fontFamilyFallback: const ['Arial']);
+        );
 
     return SizedBox(
       height: 20,

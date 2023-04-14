@@ -244,10 +244,15 @@ class MobileSignIn extends StatelessWidget {
                         if (_formKey.currentState!.validate() && await c.signin(_usernameField.text, _passwordField.text)) {
                             Get.offAll(DesktopHome());
                         }else{
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: const Text('Please check your username or password length'),
+                          Get.snackbar("Error", 'Please check your username or password length',
+                            snackPosition: SnackPosition.TOP,
+                            backgroundColor: Colors.black54,
+                            colorText: Colors.white,
+                            margin: const EdgeInsets.all(8),
+                            borderRadius: 8,
                             duration: const Duration(seconds: 2),
-                          ));
+                            icon: const Icon(Icons.error, color: Colors.white),
+                          );
                         }
                       },
                       style: ElevatedButton.styleFrom(

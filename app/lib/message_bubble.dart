@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:app/MessageController.dart';
 import 'package:app/controller.dart';
 import 'package:flutter/material.dart';
 import 'package:app/config.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -29,7 +31,6 @@ class MessageBubble extends StatelessWidget {
 
   final Controller c = Get.find();
   final MessageController messageController = Get.find<MessageController>();
-  String username = "";
   bool isMe = false;
   
 
@@ -38,9 +39,6 @@ class MessageBubble extends StatelessWidget {
     Future<void> setIsMe() async {
       c.getUUID().then((_uuid) {
         isMe = _uuid == sender_uuid;
-      });
-      c.getUserName().then((_username) {
-        username = _username;
       });
     }
     
@@ -68,68 +66,66 @@ class MessageBubble extends StatelessWidget {
                 children: [
                   if (!isMe) ...[
                     // Left avatar
-                    Container(
-                      width: 50,
-                      height: 50,
-                      color: Colors.black12,
-                      margin: const EdgeInsets.only(right: 8),
-                      child: CachedNetworkImage(
-                        width: 40,
-                        height: 40,
-                        imageUrl: "${HTTP_SERVER_HOST}/avatar-Jarvis",
-                        imageBuilder: (context, imageProvider) => Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(3),
-                            image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.cover,
-                                // colorFilter:
-                                //     ColorFilter.mode(Colors.red, BlendMode.colorBurn)
-                                ),
-                          ),
-                        ),
-                        placeholder: (context, url) => CircularProgressIndicator(),
-                        errorWidget: (context, url, error) => Icon(Icons.error),
-                      ),
-                    ),
+                    showAvatar()
                   ],
                   Flexible(
-                    child: Stack(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end ,
                       children: [
-                        CustomPaint(
-                          painter:
-                            MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            // constraints: BoxConstraints(
-                            //   minWidth: 320,
-                            // ),
-                            child: Obx(() => SelectableText.rich(
-                              templateDispatch(context),
-                              minLines: 1,
-                            )),
-                          ),
+                        Stack(
+                          children: [
+                            CustomPaint(
+                              painter:
+                                MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                // constraints: BoxConstraints(
+                                //   minWidth: 320,
+                                // ),
+                                child: Obx(() => SelectableText.rich(
+                                  templateDispatch(context),
+                                  minLines: 1,
+                                )),
+                              ),
+                            ),
+                          ],
                         ),
+                        Container(
+                          width: 30,
+                          height: 30,
+                          // color: Colors.black12,
+                          margin: const EdgeInsets.all(1),
+                          child: IconButton(
+                            onPressed: () {
+                              if (dataList.length > 0){
+                                String total_text = "";
+                                for (var i = 0; i < dataList.length; i++) {
+                                  // if dataList[i] is String, join them
+                                  if (dataList[i] is String)
+                                    total_text += dataList[i];
+                                }
+                                Clipboard.setData(ClipboardData(text: total_text));
+                                if (total_text.length > 0)
+                                  Get.snackbar("Success", "Copied to clipboard",
+                                    snackPosition: SnackPosition.TOP,
+                                    backgroundColor: Colors.black54,
+                                    colorText: Colors.white,
+                                    margin: const EdgeInsets.all(8),
+                                    borderRadius: 8,
+                                    duration: const Duration(seconds: 2),
+                                    icon: const Icon(Icons.copy, color: Colors.white),
+                                  );
+                              }                              
+                            },
+                            icon: Icon(Icons.copy, size: 15, color: Colors.black26)
+                            ),
+                        )
                       ],
                     ),
                   ),
                   if (isMe) ...[
                     // Right avatar
-                    Container(
-                      width: 50,
-                      height: 50,
-                      // color: Colors.black12,
-                      margin: const EdgeInsets.only(left: 8),
-                      child: SvgPicture.network(
-                        "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${username}",
-                        height: 40,
-                        width: 40,
-                        semanticsLabel: 'user avatar',
-                        placeholderBuilder: (BuildContext context) => Container(
-                            padding: const EdgeInsets.all(40.0),
-                            child: const CircularProgressIndicator()),
-                        )
-                    ),
+                    showAvatar()
                   ],
                 ],
               ),
@@ -149,10 +145,68 @@ class MessageBubble extends StatelessWidget {
           return _buildItem();
         }
       },
-    );
-    
+    );  
   }
-  
+
+  Widget showAvatar() {
+    return FutureBuilder<String>(
+      future: c.imageTypes("${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}"),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.hasError) {
+            return Icon(Icons.error);
+          }
+          if (snapshot.data == 'jpeg') {
+            return CachedNetworkImage(
+              imageUrl: "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}",
+              imageBuilder: (context, imageProvider) => Container(
+                width: 50,
+                height: 50,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(3),
+                  image: DecorationImage(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              placeholder: (context, url) => Container(
+                width: 50,
+                height: 50,
+                color: Colors.black12,
+                margin: const EdgeInsets.only(right: 8),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              errorWidget: (context, url, error) => Icon(Icons.error),
+            );
+          } else {
+            return SvgPicture.network(
+              "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}",
+              height: 40,
+              width: 40,
+              semanticsLabel: 'avatar',
+              placeholderBuilder: (BuildContext context) => Container(
+                width: 50,
+                height: 50,
+                color: Colors.black12,
+                margin: const EdgeInsets.only(right: 8),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            );
+          }
+        }
+        return Container(
+          width: 50,
+          height: 50,
+          color: Colors.black12,
+          margin: const EdgeInsets.only(right: 8),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      },
+    );
+  }
+
   TextSpan templateDispatch(BuildContext context) {
     if(type == WordPipeMessageType.word2root){
       // 通过单词查词根
@@ -187,7 +241,11 @@ class MessageBubble extends StatelessWidget {
   }
 
   TextSpan templateWord2Root(BuildContext context) {
-    List<TextSpan> spans = [];
+    if ( dataList.length == 0 ) {
+      return TextSpan(children: [TextSpan(text: "No root information was found for this word."), WidgetSpan(child: Icon(Icons.sentiment_dissatisfied, color: Colors.red, size: 20))]);
+    }
+
+    List<InlineSpan> spans = [];
 
     dataList.forEach((word_list) {
       word_list.forEach((word_name, root_list) {
@@ -207,24 +265,25 @@ class MessageBubble extends StatelessWidget {
                   List<String> examples = List<String>.from(value);
                   spans.add(TextSpan(text: "Examples:\n"));
                   examples.forEach((example) {
-                    spans.add(TextSpan(text: " ["));
                     spans.add(
-                      TextSpan(
-                        text: example, 
-                        style: TextStyle(
-                          color: Color.fromARGB(255, 11, 66, 93),
-                          fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily,
-                          fontSize: 14,
-                          decoration: TextDecoration.underline),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () async {
-                              await c.chat(username, "/root $example");
-                            },
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: TextButton(
+                          onPressed: () async {
+                            await c.chat(await c.getUserName(), "/root $example");
+                          }, 
+                          child: Text(
+                            example,
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 11, 66, 93),
+                              fontSize: 14,
+                              decoration: TextDecoration.underline
+                            )
+                          )
+                        )
                       )
                     );
-                    spans.add(TextSpan(text: "] "));
                   });
-                  spans.add(TextSpan(text: "\n"));
                   spans.add(TextSpan(text: "\n"));
                 } else {
                   // Handle other keys, which contain strings

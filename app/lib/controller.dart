@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:app/config.dart';
 import 'package:app/cache_helper.dart';
+import 'package:http/http.dart' as http;
 import 'dart:async';
 
 
@@ -95,6 +96,25 @@ class Controller extends GetxController{
       await CacheHelper.setData('expires_at', null);
     }
     return true;
+  }
+  Future<String> imageTypes(String url) async {
+    var response = await http.head(Uri.parse(url));
+    if (response.statusCode != 200){
+      return "not exists";
+    }
+    response.headers.forEach((key, value) {
+      print(key + " : " + value);
+    });
+    if(response.headers['content-type'] != null){
+      if(response.headers['content-type']!.contains('jpeg')){
+        return "jpeg";
+      }else if(response.headers['content-type']!.contains('png')){
+        return "png";
+      }else if(response.headers['content-type']!.contains('svg')){
+        return "svg";
+      }   
+    }
+    return "not exists";
   }
 }
 

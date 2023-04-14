@@ -311,18 +311,28 @@ class SignUp extends StatelessWidget {
                       _passwordFocusNode2.unfocus();
                       if (_formKey.currentState!.validate()) {
                         if (await c.signup_with_promo(_usernameField.text, _passwordField.text, _promoField.text)){
-                          Get.offAll(UserProfile());
+                          Get.offAll(DesktopHome());
                         }else{
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: const Text('Please check your invite code is correct'),
+                          Get.snackbar("Error", "Please check your invite code.",
+                            snackPosition: SnackPosition.TOP,
+                            backgroundColor: Colors.black54,
+                            colorText: Colors.white,
+                            margin: const EdgeInsets.all(8),
+                            borderRadius: 8,
                             duration: const Duration(seconds: 2),
-                          ));
+                            icon: const Icon(Icons.error, color: Colors.white),
+                          );
                         }
                       }else{
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: const Text('Please check your username or password length'),
-                          duration: const Duration(seconds: 2),
-                        ));
+                        Get.snackbar("Error", "Please check your username or password length.",
+                            snackPosition: SnackPosition.TOP,
+                            backgroundColor: Colors.black54,
+                            colorText: Colors.white,
+                            margin: const EdgeInsets.all(8),
+                            borderRadius: 8,
+                            duration: const Duration(seconds: 2),
+                            icon: const Icon(Icons.error, color: Colors.white),
+                          );
                       }
                     },
                     style: ElevatedButton.styleFrom(

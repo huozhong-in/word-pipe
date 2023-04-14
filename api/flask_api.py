@@ -33,7 +33,6 @@ import streamtologger
 from Crypto.Cipher import AES
 import base64
 from queue import Queue
-import codecs
 
 
 app = Flask(__name__)
@@ -273,7 +272,8 @@ def chat():
         return make_response('JSON data required', 500)
     
     tic = time.perf_counter()
-    print(username, message)
+
+    print(f'[{username}]: {message}')
     # 给每一个登录用户分配一个channel，用于SSE推送
     channel: str = SSE_MSG_DEFAULT_CHANNEL
     if request.headers.get('X-access-token'):
@@ -291,17 +291,20 @@ def chat():
     if message.startswith('/root '):
         back_data: json = {}
         back_data = get_root_by_word(message)
-        def publish_func1():
-            id = generate_time_based_client_id(prefix=username)
-            print("chat() /root publish id:", id)
-            time.sleep(1)  # 延迟一秒
-            with app.app_context():
-                sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
+        id = generate_time_based_client_id(prefix=username)
+        print("chat() /root publish id:", id)
+        if os.environ.get('DEBUG_MODE') != None:
+            def publish_func1():
+                time.sleep(1)  # 开发环境要延迟一秒，否则SSE数据比HTTP还先返回，让用户困惑
+                with app.app_context():
+                    sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
 
-        thread = threading.Thread(target=publish_func1)
-        thread.start()
+            thread = threading.Thread(target=publish_func1)
+            thread.start()
+        else:
+            sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
 
-    elif message.startswith('/help '):
+    elif message.startswith('/config '):
         pass
 
     toc = time.perf_counter()
@@ -345,30 +348,41 @@ def get_root_by_word(message: str) -> json:
             
     back_data: json = {}
     back_data['username'] = "Jarvis"
-    back_data['uuid'] = "Jarvis"
+    back_data['uuid'] = userDB.get_user_by_username("Jarvis").uuid
     back_data['type'] = 101
     back_data['dataList'] = dataList
     back_data['createTime'] = int(time.time())
-    # print(back_data)
+    print(back_data)
     return back_data
 
-@app.route('/api/avatar-Jarvis')
-def get_image():
-    # 读取图片数据
-    img = Image.open(Path(Path(__file__).parent.absolute() / 'assets/robot.jpg'))
-    img_byte_arr = BytesIO()
-    img.save(img_byte_arr, format='JPEG')
-    img_byte_arr.seek(0)
-    # 发送图像数据
-    return send_file(img_byte_arr, mimetype='image/jpeg')
+# @app.route('/api/avatar-Jarvis')
+# def get_image():
+#     # 读取图片数据
+#     img = Image.open(Path(Path(__file__).parent.absolute() / 'assets/robot.jpg'))
+#     img_byte_arr = BytesIO()
+#     img.save(img_byte_arr, format='JPEG')
+#     img_byte_arr.seek(0)
+#     # 发送图像数据
+#     return send_file(img_byte_arr, mimetype='image/jpeg')
 
 @app.route('/api/avatar/<user_name>')
 def get_user_avatar(user_name: str):
-    if Path(Path(__file__).parent.absolute() / f'assets/avatar/{user_name}.svg').exists() == False:
-        user_name = DEFAULT_AYONYMOUS_USER_ID
-    with open(Path(Path(__file__).parent.absolute() / f'assets/avatar/{user_name}.svg'), 'r') as f:
-        svg = f.read()
-    return Response(svg, mimetype='image/svg+xml')
+    imgFilePrefix = Path(Path(__file__).parent.absolute() / 'assets/avatar')
+    jpgImgFile = Path(imgFilePrefix / f'{user_name}.jpg')
+    svgImgFile = Path(imgFilePrefix / f'{user_name}.svg')
+    if jpgImgFile.exists():
+        img = Image.open(jpgImgFile)
+        img_byte_arr = BytesIO()
+        img.save(img_byte_arr, format='JPEG')
+        img_byte_arr.seek(0)
+        # 发送图像数据
+        return send_file(img_byte_arr, mimetype='image/jpeg')
+    elif svgImgFile.exists():
+        with open(svgImgFile, 'r') as f:
+            svg = f.read()
+        return Response(svg, mimetype='image/svg+xml')
+    else:
+        return make_response('', 404)
 
 @app.route('/api/user/signup', methods = ['POST'])
 def signup():
@@ -457,12 +471,9 @@ def openai_proxy(path):
     # record message to database
     username = request.json['user']
     messages = request.json['messages']
-    # for msg in messages:
-    #     # convert '[{"role": "user", "content": "\u559d\u666e\u6d31\u8336\u6709\u4ec0\u4e48\u6709\u4ec0\u4e48\u597d\u5904\uff1f"}]' to '[{"role": "user", "content": "喝普洱茶有什么有什么好处？"}]'
-    #     msg['content'] = codecs.encode(msg['content'], "utf-8")
     crdb = ChatRecordDB()
     myuuid: str = userDB.get_user_by_username(username).uuid
-    cr = ChatRecord(msgFrom=myuuid, msgTo='Jarvis', msgCreateTime=int(time.time()), msgContent=json.dumps(messages, ensure_ascii=False), msgType=1)
+    cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jarvis').uuid, msgCreateTime=int(time.time()), msgContent=json.dumps(messages, ensure_ascii=False), msgType=1)
     crdb.insert_chat_record(cr)
     crdb.close()
 
@@ -491,7 +502,7 @@ def openai_proxy(path):
                     delta = j.get('choices')[0].get('delta') if j.get('choices') else None
                     if delta is not None and delta.get('content') is not None:
                         completion_text_queue.put(delta.get('content'))
-                        print(delta.get('content'))
+                        # print(delta.get('content'))
                     elif delta is not None and delta.get('finish_reason') is not None and delta.get('finish_reason') == 'stop':
                         print('finish_reason: stop')
                         completion_text_queue.put("[DONE]")
@@ -509,7 +520,7 @@ def openai_proxy(path):
                 completion_text += c
         myuuid: str = userDB.get_user_by_username(username).uuid
         crdb = ChatRecordDB()
-        cr = ChatRecord(msgFrom='Jarvis', msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=completion_text, msgType=1)
+        cr = ChatRecord(msgFrom=userDB.get_user_by_username('Jarvis').uuid, msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=completion_text, msgType=1)
         crdb.insert_chat_record(cr)
         crdb.close()
     
@@ -563,8 +574,8 @@ def load_chat_records():
     for cr in crdb.get_chat_record(u.uuid, last_id, limit=30):
         r.append({
             'pk_chat_record': cr.pk_chat_record,
-            'msgFrom': cr.msgFrom,
-            'msgFromUUID': userDB.get_user_by_username(cr.msgFrom).uuid if userDB.get_user_by_username(cr.msgFrom) is not None else 'Jarvis', # TODO Jarvis没有UUID，要在数据库中生成一条记录
+            'msgFrom': userDB.get_user_by_uuid(cr.msgFrom).user_name,
+            'msgFromUUID': cr.msgFrom,
             # 'msgTo': cr.msgTo,
             'msgCreateTime': cr.msgCreateTime,
             'msgContent': cr.msgContent,

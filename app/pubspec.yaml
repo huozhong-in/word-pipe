@@ -97,7 +97,7 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  fonts:
+  # fonts:
     # - family: Schyler
     #   fonts:
     #     - asset: fonts/Schyler-Regular.ttf
@@ -108,13 +108,5 @@ flutter:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
-    - family: Roboto
-      fonts:
-        - asset: google_fonts/Roboto-Regular.ttf
-    - family: NotoSansSC
-      fonts:
-        - asset: google_fonts/NotoSansSC-Regular.otf
-        - asset: google_fonts/NotoSansSC-Bold.otf
-          weight: 700
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
