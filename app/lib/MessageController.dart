@@ -22,6 +22,23 @@ class MessageController extends GetxController{
   // set setLoading(bool value) => _isLoading.value = value;
   bool get isLoading => _isLoading.value;
 
+  // find  MessageModel by key
+  MessageModel findMessageByKey(Key key) {
+    return messages.firstWhere((message) => message.key == key);
+  }
+
+  // update MessageModel by key
+  void updateMessageByKey(Key key, MessageModel message) {
+    final index = messages.indexWhere((message) => message.key == key);
+    messages[index] = message;
+  }
+
+  //update MessageModel' dataList item by key
+  void updateMessageDataListByKey(Key key, int index, String value) {
+    final message = messages.firstWhere((message) => message.key == key);
+    message.dataList[index] = value;
+  }
+  
   final scrollController = ScrollController();
   @override
   void onInit() {
@@ -61,19 +78,18 @@ class MessageController extends GetxController{
     return lastSegmentBeginId;
   }
 
-  int addMessage(MessageModel message) {
+  Key addMessage(MessageModel message) {
     messages.insert(0, message);
-    return 0;
+    return message.key;
   }
 
-  void updateMessage(int index, List<dynamic> newDataList) {
-    final message = messages[index];
-    if (message.dataList[0] == '...'){
-      message.dataList.removeAt(0);
-    }
-    message.dataList.value = List<String>.from(newDataList);
-    update();
-  }
+  // void updateMessage(MessageModel message, List<dynamic> newDataList) {
+  //   if (message.dataList[0] == '...'){
+  //     message.dataList.removeAt(0);
+  //   }
+  //   message.dataList.value = List<String>.from(newDataList);
+  //   update();
+  // }
 
   Future<void> getChatCompletion(String model, String prompt) async {
     String curr_user = "";
@@ -102,7 +118,7 @@ class MessageController extends GetxController{
       return;
     }
 
-    int needUpdate = addMessage(MessageModel(
+    Key needUpdate = addMessage(MessageModel(
       dataList: RxList(['...']),
       type: WordPipeMessageType.stream,
       username: "Jarvis",
@@ -130,9 +146,12 @@ class MessageController extends GetxController{
       final content = choice.delta.content;
       if(content != null){
         // print(content);
-        final message = messages[needUpdate];
+        final message = findMessageByKey(needUpdate);
+        if (message.dataList[0] == '...'){
+          message.dataList.removeAt(0);
+        }
         message.dataList.add(content);
-        updateMessage(needUpdate, message.dataList);
+        update();
       }
     });
   }

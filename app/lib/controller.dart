@@ -79,9 +79,9 @@ class Controller extends GetxController{
     if (response.statusCode != 200){
       return "not exists";
     }
-    response.headers.forEach((key, value) {
-      print(key + " : " + value);
-    });
+    // response.headers.forEach((key, value) {
+    //   print(key + " : " + value);
+    // });
     if(response.headers['content-type'] != null){
       if(response.headers['content-type']!.contains('jpeg')){
         return "jpeg";

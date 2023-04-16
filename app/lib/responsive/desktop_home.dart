@@ -53,10 +53,10 @@ class DesktopHome extends StatelessWidget {
                 key: UniqueKey(), 
               )
             );
+            if(text.trim().substring(0,1) != "/"){
+              messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
+            }
           });
-          if(text.trim().substring(0,1) != "/"){
-            messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
-          }
         }else{
           customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
           // 三秒后跳转到登录页面
