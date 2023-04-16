@@ -1,12 +1,11 @@
-import 'package:app/responsive/desktop_home.dart';
+import 'package:wordpipe/responsive/desktop_home.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
-import 'package:app/config.dart';
-import 'package:app/controller.dart';
-import 'package:app/validator.dart';
-import 'package:app/user_profile.dart';
-import 'package:app/responsive/mobile_sign_in.dart';
+import 'package:wordpipe/config.dart';
+import 'package:wordpipe/controller.dart';
+import 'package:wordpipe/validator.dart';
+import 'package:wordpipe/responsive/mobile_sign_in.dart';
 
 
 // ignore: must_be_immutable
@@ -313,26 +312,10 @@ class SignUp extends StatelessWidget {
                         if (await c.signup_with_promo(_usernameField.text, _passwordField.text, _promoField.text)){
                           Get.offAll(DesktopHome());
                         }else{
-                          Get.snackbar("Error", "Please check your invite code.",
-                            snackPosition: SnackPosition.TOP,
-                            backgroundColor: Colors.black54,
-                            colorText: Colors.white,
-                            margin: const EdgeInsets.all(8),
-                            borderRadius: 8,
-                            duration: const Duration(seconds: 2),
-                            icon: const Icon(Icons.error, color: Colors.white),
-                          );
+                          customSnackBar(title: "Error", content: "Please check your invite code.");
                         }
                       }else{
-                        Get.snackbar("Error", "Please check your username or password length.",
-                            snackPosition: SnackPosition.TOP,
-                            backgroundColor: Colors.black54,
-                            colorText: Colors.white,
-                            margin: const EdgeInsets.all(8),
-                            borderRadius: 8,
-                            duration: const Duration(seconds: 2),
-                            icon: const Icon(Icons.error, color: Colors.white),
-                          );
+                        customSnackBar(title: "Error", content: "Please check your username or password length.");
                       }
                     },
                     style: ElevatedButton.styleFrom(

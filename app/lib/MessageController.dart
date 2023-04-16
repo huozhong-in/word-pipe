@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:app/MessageModel.dart';
-import 'package:app/sse_client.dart';
-import 'package:app/cache_helper.dart';
-import 'package:app/config.dart';
+import 'package:wordpipe/MessageModel.dart';
+import 'package:wordpipe/sse_client.dart';
+import 'package:wordpipe/cache_helper.dart';
+import 'package:wordpipe/config.dart';
 import 'package:dart_openai/openai.dart';
 import 'dart:developer';
 
@@ -41,9 +41,10 @@ class MessageController extends GetxController{
         !scrollController.position.outOfRange) {
         _isLoading.value = true;
         String curr_user = "";
-        if (await CacheHelper.hasData('username')){
-          if(await CacheHelper.getData('username') != null){
-            curr_user = await CacheHelper.getData('username');
+        if (await CacheHelper.hasData('sessionData')){
+          Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
+          if (sessionData.containsKey('error') == false){
+            curr_user = sessionData['username'] as String;
           }
         }
         if (curr_user != ""){
@@ -76,40 +77,26 @@ class MessageController extends GetxController{
 
   Future<void> getChatCompletion(String model, String prompt) async {
     String curr_user = "";
-    if (await CacheHelper.hasData('username')){
-      if(await CacheHelper.getData('username') != null){
-        curr_user = await CacheHelper.getData('username');
-      }
-    }
+    String access_token = "";
+    String apiKey = "";
+    String baseUrl = "";
+    if (await CacheHelper.hasData('sessionData')){
+          Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
+          if (sessionData.containsKey('error') == false){
+            curr_user = sessionData['username'] as String;
+            access_token = sessionData['access_token'] as String;
+            apiKey = sessionData['apiKey'] as String;
+            baseUrl = sessionData['baseUrl'] as String;
+          }
+        }
     if (curr_user == ""){
       return;
-    }
-
-    String access_token = "";
-    if (await CacheHelper.hasData('access_token')){
-      if(await CacheHelper.getData('access_token') != null){
-        access_token = await CacheHelper.getData('access_token');
-      }
     }
     if (access_token == ""){
       return;
     }
-    
-    String apiKey = "";
-    if (await CacheHelper.hasData('apiKey')){
-      if(await CacheHelper.getData('apiKey') != null){
-        apiKey = await CacheHelper.getData('apiKey');
-      }
-    }
     if (apiKey == ""){
       return;
-    }
-
-    String baseUrl = "";
-    if (await CacheHelper.hasData('baseUrl')){
-      if(await CacheHelper.getData('baseUrl') != null){
-        baseUrl = await CacheHelper.getData('baseUrl');
-      }
     }
     if (baseUrl == ""){
       return;
@@ -201,11 +188,12 @@ class ChatRecord extends GetConnect {
     data['username'] = username;
     data['last_id'] = last_id;
     String  access_token = "";
-    if (await CacheHelper.hasData('access_token')){
-      if(await CacheHelper.getData('access_token') != null){
-        access_token = await CacheHelper.getData('access_token');
-      }
-    }
+    if (await CacheHelper.hasData('sessionData')){
+          Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
+          if (sessionData.containsKey('error') == false){
+            access_token = sessionData['access_token'] as String;
+          }
+        }
     Map<String,String> hs = {};
     hs['X-access-token'] = access_token;
     final response = await post(url.toString(), data, headers: hs, contentType: 'application/json');

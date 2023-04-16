@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:app/responsive/mobile_sign_in.dart';
+import 'package:wordpipe/responsive/mobile_sign_in.dart';
 
 class DesktopSignIn extends StatelessWidget {
   const DesktopSignIn({super.key});

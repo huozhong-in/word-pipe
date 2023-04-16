@@ -1,18 +1,18 @@
 import 'dart:math' as math;
-import 'package:app/config.dart';
-import 'package:app/responsive/mobile_sign_in.dart';
+import 'package:wordpipe/config.dart';
+import 'package:wordpipe/responsive/mobile_sign_in.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
-import 'package:app/controller.dart';
-import 'package:app/MessageView.dart';
-import 'package:app/user_profile.dart';
+import 'package:wordpipe/controller.dart';
+import 'package:wordpipe/MessageView.dart';
+import 'package:wordpipe/user_profile.dart';
 import 'dart:developer';
 
 // ugly code
-import 'package:app/MessageController.dart';
-import 'package:app/MessageModel.dart';
+import 'package:wordpipe/MessageController.dart';
+import 'package:wordpipe/MessageModel.dart';
 import 'package:lottie/lottie.dart';
 
 // ignore: must_be_immutable
@@ -58,15 +58,7 @@ class DesktopHome extends StatelessWidget {
             messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
           }
         }else{
-          Get.snackbar("Error", "Failed to send message, please Sign In again.",
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.black54,
-            colorText: Colors.white,
-            margin: const EdgeInsets.all(8),
-            borderRadius: 8,
-            duration: const Duration(seconds: 2),
-            icon: const Icon(Icons.error, color: Colors.white),
-          );
+          customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
           // 三秒后跳转到登录页面
           Future.delayed(Duration(seconds: 3), () {
             Get.offAll(MobileSignIn());
@@ -357,7 +349,7 @@ class DesktopHome extends StatelessWidget {
             _handleMatchWords(_textController.text);
           },
           textInputAction: TextInputAction.newline,
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily,fontFamilyFallback: ['Arial'], fontWeight: FontWeight.w400, fontSize: 16, color: Colors.black),
           maxLines: 3,
           minLines: 3,
           decoration: InputDecoration(
@@ -408,11 +400,23 @@ class DesktopHome extends StatelessWidget {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text('Word Pipe',
-          style: TextStyle(
-            color: Colors.black54,
-            fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
-            fontWeight: FontWeight.w600),
+        title: RichText(
+          text: TextSpan(
+            text: 'Word Pipe',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+              color: Colors.black54,
+              fontSize: 20,
+              fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
+              fontWeight: FontWeight.w600),
+            children: <TextSpan>[
+              TextSpan(
+                text: '  alpha',
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: Colors.black54,
+                  fontSize: 12),
+              ),
+            ],
+          )
         ),
         centerTitle: false,
         backgroundColor: Colors.greenAccent[100],
@@ -543,15 +547,7 @@ class DesktopHome extends StatelessWidget {
                                                   () => ListView.builder(
                                                     itemBuilder: (_, int index) => InkWell(
                                                       onDoubleTap: () {
-                                                        Get.snackbar("select word", _matchWords[index].text,
-                                                          snackPosition: SnackPosition.TOP,
-                                                          backgroundColor: Colors.black54,
-                                                          colorText: Colors.white,
-                                                          margin: const EdgeInsets.all(8),
-                                                          borderRadius: 8,
-                                                          duration: const Duration(seconds: 2),
-                                                          icon: const Icon(Icons.copy, color: Colors.white),
-                                                        );
+                                                        customSnackBar(title: "select word", content: _matchWords[index].text);
                                                       },
                                                       child: _matchWords[index],
                                                     ),
@@ -710,15 +706,7 @@ class DesktopHome extends StatelessWidget {
                             color: Colors.grey,
                             hoverColor: Colors.black54,
                             onPressed: () {
-                              Get.snackbar("not yet open", "not yet open",
-                                snackPosition: SnackPosition.TOP,
-                                backgroundColor: Colors.black54,
-                                colorText: Colors.white,
-                                margin: const EdgeInsets.all(8),
-                                borderRadius: 8,
-                                duration: const Duration(seconds: 2),
-                                icon: const Icon(Icons.close, color: Colors.white),
-                              );
+                              customSnackBar(title: "not yet open", content: "not yet open");
                             }, 
                             icon: const Icon(Icons.mic_rounded)
                           ),

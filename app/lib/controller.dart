@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:app/config.dart';
-import 'package:app/cache_helper.dart';
+import 'package:wordpipe/config.dart';
+import 'package:wordpipe/cache_helper.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 
@@ -10,46 +10,33 @@ class Controller extends GetxController{
   final UserProvider _userProvider = UserProvider();
   
   Future<String> getUserName() async{
-    if (await CacheHelper.hasData('username')){
-      if(await CacheHelper.getData('username') != null){
-        return await CacheHelper.getData('username');
-      }
-    }
+    Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
+    if (sessionData.containsKey('error') == false)
+        return sessionData['username'] as String;
     return "";
   }
   Future<String> getUUID() async{
-    if (await CacheHelper.hasData('uuid')){
-      if(await CacheHelper.getData('uuid') != null){
-        return await CacheHelper.getData('uuid');
-      }
-    }
+    Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
+    if (sessionData.containsKey('error') == false)
+        return sessionData['uuid'] as String;
     return "";
   }
   Future<String> getAccessToken() async{
-    if (await CacheHelper.hasData('access_token')){
-      if(await CacheHelper.getData('access_token') != null){
-        Future<String> access_token = await CacheHelper.getData('access_token');
-        return access_token;
-      }
-    }
+    Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
+    if (sessionData.containsKey('error') == false)
+        return sessionData['access_token'] as String;
     return "";
   }
   Future<String> getApiKey() async{
-    if (await CacheHelper.hasData('apiKey')){
-      if(await CacheHelper.getData('apiKey') != null){
-        Future<String> apiKey = await CacheHelper.getData('apiKey');
-        return apiKey;
-      }
-    }
+    Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
+    if (sessionData.containsKey('error') == false)
+        return sessionData['apiKey'] as String;
     return "";
   }
   Future<String> getBaseUrl() async{
-    if (await CacheHelper.hasData('baseUrl')){
-      if(await CacheHelper.getData('baseUrl') != null){
-        Future<String> baseUrl = await CacheHelper.getData('baseUrl');
-        return baseUrl;
-      }
-    }
+    Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
+    if (sessionData.containsKey('error') == false)
+        return sessionData['baseUrl'] as String;
     return "";
   }
   Future<List<dynamic>> searchWords(String word) async{
@@ -64,20 +51,16 @@ class Controller extends GetxController{
   Future<bool> chat(String username, String message) async{
     return await _userProvider.chat(username, message);
   }
-  Future<bool> signin(String username, String password) async{
-    if (await _userProvider.signin(username, password)){
-      return true;
-    }else{
-      return false;
-    }
+  Future<Map<String, dynamic>> signin(String username, String password) async{
+    return await _userProvider.signin(username, password);
   }
-  Future<bool> signup(String username, String password) async{
-    if (await _userProvider.signup(username, password)){
-      return true;
-    }else{
-      return false;
-    }
-  }
+  // Future<bool> signup(String username, String password) async{
+  //   if (await _userProvider.signup(username, password)){
+  //     return true;
+  //   }else{
+  //     return false;
+  //   }
+  // }
   Future<bool> signup_with_promo(String username, String password, String promo) async{
     if (await _userProvider.signup_with_promo(username, password, promo)){
       return true;
@@ -86,14 +69,8 @@ class Controller extends GetxController{
     }
   }
   Future<bool> signout() async{
-    if(await CacheHelper.hasData('username')){
-      await CacheHelper.setData('username', null);
-    }
-    if(await CacheHelper.hasData('access_token')){
-      await CacheHelper.setData('access_token', null);
-    }
-    if(await CacheHelper.hasData('expires_at')){
-      await CacheHelper.setData('expires_at', null);
+    if(await CacheHelper.hasData('sessionData')){
+      await CacheHelper.setData('sessionData', null);
     }
     return true;
   }
@@ -187,9 +164,10 @@ class UserProvider extends GetConnect {
     data['username'] = username;
     data['message'] = message;
     String  access_token = "";
-    if (await CacheHelper.hasData('access_token')){
-      if(await CacheHelper.getData('access_token') != null){
-        access_token = await CacheHelper.getData('access_token');
+    if (await CacheHelper.hasData('sessionData')){
+      if(await CacheHelper.getData('sessionData') != null){
+        Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
+        access_token = sessionData['access_token'] as String;
       }
     }
     Map<String,String> hs = {};
@@ -202,48 +180,40 @@ class UserProvider extends GetConnect {
     } else {
       if (response.statusCode == 401){
         // signout
-        if(await CacheHelper.hasData('username')){
-          await CacheHelper.setData('username', null);
-        }
-        if(await CacheHelper.hasData('access_token')){
-          await CacheHelper.setData('access_token', null);
-        }
-        if(await CacheHelper.hasData('expires_at')){
-          await CacheHelper.setData('expires_at', null);
+        if(await CacheHelper.hasData('sessionData')){
+          await CacheHelper.setData('sessionData', null);
         }
       }
       return false;
     }
   }
 
-  Future<bool> signin(String username, String password) async{
+  Future<Map<String, dynamic>> signin(String username, String password) async{
     Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signin');
     Map data = {};
     data['username'] = username;
     data['password'] = password;
     final response = await post(url.toString(), data);
+    Map<String, dynamic> rsp = Map<String, dynamic>.from(response.body);
     if (response.statusCode == 200) {
-      Map<String, dynamic> rsp = Map<String, dynamic>.from(response.body);
       await setLocalStorge(username, rsp);
-      return true;
-    } else {
-      return false;
     }
+    return rsp;
   }
-  Future<bool> signup(String username, String password) async{
-    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signup');
-    Map data = {};
-    data['username'] = username;
-    data['password'] = password;
-    final response = await post(url.toString(), data);
-    if (response.statusCode == 200) {
-      Map<String, dynamic> rsp = Map<String, dynamic>.from(response.body);
-      await setLocalStorge(username, rsp);
-      return true;
-    } else {
-      return false;
-    }
-  }
+  // Future<bool> signup(String username, String password) async{
+  //   Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signup');
+  //   Map data = {};
+  //   data['username'] = username;
+  //   data['password'] = password;
+  //   final response = await post(url.toString(), data);
+  //   if (response.statusCode == 200) {
+  //     Map<String, dynamic> rsp = Map<String, dynamic>.from(response.body);
+  //     await setLocalStorge(username, rsp);
+  //     return true;
+  //   } else {
+  //     return false;
+  //   }
+  // }
   Future<bool> signup_with_promo(String username, String password, String promo) async{
     Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signup_with_promo');
     Map data = {};
@@ -260,11 +230,24 @@ class UserProvider extends GetConnect {
     }
   }
   Future<void> setLocalStorge(String username, Map<String, dynamic> rsp) async {
-    await CacheHelper.setData('username', username);
-    await CacheHelper.setData('access_token', rsp['access_token'] as String);
-    await CacheHelper.setData('expires_at', rsp['expires_at'] as int);
-    await CacheHelper.setData('uuid', rsp['uuid'] as String);
-    await CacheHelper.setData('apiKey', decrypt(rsp['apiKey'] as String));
-    await CacheHelper.setData('baseUrl', rsp['baseUrl'] as String);
+    // 将登录后的数据保存在本地
+    Map<String, dynamic> sessionData = {};
+    sessionData['username'] = username;
+    sessionData['access_token'] = rsp['access_token'] as String;
+    sessionData['expires_at'] = rsp['expires_at'] as int;
+    sessionData['uuid'] = rsp['uuid'] as String;
+    sessionData['apiKey'] = decrypt(rsp['apiKey']);
+    sessionData['baseUrl'] = rsp['baseUrl'] as String;
+    await CacheHelper.setData('sessionData', sessionData);
+  }
+
+  Future<Map<String, dynamic>> getLocalStorge() async {
+    if (await CacheHelper.hasData('sessionData')){
+      if(await CacheHelper.getData('sessionData') != null){
+        Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
+        return sessionData;
+      }
+    }
+    return {"error": ""};
   }
 }

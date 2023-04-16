@@ -1,15 +1,15 @@
 import 'dart:io';
-import 'package:app/MessageController.dart';
-import 'package:app/controller.dart';
+import 'package:wordpipe/MessageController.dart';
+import 'package:wordpipe/controller.dart';
 import 'package:flutter/material.dart';
-import 'package:app/config.dart';
+import 'package:wordpipe/config.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:app/MessageBubblePainter.dart';
+import 'package:wordpipe/MessageBubblePainter.dart';
 import 'package:lottie/lottie.dart';
 
 // ignore: must_be_immutable
@@ -106,15 +106,7 @@ class MessageBubble extends StatelessWidget {
                                 }
                                 Clipboard.setData(ClipboardData(text: total_text));
                                 if (total_text.length > 0)
-                                  Get.snackbar("Success", "Copied to clipboard",
-                                    snackPosition: SnackPosition.TOP,
-                                    backgroundColor: Colors.black54,
-                                    colorText: Colors.white,
-                                    margin: const EdgeInsets.all(8),
-                                    borderRadius: 8,
-                                    duration: const Duration(seconds: 2),
-                                    icon: const Icon(Icons.copy, color: Colors.white),
-                                  );
+                                  customSnackBar(title: "Success", content: "Copied to clipboard");
                               }                              
                             },
                             icon: Icon(Icons.copy, size: 15, color: Colors.black26)

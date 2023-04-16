@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:app/MessageModel.dart';
-import 'package:app/message_bubble.dart';
-import 'package:app/typing_bubble.dart';
-import 'package:app/config.dart';
+import 'package:wordpipe/MessageModel.dart';
+import 'package:wordpipe/message_bubble.dart';
+import 'package:wordpipe/typing_bubble.dart';
+import 'package:wordpipe/config.dart';
 import 'package:get/get.dart';
 
 class MessageItem extends StatelessWidget {

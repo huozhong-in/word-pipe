@@ -1,5 +1,6 @@
 import 'dart:core';
 import 'dart:convert';
+import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pointycastle/export.dart';
@@ -40,11 +41,12 @@ class WordPipeMessageType{
 
 final ThemeData appTheme = ThemeData(
   useMaterial3: true,
+  brightness: Brightness.light,
   primarySwatch: Colors.green,
   primaryColor: const Color(0xFFF5F7FD),
   scaffoldBackgroundColor: const Color(0xFFF5F7FD),
   fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, // 'Georgia'
-  brightness: Brightness.light,
+  fontFamilyFallback: ["PingFang SC" , "Heiti SC" , 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans CJK HK'],
   // Define the default `TextTheme`. Use this to specify the default
   // text styling for headlines, titles, bodies of text, and more.
   // appBarTheme: ,
@@ -53,9 +55,17 @@ final ThemeData appTheme = ThemeData(
     displayMedium: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
     titleLarge: TextStyle(fontSize: 36.0, fontStyle: FontStyle.italic),
     bodyMedium: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
+    displaySmall: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+    titleMedium: TextStyle(fontSize: 18.0, fontStyle: FontStyle.italic),
+    titleSmall: TextStyle(fontSize: 16.0, fontStyle: FontStyle.italic),
   ),
   colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.orange),
-
+  visualDensity: VisualDensity.adaptivePlatformDensity,
+  textSelectionTheme: const TextSelectionThemeData(
+    cursorColor: Colors.red,
+    selectionColor: Colors.yellow,
+    selectionHandleColor: Colors.black,
+  )
 );
 
 class CustomColors {
@@ -74,6 +84,8 @@ class CustomColors {
 
 // define mobile layout and desktop layout width
 const double MOBILE_LAYOUT_WIDTH = 600;
+const double DESKTOP_LAYOUT_WIDTH = 1000;
+
 
 var textFontStyle = TextStyle(
   color: Colors.black,
@@ -118,13 +130,16 @@ var titleFontStyle = GoogleFonts.knewave(color: Colors.black, fontSize: 24, font
 // String debugLabel,
 // })
 
-SnackBar customSnackBar({required String content}) {
-  return SnackBar(
-    backgroundColor: Colors.greenAccent,
-    content: Text(
-      content,
-      style: const TextStyle(color: Colors.blueGrey, letterSpacing: 0.5),
-    ),
+
+SnackbarController customSnackBar({required String title, required String content}) {
+  return Get.snackbar(title, content,
+    snackPosition: SnackPosition.TOP,
+    backgroundColor: Colors.black54,
+    colorText: Colors.white,
+    margin: const EdgeInsets.all(8),
+    borderRadius: 8,
+    duration: const Duration(seconds: 2),
+    icon: const Icon(Icons.error, color: Colors.white),
   );
 }
 

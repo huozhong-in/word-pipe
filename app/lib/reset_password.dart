@@ -1,11 +1,10 @@
-import 'package:app/config.dart';
+import 'package:wordpipe/config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:app/controller.dart';
-import 'package:app/validator.dart';
+import 'package:wordpipe/controller.dart';
+import 'package:wordpipe/validator.dart';
 import 'dart:developer';
 
 
@@ -164,10 +163,7 @@ class ResetPassword extends StatelessWidget {
                             // await FirebaseAuth.instance.sendPasswordResetEmail(email: _emailField.text)
                             //   .then((value) {showAlertDialog(context);});
                           }else{
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: const Text('Please check your email format'),
-                              duration: const Duration(seconds: 2),
-                            ));
+                            customSnackBar(title: "Notice", content: "Please check your email format");
                           }
                         },
                         style: ElevatedButton.styleFrom(

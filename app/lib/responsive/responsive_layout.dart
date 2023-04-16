@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:app/config.dart';
-import 'package:app/controller.dart';
+import 'package:wordpipe/config.dart';
+import 'package:wordpipe/controller.dart';
 import 'package:get/get.dart';
-import 'package:app/responsive/desktop_home.dart';
-import 'package:app/responsive/desktop_sign_in.dart';
-import 'package:app/responsive/mobile_home.dart';
-import 'package:app/responsive/mobile_sign_in.dart';
+import 'package:wordpipe/responsive/desktop_home.dart';
+import 'package:wordpipe/responsive/desktop_sign_in.dart';
+import 'package:wordpipe/responsive/mobile_home.dart';
+import 'package:wordpipe/responsive/mobile_sign_in.dart';
 
 // ignore: must_be_immutable
 class ResponsiveLayout extends StatelessWidget {

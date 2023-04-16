@@ -1,15 +1,15 @@
-import 'package:app/config.dart';
-import 'package:app/responsive/mobile_sign_in.dart';
+import 'package:wordpipe/config.dart';
+import 'package:wordpipe/responsive/mobile_sign_in.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
-import 'package:app/controller.dart';
-import 'package:app/MessageView.dart';
-import 'package:app/user_profile.dart';
+import 'package:wordpipe/controller.dart';
+import 'package:wordpipe/MessageView.dart';
+import 'package:wordpipe/user_profile.dart';
 
 // ugly code
-import 'package:app/MessageController.dart';
-import 'package:app/MessageModel.dart';
+import 'package:wordpipe/MessageController.dart';
+import 'package:wordpipe/MessageModel.dart';
 
 class MobileHome extends StatelessWidget {
   MobileHome({super.key});
@@ -224,7 +224,7 @@ class MobileHome extends StatelessWidget {
             messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
           }
         }else{
-          Get.snackbar("Error", "Failed to send message, please Sign In again.");
+          customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
           // 三秒后跳转到登录页面
           Future.delayed(Duration(seconds: 3), () {
             Get.offAll(MobileSignIn());

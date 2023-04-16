@@ -1,5 +1,5 @@
-name: app
-description: A new Flutter project.
+name: wordpipe
+description: A app to practice English.
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -46,7 +46,6 @@ dependencies:
   shared_preferences_foundation: ^2.1.5
   sqflite: ^2.2.6
   url_launcher_macos: ^3.0.4
-  font_awesome_flutter: ^10.4.0
   cached_network_image: ^3.2.3
   flutter_svg: ^2.0.4
   lottie: ^2.3.1

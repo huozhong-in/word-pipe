@@ -1,8 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:get/get.dart';
-import 'package:app/config.dart';
+import 'package:/wordpipe/config.dart';
 
 class CustomRichText extends StatelessWidget {
   final String message;
@@ -28,15 +27,7 @@ class CustomRichText extends StatelessWidget {
                 if (await canLaunchUrl(url)) {
                   await launchUrl(url);
                 } else {
-                  Get.snackbar("Error", "无法打开链接",
-                    snackPosition: SnackPosition.TOP,
-                    backgroundColor: Colors.black54,
-                    colorText: Colors.white,
-                    margin: const EdgeInsets.all(8),
-                    borderRadius: 8,
-                    duration: const Duration(seconds: 2),
-                    icon: const Icon(Icons.error, color: Colors.white),
-                  );
+                  customSnackBar(title: "Error", content: "无法打开链接");
                 }
               },
           ),

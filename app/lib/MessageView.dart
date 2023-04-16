@@ -1,10 +1,10 @@
-import 'package:app/MessageModel.dart';
-import 'package:app/config.dart';
+import 'package:wordpipe/MessageModel.dart';
+import 'package:wordpipe/config.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:app/controller.dart';
-import 'package:app/MessageController.dart';
-import 'package:app/message_bubble.dart';
+import 'package:wordpipe/controller.dart';
+import 'package:wordpipe/MessageController.dart';
+import 'package:wordpipe/message_bubble.dart';
 
 // ignore: must_be_immutable
 class MessageView extends StatelessWidget {

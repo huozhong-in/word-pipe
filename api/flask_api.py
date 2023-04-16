@@ -33,7 +33,7 @@ import streamtologger
 from Crypto.Cipher import AES
 import base64
 from queue import Queue
-
+import tiktoken
 
 app = Flask(__name__)
 CORS(app)
@@ -355,16 +355,6 @@ def get_root_by_word(message: str) -> json:
     print(back_data)
     return back_data
 
-# @app.route('/api/avatar-Jarvis')
-# def get_image():
-#     # 读取图片数据
-#     img = Image.open(Path(Path(__file__).parent.absolute() / 'assets/robot.jpg'))
-#     img_byte_arr = BytesIO()
-#     img.save(img_byte_arr, format='JPEG')
-#     img_byte_arr.seek(0)
-#     # 发送图像数据
-#     return send_file(img_byte_arr, mimetype='image/jpeg')
-
 @app.route('/api/avatar/<user_name>')
 def get_user_avatar(user_name: str):
     imgFilePrefix = Path(Path(__file__).parent.absolute() / 'assets/avatar')
@@ -384,29 +374,29 @@ def get_user_avatar(user_name: str):
     else:
         return make_response('', 404)
 
-@app.route('/api/user/signup', methods = ['POST'])
-def signup():
-    '''
-    用户注册
-    '''
-    if request.method != 'POST':
-        return make_response(jsonify({"errcode":50001,"errmsg":"Please use POST method"}), 500)
-    try:
-        data: dict = request.get_json()
-        username: str = data.get('username')
-        password: str = data.get('password')
-    except:
-        return make_response(jsonify({"errcode":50002,"errmsg":"JSON data required"}), 500)
-    if username == None or password == None:
-        return make_response('Please provide username and password', 500)
-    user: User = userDB.get_user_by_username(username)
-    if user != None:
-        return make_response(jsonify({"errcode":50005,"errmsg":"User already exists"}), 500)
-    r: dict = userDB.create_user_by_username(user_name=username, password=password)
-    if r == {}:
-        return make_response(jsonify({"errcode": 50006,"errmsg": 'User create failed'}), 500)
-    r.update(get_openai_apikey())
-    return make_response(jsonify(r), 200)
+# @app.route('/api/user/signup', methods = ['POST'])
+# def signup():
+#     '''
+#     用户注册
+#     '''
+#     if request.method != 'POST':
+#         return make_response(jsonify({"errcode":50001,"errmsg":"Please use POST method"}), 500)
+#     try:
+#         data: dict = request.get_json()
+#         username: str = data.get('username')
+#         password: str = data.get('password')
+#     except:
+#         return make_response(jsonify({"errcode":50002,"errmsg":"JSON data required"}), 500)
+#     if username == None or password == None:
+#         return make_response('Please provide username and password', 500)
+#     user: User = userDB.get_user_by_username(username)
+#     if user != None:
+#         return make_response(jsonify({"errcode":50005,"errmsg":"User already exists"}), 500)
+#     r: dict = userDB.create_user_by_username(user_name=username, password=password)
+#     if r == {}:
+#         return make_response(jsonify({"errcode": 50006,"errmsg": 'User create failed'}), 500)
+#     r.update(get_openai_apikey())
+#     return make_response(jsonify(r), 200)
 
 @app.route('/api/user/signup_with_promo', methods = ['POST'])
 def signup_with_promo():
@@ -454,6 +444,8 @@ def signin():
     if r == {}:
         return make_response(jsonify({"errcode":50004,"errmsg":"Username Or Password is incorrect"}), 500)
     r.update(get_openai_apikey())
+    r['errcode'] = 0
+    r['errmsg'] = 'Success'
     response: Response = make_response(jsonify(r), 200)
     response.headers['Cache-Control'] = 'no-cache'
     return make_response(jsonify(r), 200)
@@ -471,6 +463,7 @@ def openai_proxy(path):
     # record message to database
     username = request.json['user']
     messages = request.json['messages']
+    print(num_tokens_from_messages(messages));
     crdb = ChatRecordDB()
     myuuid: str = userDB.get_user_by_username(username).uuid
     cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jarvis').uuid, msgCreateTime=int(time.time()), msgContent=json.dumps(messages, ensure_ascii=False), msgType=1)
@@ -528,6 +521,25 @@ def openai_proxy(path):
     thread.start()
     return rsp
 
+def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
+  """Returns the number of tokens used by a list of messages."""
+  try:
+      encoding = tiktoken.encoding_for_model(model)
+  except KeyError:
+      encoding = tiktoken.get_encoding("cl100k_base")
+  if model == "gpt-3.5-turbo-0301":  # note: future models may deviate from this
+      num_tokens = 0
+      for message in messages:
+          num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
+          for key, value in message.items():
+              num_tokens += len(encoding.encode(value))
+              if key == "name":  # if there's a name, the role is omitted
+                  num_tokens += -1  # role is always required and always 1 token
+      num_tokens += 2  # every reply is primed with <im_start>assistant
+      return num_tokens
+  else:
+      raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}.
+  See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
 
 def get_openai_apikey() -> dict:
     '''
@@ -558,17 +570,16 @@ def load_chat_records():
     if request.headers.get('X-access-token'):
         u: User = userDB.get_user_by_username(username)
         if u is None:
-            return make_response('', 500)
+            return make_response('user not exist', 500)
         if u.access_token != request.headers['X-access-token']:
-            return make_response('', 500)
+            return make_response('access-token missing', 500)
         if u.access_token_expire_at < int(time.time()):
             return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
     try:
         last_id: int = data.get('last_id', -1)
     except Exception as e:
-        return make_response('', 500)
+        return make_response('last_id missing', 500)
     
-
     r: list = []
     crdb = ChatRecordDB()
     for cr in crdb.get_chat_record(u.uuid, last_id, limit=30):
