@@ -32,7 +32,7 @@ PROXIES = {
 }
 
 MYSQL_CONFIG = {
-  'user': 'root',
+  'user': 'wordpipe',
   'password': 'dswybs-yoqoo',
   'host': '127.0.0.1',
   'database': 'wordpipe',

@@ -12,3 +12,4 @@ requests
 openai
 streamtologger
 pycryptodome
+tiktoken

@@ -11,7 +11,7 @@
  Target Server Version : 101102 (10.11.2-MariaDB-1:10.11.2+maria~ubu2204)
  File Encoding         : 65001
 
- Date: 16/04/2023 11:38:57
+ Date: 16/04/2023 11:47:59
 */
 
 SET NAMES utf8mb4;
@@ -57,11 +57,11 @@ COMMIT;
 DROP TABLE IF EXISTS `t_promo`;
 CREATE TABLE `t_promo` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `promo` text NOT NULL,
+  `promo` char(6) NOT NULL,
   `bind_userid` text DEFAULT NULL,
   `gen_by` text NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `iq_promo` (`promo`) USING HASH
+  UNIQUE KEY `iq_promo` (`promo`)
 ) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ----------------------------
