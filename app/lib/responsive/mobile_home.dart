@@ -23,11 +23,23 @@ class MobileHome extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Word Pipe ${context.width}',
-          style: TextStyle(
-            color: Colors.black54,
-            fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
-            fontWeight: FontWeight.w600),
+        title: RichText(
+          text: TextSpan(
+            text: 'Word Pipe',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+              color: Colors.black54,
+              fontSize: 20,
+              fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
+              fontWeight: FontWeight.w600),
+            children: <TextSpan>[
+              TextSpan(
+                text: '  alpha',
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: Colors.black54,
+                  fontSize: 12),
+              ),
+            ],
+          )
         ),
         centerTitle: true,
         backgroundColor: Colors.greenAccent[100],
@@ -219,10 +231,10 @@ class MobileHome extends StatelessWidget {
                 key: UniqueKey(), 
               )
             );
-          });
-          if(text.trim().substring(0,1) != "/"){
+
             messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
-          }
+
+          });
         }else{
           customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
           // 三秒后跳转到登录页面
@@ -230,9 +242,7 @@ class MobileHome extends StatelessWidget {
             Get.offAll(MobileSignIn());
           });
         }
-      });    
-
+      });
     });
-    
   }
 }

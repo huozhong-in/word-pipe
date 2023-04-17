@@ -10,12 +10,12 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 // final bool kDebugMode = true;
 // final bool isDebug = bool.fromEnvironment('DEBUG', defaultValue: false);
 
-final String SSE_SERVER_HOST = kDebugMode ? "http://127.0.0.1" : "https://wordpipe.huozhong.in";
+final String SSE_SERVER_HOST = kDebugMode ? "http://192.168.0.166" : "https://wordpipe.huozhong.in";
 final String SSE_SERVER_PATH = "/api/stream";
 final String SSE_MSG_TYPE = "prod"; // prod, dev, test
 final String SSE_MSG_DEFAULT_CHANNEL = "users.social";
 
-final String HTTP_SERVER_HOST = kDebugMode ? "http://127.0.0.1/api" : "https://wordpipe.huozhong.in/api";
+final String HTTP_SERVER_HOST = kDebugMode ? "http://192.168.0.166/api" : "https://wordpipe.huozhong.in/api";
 
 final AVATAR_FILE_DIR = "avatar";
 
@@ -43,7 +43,7 @@ final ThemeData appTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.light,
   primarySwatch: Colors.green,
-  primaryColor: const Color(0xFFF5F7FD),
+  primaryColor: Color.fromARGB(255, 25, 141, 199),
   scaffoldBackgroundColor: const Color(0xFFF5F7FD),
   fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, // 'Georgia'
   fontFamilyFallback: ["PingFang SC" , "Heiti SC" , 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans CJK HK'],
@@ -80,6 +80,13 @@ class CustomColors {
   static const Color firebaseYellow = Color(0xFFFFCA28);
   static const Color firebaseGrey =  Color(0xFFECEFF1);
   static const Color googleBackground = Color(0xFF4285F4);
+
+  static const Color gradientStart = Color.fromARGB(255, 148, 231, 225);
+  static const Color gradientEnd = Color.fromARGB(255, 62, 182, 226);
+  static const Color appBarColor = Color.fromARGB(255, 25, 172, 225);
+  static const Color inputTextFieldBorder = Color(0xFF4285F4);
+  static const Color desktopLeftNav = Color.fromARGB(255, 122, 207, 238);
+  static const Color listViewBg = Color.fromARGB(255, 59, 214, 157);
 }
 
 // define mobile layout and desktop layout width
@@ -136,10 +143,11 @@ SnackbarController customSnackBar({required String title, required String conten
     snackPosition: SnackPosition.TOP,
     backgroundColor: Colors.black54,
     colorText: Colors.white,
-    margin: const EdgeInsets.all(8),
+    margin: const EdgeInsets.all(1),
     borderRadius: 8,
     duration: const Duration(seconds: 2),
     icon: const Icon(Icons.error, color: Colors.white),
+    maxWidth: 375,
   );
 }
 

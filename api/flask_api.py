@@ -293,14 +293,14 @@ def chat():
         back_data = get_root_by_word(message)
         id = generate_time_based_client_id(prefix=username)
         print("chat() /root publish id:", id)
-        
-        def publish_func1():
-            time.sleep(1)  # 开发环境要延迟一秒，否则SSE数据比HTTP还先返回，让用户困惑
-            with app.app_context():
-                sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
+        sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
+        # def publish_func1():
+        #     time.sleep(1)  # 开发环境要延迟一秒，否则SSE数据比HTTP还先返回，让用户困惑
+        #     with app.app_context():
+        #         sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
 
-        thread = threading.Thread(target=publish_func1)
-        thread.start()
+        # thread = threading.Thread(target=publish_func1)
+        # thread.start()
         
 
     elif message.startswith('/config '):

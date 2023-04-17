@@ -27,8 +27,8 @@ class MessageView extends StatelessWidget {
     Future<void> getChatHistory() async {
       c.getUserName().then((user_name){
         if (user_name != ""){
+          messageController.handleSSE(user_name);
           if (messageController.messsage_view_first_build == true){
-            messageController.handleSSE(user_name);
             Future<int> _lastSegmentBeginId = messageController.chatHistory(user_name, messageController.lastSegmentBeginId);
             // Welcome message to new user!
             _lastSegmentBeginId.then((lastId) => {

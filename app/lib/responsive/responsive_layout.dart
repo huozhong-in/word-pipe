@@ -47,8 +47,6 @@ class ResponsiveLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: FutureBuilder(builder: builder, future: c.getUserName().then((value) => user_name=value)),
-    );
+    return FutureBuilder(builder: builder, future: c.getUserName().then((value) => user_name=value));
   }
 }

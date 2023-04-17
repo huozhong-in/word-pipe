@@ -97,14 +97,14 @@ class MessageController extends GetxController{
     String apiKey = "";
     String baseUrl = "";
     if (await CacheHelper.hasData('sessionData')){
-          Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
-          if (sessionData.containsKey('error') == false){
-            curr_user = sessionData['username'] as String;
-            access_token = sessionData['access_token'] as String;
-            apiKey = sessionData['apiKey'] as String;
-            baseUrl = sessionData['baseUrl'] as String;
-          }
-        }
+      Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
+      if (sessionData.containsKey('error') == false){
+        curr_user = sessionData['username'] as String;
+        access_token = sessionData['access_token'] as String;
+        apiKey = sessionData['apiKey'] as String;
+        baseUrl = sessionData['baseUrl'] as String;
+      }
+    }
     if (curr_user == ""){
       return;
     }
@@ -182,7 +182,11 @@ class MessageController extends GetxController{
 
   // 关闭 SSE 连接，以便可以重新订阅其他频道
   void closeSSE(){
-    sseClient.close();
+    try{
+      sseClient.close();
+    } catch (e) {
+      log('closeSSE error: $e');
+    }
   }
 
 

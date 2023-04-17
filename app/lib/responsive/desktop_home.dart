@@ -419,7 +419,7 @@ class DesktopHome extends StatelessWidget {
           )
         ),
         centerTitle: false,
-        backgroundColor: Colors.greenAccent[100],
+        backgroundColor: CustomColors.appBarColor,
         automaticallyImplyLeading: true,
       ),
       body: Center(
@@ -431,7 +431,7 @@ class DesktopHome extends StatelessWidget {
                 maxWidth: 150,
                 minWidth: 150,
               ),
-              color: Colors.greenAccent[100],
+              color: CustomColors.desktopLeftNav,
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: <Widget>[

@@ -9,6 +9,7 @@ import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/responsive/mobile_sign_in.dart';
 import 'package:wordpipe/MessageController.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:wordpipe/responsive/responsive_layout.dart';
 
 
 
@@ -75,7 +76,7 @@ class UserProfile extends StatelessWidget {
                               // 登出后清空消息列表
                               messageController.messages.clear();
                               messageController.closeSSE();
-                              Get.offAll(MobileSignIn());
+                              Get.offAll(ResponsiveLayout());
                             },
                             child: Text('Sign Out'),
                           ),
@@ -85,9 +86,7 @@ class UserProfile extends StatelessWidget {
                   )
                 );
             }else{
-              return MaterialApp(
-                home: MobileSignIn(),
-              );
+              Get.offAll(ResponsiveLayout());
             }
           }
         return Container(

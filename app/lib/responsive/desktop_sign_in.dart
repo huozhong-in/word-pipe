@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wordpipe/responsive/mobile_sign_in.dart';
+import 'package:wordpipe/config.dart';
 
 class DesktopSignIn extends StatelessWidget {
   const DesktopSignIn({super.key});
@@ -12,8 +13,14 @@ class DesktopSignIn extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.transparent,
+                color: Colors.greenAccent.withOpacity(0.6),
                 borderRadius: BorderRadius.circular(10),
+                gradient: new LinearGradient(
+                  colors: [
+                    Color.fromARGB(255, 118, 232, 169),
+                    Color.fromARGB(255, 32, 220, 161),
+                  ],
+                                ),
               ),
             ),
           ),

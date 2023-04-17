@@ -2,9 +2,15 @@
 
 ## 新增包的方法可以选择不直接修改pubspec.yaml，使用以下命令
 
-`dart pub add url_launcher` 或 `flutter pub add url_launcher`
+`dart pub add url_launcher` + `flutter pub get`
+
+或 `flutter pub add url_launcher`
 
 `flutter pub run flutter_launcher_icons:main`
+
+## 本机开web-server，供内网的手机或模拟器测试mobile web
+
+`flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0`
 
 ## TODO
 
