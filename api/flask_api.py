@@ -89,27 +89,28 @@ for key, value in wordroot.items():
 
 # init user db
 userDB = UserDB()
+crdb = ChatRecordDB()
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     # 请求上下文结束时自动释放 session
     # g.session.close()
     userDB.session.close()
-    # crdb.session.close()
+    crdb.session.close()
 
 @app.before_request
 def before_request():
     # 请求开始时将连接和 session 绑定到请求上下文
     g.db = userDB.engine.connect()
     g.session = userDB.session
-    # g.db2= crdb.engine.connect()
-    # g.session2 = crdb.session
+    g.db2= crdb.engine.connect()
+    g.session2 = crdb.session
 
 @app.after_request
 def after_request(response):
     # 请求结束时断开连接
     g.db.close()
-    # g.db2.close()
+    g.db2.close()
     return response
 
 
@@ -464,11 +465,10 @@ def openai_proxy(path):
     messages = request.json['messages']
     print(num_tokens_from_messages(messages))
     
-    crdb = ChatRecordDB()
     myuuid: str = userDB.get_user_by_username(username).uuid
     cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jarvis').uuid, msgCreateTime=int(time.time()), msgContent=json.dumps(messages, ensure_ascii=False), msgType=1)
     crdb.insert_chat_record(cr)
-    crdb.close()
+
     
 
 
@@ -514,10 +514,9 @@ def openai_proxy(path):
             else:
                 completion_text += c
         myuuid: str = userDB.get_user_by_username(username).uuid
-        crdb = ChatRecordDB()
         cr = ChatRecord(msgFrom=userDB.get_user_by_username('Jarvis').uuid, msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=completion_text, msgType=1)
         crdb.insert_chat_record(cr)
-        crdb.close()
+
     
     thread = threading.Thread(target=fn_thread, args=(completion_text_queue, username))
     thread.start()
@@ -583,7 +582,6 @@ def load_chat_records():
         return make_response('last_id missing', 500)
     
     r: list = []
-    crdb = ChatRecordDB()
     for cr in crdb.get_chat_record(u.uuid, last_id, limit=30):
         r.append({
             'pk_chat_record': cr.pk_chat_record,
@@ -597,7 +595,6 @@ def load_chat_records():
             # 'msgSource': cr.msgSource,
             # 'msgDest': cr.msgDest
         })
-    crdb.close()
     return make_response(jsonify(r), 200)
 
 if __name__ == '__main__':
