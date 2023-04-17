@@ -181,11 +181,9 @@ class UserProvider extends GetConnect {
     if (response.statusCode == 204) {
       return true;
     } else {
-      if (response.statusCode == 401){
-        // signout
-        if(await CacheHelper.hasData('sessionData')){
-          await CacheHelper.setData('sessionData', null);
-        }
+      // signout
+      if(await CacheHelper.hasData('sessionData')){
+        await CacheHelper.setData('sessionData', null);
       }
       return false;
     }

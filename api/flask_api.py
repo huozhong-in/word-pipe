@@ -462,7 +462,7 @@ def openai_proxy(path):
     # record message to database
     username = request.json['user']
     messages = request.json['messages']
-    print("num_tokens_from_messages: " +  num_tokens_from_messages(messages));
+    print(num_tokens_from_messages(messages))
     
     crdb = ChatRecordDB()
     myuuid: str = userDB.get_user_by_username(username).uuid
@@ -497,7 +497,7 @@ def openai_proxy(path):
                     delta = j.get('choices')[0].get('delta') if j.get('choices') else None
                     if delta is not None and delta.get('content') is not None:
                         completion_text_queue.put(delta.get('content'))
-                        print(delta.get('content'))
+                        # print(delta.get('content'))
                     elif delta is not None and delta.get('finish_reason') is not None and delta.get('finish_reason') == 'stop':
                         print('finish_reason: stop')
                         completion_text_queue.put("[DONE]")
@@ -552,7 +552,7 @@ def get_openai_apikey() -> dict:
     else:
         return {
             "apiKey": encrypt(os.environ['OPENAI_API_KEY']),
-            "baseUrl": "http://127.0.0.1/api/openai" if os.environ.get('DEBUG_MODE') != None else "https://wordpipe.huozhong.in/api/openai"
+            "baseUrl": OPENAI_PROXY_BASEURL['dev'] if os.environ.get('DEBUG_MODE') != None else OPENAI_PROXY_BASEURL['prod']
             }
 
 def encrypt(text):
@@ -578,7 +578,7 @@ def load_chat_records():
         if u.access_token_expire_at < int(time.time()):
             return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
     try:
-        last_id: int = data.get('last_id', -1)
+        last_id: int = data.get('last_id', 0)
     except Exception as e:
         return make_response('last_id missing', 500)
     

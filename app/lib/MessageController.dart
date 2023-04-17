@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:wordpipe/MessageModel.dart';
 import 'package:wordpipe/sse_client.dart';
-import 'package:wordpipe/cache_helper.dart';
 import 'package:wordpipe/config.dart';
 import 'package:dart_openai/openai.dart';
 import 'package:wordpipe/controller.dart';
@@ -125,7 +124,7 @@ class MessageController extends GetxController{
       dataList: RxList(['...']),
       type: WordPipeMessageType.stream,
       username: "Jarvis",
-      uuid: "Jarvis",
+      uuid: "b811abd7-c0bb-4301-9664-574d0d8b11f8",
       createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       key: UniqueKey(),
     ));

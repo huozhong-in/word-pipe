@@ -31,12 +31,18 @@ PROXIES = {
     "socks5": "127.0.0.1:7890"
 }
 
+# ----- MYSQL CONFIG -----
 MYSQL_CONFIG = {
   'user': 'wordpipe',
   'password': 'dswybs-yoqoo',
   'host': '127.0.0.1',
   'database': 'wordpipe',
   'raise_on_warnings': True,
+}
+
+OPENAI_PROXY_BASEURL = {
+    "dev": "http://192.168.0.166/api/openai",
+    "prod": "https://wordpipe.huozhong.in/api/openai",
 }
 
 def generate_random_avatar(user_name: str) -> bool:
