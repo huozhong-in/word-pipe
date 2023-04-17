@@ -43,7 +43,7 @@ final ThemeData appTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.light,
   primarySwatch: Colors.green,
-  primaryColor: Color.fromARGB(255, 25, 141, 199),
+  primaryColor: Colors.green,
   scaffoldBackgroundColor: const Color(0xFFF5F7FD),
   fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, // 'Georgia'
   fontFamilyFallback: ["PingFang SC" , "Heiti SC" , 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans CJK HK'],
@@ -84,9 +84,11 @@ class CustomColors {
   static const Color gradientStart = Color.fromARGB(255, 148, 231, 225);
   static const Color gradientEnd = Color.fromARGB(255, 62, 182, 226);
   static const Color appBarColor = Color.fromARGB(255, 25, 172, 225);
+  static const Color appBarColor2 =Color.fromARGB(255, 31, 165, 69);
   static const Color inputTextFieldBorder = Color(0xFF4285F4);
   static const Color desktopLeftNav = Color.fromARGB(255, 122, 207, 238);
-  static const Color listViewBg = Color.fromARGB(255, 59, 214, 157);
+  static const Color desktopLeftNav2 = Color.fromARGB(255, 59, 214, 157);
+  static const Color listViewBg = Color.fromARGB(255, 25, 141, 199);
 }
 
 // define mobile layout and desktop layout width

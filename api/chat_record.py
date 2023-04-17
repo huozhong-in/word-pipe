@@ -40,7 +40,7 @@ class ChatRecordDB:
 
     def get_chat_record(self, user_id: str, last_chat_record_id: int, limit: int=50):
         result: list = []
-        if last_chat_record_id == -1:
+        if last_chat_record_id == 0:
             # 获取我发出或我收到的最新的50条消息，按照主键自增ID倒序排列
             result = self.session.query(ChatRecord).filter(or_(ChatRecord.msgFrom == user_id, ChatRecord.msgTo == user_id)).order_by(ChatRecord.pk_chat_record.desc()).limit(limit).all()
         else:

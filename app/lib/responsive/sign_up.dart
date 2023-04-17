@@ -35,9 +35,9 @@ class SignUp extends StatelessWidget {
       return Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: Text('Sign Up'),
+          title: Text('Sign Up', style: TextStyle(color: Colors.white70, fontSize: 24)),
           centerTitle: true,
-          backgroundColor: Colors.green.withOpacity(0.6),
+          backgroundColor: CustomColors.appBarColor2,
           automaticallyImplyLeading: false,
         ),
         body: Form(
@@ -51,12 +51,24 @@ class SignUp extends StatelessWidget {
                 children: [
                   Container(
                     padding: EdgeInsets.only(top: 15),
-                    child: Text('Word Pipe' + Get.height.toString(),
-                      style: TextStyle(
-                        color: Colors.black54,
-                        fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
-                        fontWeight: FontWeight.w600),
-                    ),
+                    child: RichText(
+                          text: TextSpan(
+                            text: 'Word Pipe',
+                            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                              color: Colors.black54,
+                              fontSize: 16,
+                              fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
+                              fontWeight: FontWeight.w600),
+                            children: <TextSpan>[
+                              TextSpan(
+                                text: '  alpha',
+                                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                                  color: Colors.black54,
+                                  fontSize: 10),
+                              ),
+                            ],
+                          )
+                        ),
                   ),
                   Container(
                     // padding: EdgeInsets.only(top: 1),
@@ -285,7 +297,7 @@ class SignUp extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: TextButton(
                       child: Text("Already have an account?",
-                        style: TextStyle(fontSize: 12,fontWeight: FontWeight.bold, color: Colors.green[900]),
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green[900]),
                       ),
                       onPressed: () {
                         if ( GetPlatform.isDesktop)

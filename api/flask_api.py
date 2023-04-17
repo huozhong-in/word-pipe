@@ -462,12 +462,15 @@ def openai_proxy(path):
     # record message to database
     username = request.json['user']
     messages = request.json['messages']
-    print(num_tokens_from_messages(messages));
+    print("num_tokens_from_messages: " +  num_tokens_from_messages(messages));
+    
     crdb = ChatRecordDB()
     myuuid: str = userDB.get_user_by_username(username).uuid
     cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jarvis').uuid, msgCreateTime=int(time.time()), msgContent=json.dumps(messages, ensure_ascii=False), msgType=1)
     crdb.insert_chat_record(cr)
     crdb.close()
+    
+
 
     # 开发环境需要走本地代理服务器才能访问到openai API
     if os.environ.get('DEBUG_MODE') != None:
@@ -494,7 +497,7 @@ def openai_proxy(path):
                     delta = j.get('choices')[0].get('delta') if j.get('choices') else None
                     if delta is not None and delta.get('content') is not None:
                         completion_text_queue.put(delta.get('content'))
-                        # print(delta.get('content'))
+                        print(delta.get('content'))
                     elif delta is not None and delta.get('finish_reason') is not None and delta.get('finish_reason') == 'stop':
                         print('finish_reason: stop')
                         completion_text_queue.put("[DONE]")

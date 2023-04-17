@@ -47,7 +47,7 @@ class MessageBubble extends StatelessWidget {
       if(isMe){
         bubbleColor = const Color.fromRGBO(40, 178, 95, 1);
       }else{
-        bubbleColor = Colors.green[200]!;
+        bubbleColor = Colors.green[100]!;
       }
       
       return GestureDetector(

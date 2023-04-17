@@ -7,16 +7,19 @@ import 'package:wordpipe/sse_client.dart';
 import 'package:wordpipe/cache_helper.dart';
 import 'package:wordpipe/config.dart';
 import 'package:dart_openai/openai.dart';
+import 'package:wordpipe/controller.dart';
 import 'dart:developer';
 
 class MessageController extends GetxController{
+  final Controller c = Get.find();
+
   final messages = <MessageModel>[].obs;
   
   late final SSEClient sseClient;
   bool sse_connected = false;
   
   bool messsage_view_first_build = true;
-  int lastSegmentBeginId = -1;
+  int lastSegmentBeginId = 0;
 
   RxBool _isLoading = false.obs;
   // set setLoading(bool value) => _isLoading.value = value;
@@ -58,12 +61,10 @@ class MessageController extends GetxController{
         !scrollController.position.outOfRange) {
         _isLoading.value = true;
         String curr_user = "";
-        if (await CacheHelper.hasData('sessionData')){
-          Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
-          if (sessionData.containsKey('error') == false){
-            curr_user = sessionData['username'] as String;
-          }
-        }
+        Map<String, dynamic> sessionData = await c.getSessionData();
+        if (sessionData.containsKey('error') == false)
+          curr_user = sessionData['username'] as String;
+        
         if (curr_user != ""){
           chatHistory(curr_user, lastSegmentBeginId);
         }
@@ -73,6 +74,8 @@ class MessageController extends GetxController{
   Future<int> chatHistory(String username, int last_id) async {
     ChatRecord chatRecord = ChatRecord();
     messsage_view_first_build = false;
+    if (lastSegmentBeginId == -1)
+      return -1;
     lastSegmentBeginId = await chatRecord.chatHistory(username, last_id);
     // print(lastSegmentBeginId);
     return lastSegmentBeginId;
@@ -96,14 +99,14 @@ class MessageController extends GetxController{
     String access_token = "";
     String apiKey = "";
     String baseUrl = "";
-    if (await CacheHelper.hasData('sessionData')){
-      Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
-      if (sessionData.containsKey('error') == false){
-        curr_user = sessionData['username'] as String;
-        access_token = sessionData['access_token'] as String;
-        apiKey = sessionData['apiKey'] as String;
-        baseUrl = sessionData['baseUrl'] as String;
-      }
+    Map<String, dynamic> sessionData = await c.getSessionData();
+    if (sessionData.containsKey('error') == false){
+      curr_user = sessionData['username'] as String;
+      access_token = sessionData['access_token'] as String;
+      apiKey = sessionData['apiKey'] as String;
+      baseUrl = sessionData['baseUrl'] as String;
+    }else{
+      return;
     }
     if (curr_user == ""){
       return;
@@ -193,30 +196,24 @@ class MessageController extends GetxController{
 }
 
 class ChatRecord extends GetConnect {
+  final Controller c = Get.find();
+  
   @override
   void onInit() {
     
   }
 
   Future<int> chatHistory(String username, int last_id) async {
-    // 从 API 获取数据并解析 JSON，此处仅为示例
-    // List<Map<String, dynamic>> jsonResponse = [
-    //   {"username": "user1", "text": "Text 1", "type": "text"},
-    //   {"username": "user2", "text": "Text 2", "type": "link"},
-    //   {"username": "user3", "text": "Text 3", "type": "reserved"},
-    // ];
     int ret = -1;
     Uri url = Uri.parse('$HTTP_SERVER_HOST/user/chat-history');
     Map data = {};
     data['username'] = username;
     data['last_id'] = last_id;
     String  access_token = "";
-    if (await CacheHelper.hasData('sessionData')){
-          Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
-          if (sessionData.containsKey('error') == false){
-            access_token = sessionData['access_token'] as String;
-          }
-        }
+    Map<String, dynamic> sessionData = await c.getSessionData();
+    if (sessionData.containsKey('error') == false)
+        access_token = sessionData['access_token'] as String;
+    
     Map<String,String> hs = {};
     hs['X-access-token'] = access_token;
     final response = await post(url.toString(), data, headers: hs, contentType: 'application/json');
@@ -249,7 +246,8 @@ class ChatRecord extends GetConnect {
             key: UniqueKey()
             )
           );
-      });   
+      });
+
     }
     return ret;
   }

@@ -9,6 +9,9 @@ class Controller extends GetxController{
   final WordsProvider _wordsProvider = WordsProvider();
   final UserProvider _userProvider = UserProvider();
   
+  Future<Map<String, dynamic>> getSessionData() async{
+    return await _userProvider.getLocalStorge();
+  }
   Future<String> getUserName() async{
     Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
     if (sessionData.containsKey('error') == false)

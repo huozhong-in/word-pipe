@@ -88,13 +88,12 @@ class MobileHome extends StatelessWidget {
             Expanded(
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 5.0),
-                decoration: const BoxDecoration(color: Colors.greenAccent),
                 child: 
                   Container(
                     width: double.infinity,
                     height: double.infinity,
                     alignment: Alignment.topCenter,
-                    color: Colors.grey.withOpacity(0.5),
+                    color: Colors.white24,
                     child: MessageView(key: ValueKey(DateTime.now()))
                   )
               ),
@@ -105,10 +104,7 @@ class MobileHome extends StatelessWidget {
               // height: 100,
               decoration: BoxDecoration(
                 color: Colors.white70,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(15),
-                  bottomRight: Radius.circular(15),
-                ),
+                borderRadius: const BorderRadius.all(Radius.circular(15)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.grey.withOpacity(0.5),
@@ -119,22 +115,6 @@ class MobileHome extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // Ink(
-                  //   decoration: const ShapeDecoration(
-                  //     color: Colors.lightBlue,
-                  //     shape: CircleBorder(),
-                  //   ),
-                  //   child: IconButton(
-                  //     color: Colors.grey,
-                  //     hoverColor: Colors.black54,
-                  //     onPressed: () {
-                  //       ScaffoldMessenger.of(Get.overlayContext!).showSnackBar(
-                  //         customSnackBar(content: "暂未开放"),
-                  //       );
-                  //     }, 
-                  //     icon: const Icon(Icons.mic_rounded)
-                  //   ),
-                  // ),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(left: 10),
@@ -169,13 +149,14 @@ class MobileHome extends StatelessWidget {
       maxLines: 1,
       minLines: 1,
       decoration: InputDecoration(
-        hintText: 'write some words',
+        hintText: 'ask some questions',
         hintStyle: TextStyle(color: Colors.grey),
         prefixIcon: IconButton(
             color: Colors.grey,
             hoverColor: Colors.black54,
             onPressed: () {
               // messageController.getChatCompletion('gpt-3.5-turbo', 'What is hallucinate?');
+              customSnackBar(title: "not open yet", content: "not open yet");
             }, 
             icon: const Icon(Icons.mic_rounded)
           ),
@@ -220,6 +201,7 @@ class MobileHome extends StatelessWidget {
       r.then((ret){
         if(ret == true){
           _textController.clear();
+          _commentFocus.unfocus();
           c.getUUID().then((_uuid){
             messageController.addMessage(
               MessageModel(
@@ -231,9 +213,9 @@ class MobileHome extends StatelessWidget {
                 key: UniqueKey(), 
               )
             );
-
-            messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
-
+            if(text.trim().substring(0,1) != "/"){
+              messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
+            }
           });
         }else{
           customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");

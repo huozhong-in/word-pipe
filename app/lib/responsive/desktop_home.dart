@@ -418,8 +418,8 @@ class DesktopHome extends StatelessWidget {
             ],
           )
         ),
-        centerTitle: false,
-        backgroundColor: CustomColors.appBarColor,
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
         automaticallyImplyLeading: true,
       ),
       body: Center(
@@ -431,34 +431,43 @@ class DesktopHome extends StatelessWidget {
                 maxWidth: 150,
                 minWidth: 150,
               ),
-              color: CustomColors.desktopLeftNav,
+              decoration: BoxDecoration(
+                // color: Color.fromARGB(255, 131, 198, 175),
+                color: Color.fromARGB(255, 94, 211, 168).withOpacity(0.5),
+                borderRadius: BorderRadius.circular(5),
+                gradient: new LinearGradient(
+                  colors: [
+                    Color.fromARGB(255, 148, 231, 170),
+                    Color.fromARGB(255, 30, 167, 110),
+                  ],
+                ),
+              ),
               child: ListView(
-                padding: EdgeInsets.zero,
+                padding: EdgeInsets.only(top: 10),
                 children: <Widget>[
                   ListTile(
                     leading: Icon(Icons.message),
-                    title: Text('Messages', style: TextStyle(fontSize: 12)),
+                    title: Text('Messages', style: TextStyle(fontSize: 14)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
                   ),
                   ListTile(
                     leading: Icon(Icons.account_circle),
-                    title: Text('Profile', style: TextStyle(fontSize: 12)),
+                    title: Text('Profile', style: TextStyle(fontSize: 14)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
                     onTap: () => Get.offAll(UserProfile()),
                   ),
                   ListTile(
                     leading: Icon(Icons.settings),
-                    title: Text('Settings', style: TextStyle(fontSize: 12)),
+                    title: Text('Settings', style: TextStyle(fontSize: 14)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
-                    onTap: () => Get.offAll(UserProfile()),
                   ),
                   Divider(),
                   ListTile(
                     leading: Icon(Icons.info),
-                    title: Text('About WordPipe', style: TextStyle(fontSize: 12)),
+                    title: Text('About WordPipe', style: TextStyle(fontSize: 14)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
                   ),
@@ -470,8 +479,7 @@ class DesktopHome extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 5.0),
-                      decoration: const BoxDecoration(color: Colors.greenAccent),
+                      margin: const EdgeInsets.all(0),
                       child: 
                         Stack(
                           children: [
@@ -479,7 +487,7 @@ class DesktopHome extends StatelessWidget {
                               width: double.infinity,
                               height: double.infinity,
                               alignment: Alignment.topCenter,
-                              color: Colors.grey.withOpacity(0.5),
+                              color: Colors.white24,
                               child: MessageView(key: ValueKey(DateTime.now()))
                             ),
                             Obx(() => 
@@ -649,10 +657,10 @@ class DesktopHome extends StatelessWidget {
                                   child: ListView(
                                     children:[
                                       ListTile(
-                                        title: Text('/root␣word 查词根'),
+                                        title: Text('/root␣word 查词根', style: TextStyle(fontSize: 14)),
                                       ),
                                       ListTile(
-                                        title: Text('/config␣[未实现]'),
+                                        title: Text('/config␣[未实现]', style: TextStyle(fontSize: 14)),
                                       ),
                                     ]
                                   ),
@@ -680,13 +688,9 @@ class DesktopHome extends StatelessWidget {
                   Container(
                     margin: const EdgeInsets.fromLTRB(5, 0, 5, 5),
                     padding: const EdgeInsets.all(10),
-                    // height: 100,
                     decoration: BoxDecoration(
                       color: Colors.white70,
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(15),
-                        bottomRight: Radius.circular(15),
-                      ),
+                      borderRadius: const BorderRadius.all(Radius.circular(15)),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.5),
@@ -699,14 +703,14 @@ class DesktopHome extends StatelessWidget {
                       children: [
                         Ink(
                           decoration: const ShapeDecoration(
-                            color: Colors.lightBlue,
+                            color: CustomColors.gradientEnd,
                             shape: CircleBorder(),
                           ),
                           child: IconButton(
                             color: Colors.grey,
                             hoverColor: Colors.black54,
                             onPressed: () {
-                              customSnackBar(title: "not yet open", content: "not yet open");
+                              customSnackBar(title: "not open yet", content: "not open yet");
                             }, 
                             icon: const Icon(Icons.mic_rounded)
                           ),
@@ -717,15 +721,40 @@ class DesktopHome extends StatelessWidget {
                             child: _myTextFild(context),
                           )
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.send_rounded),
-                          color: Colors.green[400],
-                          onPressed: () {
-                            _handleSubmitted(_textController.text);
-                            _commentFocus.requestFocus();
-                          },
-                          tooltip: "cmd+enter",
-                          hoverColor: Colors.black54,
+                        Container(
+                          width: 45,
+                          height: 40,
+                          margin: EdgeInsets.only(left: 5),
+                          decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5.0),
+                                color: Colors.green[900],
+                          ),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green[800],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5.0),
+                                ),
+                              padding: const EdgeInsets.all(0),
+                            ),
+                            onPressed: () {
+                              _handleSubmitted(_textController.text);
+                              _commentFocus.requestFocus();
+                            },
+                            child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                          )
+                          // IconButton(
+                          //   icon: const Icon(Icons.send_rounded),
+                          //   color: Colors.white,
+                          //   iconSize: 20,
+
+                          //   onPressed: () {
+                          //     _handleSubmitted(_textController.text);
+                          //     _commentFocus.requestFocus();
+                          //   },
+                          //   tooltip: "cmd+enter",
+                          //   hoverColor: Colors.green[700],
+                          // ),
                         ),
                       ],
                     ),

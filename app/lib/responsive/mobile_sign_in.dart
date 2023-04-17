@@ -5,6 +5,8 @@ import 'package:get/get.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/responsive/desktop_home.dart';
 import 'package:wordpipe/controller.dart';
+import 'package:wordpipe/responsive/mobile_home.dart';
+import 'package:wordpipe/responsive/responsive_layout.dart';
 import 'package:wordpipe/validator.dart';
 import 'package:wordpipe/responsive/sign_up.dart';
 // import 'package:wordpipe/reset_password.dart';
@@ -31,7 +33,7 @@ class MobileSignIn extends StatelessWidget {
         appBar: AppBar(
           title: Text('Sign In', style: TextStyle(color: Colors.white70, fontSize: 24)),
           centerTitle: true,
-          backgroundColor: Color.fromARGB(255, 31, 165, 69),
+          backgroundColor: CustomColors.appBarColor2,
           automaticallyImplyLeading: false,
         ),
         resizeToAvoidBottomInset : false,
@@ -52,11 +54,23 @@ class MobileSignIn extends StatelessWidget {
                     children: [
                       Container(
                         padding: EdgeInsets.only(top: 15),
-                        child: Text('Word Pipe',
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
-                            fontWeight: FontWeight.w600),
+                        child: RichText(
+                          text: TextSpan(
+                            text: 'Word Pipe',
+                            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                              color: Colors.black54,
+                              fontSize: 16,
+                              fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
+                              fontWeight: FontWeight.w600),
+                            children: <TextSpan>[
+                              TextSpan(
+                                text: '  alpha',
+                                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                                  color: Colors.black54,
+                                  fontSize: 10),
+                              ),
+                            ],
+                          )
                         ),
                       )
                     ],
@@ -204,7 +218,7 @@ class MobileSignIn extends StatelessWidget {
                                   Get.offAll(SignUp());
                                 },
                                 child: Text("Haven't an account? go to Sign Up",
-                                  style: TextStyle(fontSize: 12,fontWeight: FontWeight.bold, color: Colors.green[900]),
+                                  style: TextStyle(fontSize: 14,fontWeight: FontWeight.bold, color: Colors.green[900]),
                                 ),
                               ),
                               // TextButton(
@@ -242,7 +256,10 @@ class MobileSignIn extends StatelessWidget {
                                   if (_formKey.currentState!.validate()) {
                                     Map<String, dynamic> rsp = await c.signin(_usernameField.text, _passwordField.text);
                                     if (rsp['errcode'] == 0) {
-                                      Get.offAll(DesktopHome());
+                                      if (GetPlatform.isDesktop)
+                                        Get.offAll(DesktopHome());
+                                      else
+                                        Get.offAll(MobileHome());
                                     }else{
                                       customSnackBar(title: "Errcode:${rsp['errcode']}", content: '${rsp['errmsg']}');
                                     }

@@ -12,15 +12,16 @@ class DesktopSignIn extends StatelessWidget {
         children: [
           Expanded(
             child: Container(
+              margin: EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.greenAccent.withOpacity(0.6),
                 borderRadius: BorderRadius.circular(10),
                 gradient: new LinearGradient(
                   colors: [
-                    Color.fromARGB(255, 118, 232, 169),
-                    Color.fromARGB(255, 32, 220, 161),
+                    CustomColors.splashEnd,
+                    CustomColors.splashStart,
                   ],
-                                ),
+                ),
               ),
             ),
           ),
@@ -29,7 +30,7 @@ class DesktopSignIn extends StatelessWidget {
             height: double.infinity,
             decoration: BoxDecoration(
               color: Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
+              // borderRadius: BorderRadius.circular(10),
             ),
             child: Padding(
               padding: const EdgeInsets.all(8.0),
