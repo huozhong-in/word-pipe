@@ -1,12 +1,7 @@
 import 'package:wordpipe/config.dart';
-import 'package:wordpipe/responsive/desktop_home.dart';
 import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
-// import 'package:google_fonts/google_fonts.dart';
-// import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:wordpipe/controller.dart';
-import 'package:wordpipe/responsive/mobile_sign_in.dart';
 import 'package:wordpipe/MessageController.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:wordpipe/responsive/responsive_layout.dart';
@@ -17,7 +12,7 @@ import 'package:wordpipe/responsive/responsive_layout.dart';
 class UserProfile extends StatelessWidget {
   UserProfile({Key? key}) : super(key: key);
   final Controller c = Get.find();
-  final MessageController messageController = Get.put(MessageController());
+  final MessageController messageController = Get.find();
   late String username = "";
 
   @override
@@ -44,7 +39,7 @@ class UserProfile extends StatelessWidget {
                       leading: IconButton(
                         icon: Icon(Icons.arrow_back),
                         onPressed: () {
-                          Get.offAll(DesktopHome());
+                          Get.offAll(ResponsiveLayout());
                         },
                       )
                     ),

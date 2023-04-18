@@ -219,7 +219,7 @@ class ChatRecord extends GetConnect {
     if (response.statusCode == 200) {
       
       List<dynamic>json = List<dynamic>.from(response.body);
-      MessageController messageController = Get.find<MessageController>();
+      MessageController messageController = Get.find();
       messageController._isLoading.value = false;
       json.forEach((element ) {
         Map<String, dynamic> e = element as Map<String, dynamic>;

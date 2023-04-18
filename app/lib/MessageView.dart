@@ -11,7 +11,7 @@ class MessageView extends StatelessWidget {
   MessageView({required Key key }) : super(key: key);
   
   final Controller c = Get.find();
-  final MessageController messageController = Get.find<MessageController>();
+  final MessageController messageController = Get.find();
   
   @override
   Widget build(BuildContext context) {

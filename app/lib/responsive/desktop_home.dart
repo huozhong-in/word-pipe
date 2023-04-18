@@ -8,18 +8,19 @@ import 'package:get/get.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageView.dart';
 import 'package:wordpipe/user_profile.dart';
+import 'package:lottie/lottie.dart';
 import 'dart:developer';
 
 // ugly code
 import 'package:wordpipe/MessageController.dart';
 import 'package:wordpipe/MessageModel.dart';
-import 'package:lottie/lottie.dart';
 
 // ignore: must_be_immutable
 class DesktopHome extends StatelessWidget {
   DesktopHome({super.key});
-  final Controller c = Get.find();
+  final Controller c = Get.find<Controller>();
   final MessageController messageController = Get.put(MessageController());
+  final SettingsController settingsController = Get.find<SettingsController>();
   final List<MatchWords> _matchWords = <MatchWords>[].obs;
   final TextEditingController _textController = TextEditingController();
   final FocusNode _commentFocus = FocusNode();
@@ -69,6 +70,12 @@ class DesktopHome extends StatelessWidget {
   }
   
   void _handleMatchWords(String text) {
+    if(settingsController.configEnglishInputHelper == false){
+      _matchWords.clear();
+      _indexHighlight = 0;
+      _isShowSlashMenu.value = false;
+      return;
+    }
     if (text.trim() == ""){
       _matchWords.clear();
       _indexHighlight = 0;
@@ -353,7 +360,7 @@ class DesktopHome extends StatelessWidget {
           maxLines: 3,
           minLines: 3,
           decoration: InputDecoration(
-            hintText: '/ OR words',
+            hintText: '输入/或单词' ,
             hintStyle: TextStyle(color: Colors.grey),
             // prefixIcon: IconButton(
             //     color: Colors.grey,
@@ -399,29 +406,33 @@ class DesktopHome extends StatelessWidget {
   Widget build(context){
     
     return Scaffold(
-      appBar: AppBar(
-        title: RichText(
-          text: TextSpan(
-            text: 'Word Pipe',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              color: Colors.black54,
-              fontSize: 20,
-              fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
-              fontWeight: FontWeight.w600),
-            children: <TextSpan>[
-              TextSpan(
-                text: '  alpha',
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: Colors.black54,
-                  fontSize: 12),
-              ),
-            ],
-          )
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        automaticallyImplyLeading: true,
-      ),
+      appBar: null,
+      // PreferredSize(
+      //   child: AppBar(
+      //     title: RichText(
+      //       text: TextSpan(
+      //         text: 'Word Pipe',
+      //         style: Theme.of(context).textTheme.displaySmall?.copyWith(
+      //           color: Colors.black54,
+      //           fontSize: 20,
+      //           fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
+      //           fontWeight: FontWeight.w600),
+      //         children: <TextSpan>[
+      //           TextSpan(
+      //             text: '  alpha',
+      //             style: Theme.of(context).textTheme.displaySmall?.copyWith(
+      //               color: Colors.black54,
+      //               fontSize: 12),
+      //           ),
+      //         ],
+      //       )
+      //     ),
+      //     centerTitle: true,
+      //     backgroundColor: Colors.transparent,
+      //     automaticallyImplyLeading: true,
+      //   ), 
+      // preferredSize: Size(double.infinity, 30),
+      // ),
       body: Center(
         child: Row(
           children: [
@@ -434,7 +445,10 @@ class DesktopHome extends StatelessWidget {
               decoration: BoxDecoration(
                 // color: Color.fromARGB(255, 131, 198, 175),
                 color: Color.fromARGB(255, 94, 211, 168).withOpacity(0.5),
-                borderRadius: BorderRadius.circular(5),
+                borderRadius: BorderRadius.only(
+                  // topLeft: Radius.circular(5),
+                  bottomRight: Radius.circular(5),
+                ),
                 gradient: new LinearGradient(
                   colors: [
                     Color.fromARGB(255, 148, 231, 170),
@@ -445,6 +459,31 @@ class DesktopHome extends StatelessWidget {
               child: ListView(
                 padding: EdgeInsets.only(top: 10),
                 children: <Widget>[
+                  Center(
+                    child: Container(
+                      padding: EdgeInsets.all(5),
+                      alignment: AlignmentDirectional.center,
+                      child: RichText(
+                        text: TextSpan(
+                          text: 'Word Pipe',
+                          style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                            color: Colors.black54,
+                            fontSize: 18,
+                            fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
+                            fontWeight: FontWeight.w600),
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: '  alpha',
+                              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                                color: Colors.black54,
+                                fontSize: 12),
+                            ),
+                          ],
+                        )
+                      ),
+                    ),
+                  ),
+                  Divider(),
                   ListTile(
                     leading: Icon(Icons.message),
                     title: Text('Messages', style: TextStyle(fontSize: 14)),
@@ -464,13 +503,26 @@ class DesktopHome extends StatelessWidget {
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
                   ),
-                  Divider(),
+                  
                   ListTile(
                     leading: Icon(Icons.info),
                     title: Text('About WordPipe', style: TextStyle(fontSize: 14)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
                   ),
+                  Divider(),
+                  Obx(() {
+                    return SwitchListTile(
+                      activeColor: Colors.blue,
+                      title: Text('English Input Helper', 
+                      style: TextStyle(fontSize: 12)), 
+                      value: settingsController.configEnglishInputHelper.obs.value, 
+                      onChanged: ((bool value) {
+                        settingsController.toggleEnglishInputHelper(value);
+                      }
+                      )
+                    );
+                  })
                 ],
               ),
             ),
@@ -488,7 +540,27 @@ class DesktopHome extends StatelessWidget {
                               height: double.infinity,
                               alignment: Alignment.topCenter,
                               color: Colors.white24,
-                              child: MessageView(key: ValueKey(DateTime.now()))
+                              child: Column(
+                                children: [
+                                  Container(
+                                    height: 50,
+                                    color: Colors.grey[200],
+                                    padding: const EdgeInsets.fromLTRB(20, 5, 5, 5),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Text('Jasmine', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green[900])),
+                                        IconButton(
+                                          icon: Icon(Icons.account_circle),
+                                          onPressed: () => {},
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(child: MessageView(key: ValueKey(DateTime.now()))),
+                                ],
+                              )
                             ),
                             Obx(() => 
                               Visibility(

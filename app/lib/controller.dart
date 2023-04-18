@@ -3,12 +3,18 @@ import 'package:wordpipe/config.dart';
 import 'package:wordpipe/cache_helper.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
+// import 'package:shared_preferences/shared_preferences.dart'; // TODO 换掉cache_helper
 
 
 class Controller extends GetxController{
   final WordsProvider _wordsProvider = WordsProvider();
   final UserProvider _userProvider = UserProvider();
   
+  // Future<bool> a() async {
+  //   final SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   return prefs.containsKey('sessionData');
+  // }
+
   Future<Map<String, dynamic>> getSessionData() async{
     return await _userProvider.getLocalStorge();
   }
@@ -250,5 +256,20 @@ class UserProvider extends GetConnect {
       }
     }
     return {"error": ""};
+  }
+}
+
+class SettingsBinding implements Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut(() => SettingsController());
+  }
+}
+class SettingsController extends GetxController {
+  RxBool _configEnglishInputHelper = true.obs;
+  bool get configEnglishInputHelper => _configEnglishInputHelper.value; 
+  
+  void toggleEnglishInputHelper(bool value) {
+    _configEnglishInputHelper.value = value;
   }
 }

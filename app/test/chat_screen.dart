@@ -68,7 +68,7 @@ class MessageController extends GetxController {
 class ChatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final messageController = Get.put(MessageController());
+    final messageController = Get.find();
     final TextEditingController _textController = TextEditingController();
 
     return Obx(() {

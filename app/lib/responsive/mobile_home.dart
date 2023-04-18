@@ -45,6 +45,7 @@ class MobileHome extends StatelessWidget {
         backgroundColor: Colors.greenAccent[100],
         automaticallyImplyLeading: true,
       ),
+      resizeToAvoidBottomInset : false,
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,

@@ -29,7 +29,7 @@ class MessageBubble extends StatelessWidget {
   //      this.type = type;
 
   final Controller c = Get.find();
-  final MessageController messageController = Get.find<MessageController>();
+  final MessageController messageController = Get.find();
   bool isMe = false;
   
 
