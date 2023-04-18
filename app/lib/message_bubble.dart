@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:wordpipe/MessageController.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:flutter/material.dart';
@@ -66,7 +65,7 @@ class MessageBubble extends StatelessWidget {
                 children: [
                   if (!isMe) ...[
                     // Left avatar
-                    showAvatar()
+                    showAvatar2()
                   ],
                   Flexible(
                     child: Column(
@@ -117,7 +116,7 @@ class MessageBubble extends StatelessWidget {
                   ),
                   if (isMe) ...[
                     // Right avatar
-                    showAvatar()
+                    showAvatar2()
                   ],
                 ],
               ),
@@ -196,6 +195,22 @@ class MessageBubble extends StatelessWidget {
           child: Center(child: CircularProgressIndicator()),
         );
       },
+    );
+  }
+
+  Widget showAvatar2() {
+    return SvgPicture.network(
+      "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}",
+      height: 40,
+      width: 40,
+      semanticsLabel: 'avatar',
+      placeholderBuilder: (BuildContext context) => Container(
+        width: 50,
+        height: 50,
+        color: Colors.black12,
+        margin: const EdgeInsets.only(right: 8),
+        child: Center(child: CircularProgressIndicator()),
+      ),
     );
   }
 
