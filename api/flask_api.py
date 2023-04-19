@@ -247,7 +247,7 @@ def publish_test():
     r: list = list()
     id: str = generate_time_based_client_id()
     back_data: json = {}
-    back_data['username'] = "Jarvis"
+    back_data['username'] = "Jasmine"
     back_data['type'] = 1
     r.append(message)
     back_data['dataList'] = r
@@ -256,6 +256,70 @@ def publish_test():
 
 @app.route('/api/chat', methods = ['POST'])
 def chat():
+    '''
+    接收用户发送的任何消息
+    替用户发消息，就不会有时间错乱的问题了，否则SSE太快，比HTTP先返回数据。
+    '''
+    if request.method != 'POST':
+        return make_response('Please use POST method', 500)
+    try:
+        data: dict = request.get_json()
+        username: str = data.get('username')
+        message: str = data.get('message')
+    except:
+        return make_response('JSON data required', 500)
+    if message == '':
+        return make_response('message required', 500)
+    
+    tic = time.perf_counter()
+
+    print(f'[{username}]: {message}')
+    # 每个登录用户都分配到一个channel，用于SSE推送，取得这个channel字符串
+    channel: str = ''
+    if request.headers.get('X-access-token'):
+        # print('X-access-token: ', request.headers['X-access-token'])
+        u: User = userDB.get_user_by_username(username)
+        if u is None:
+            return make_response('', 500)
+        if u.access_token != request.headers['X-access-token']:
+            return make_response('', 500)
+        if u.access_token_expire_at < int(time.time()):
+            return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
+        channel = username
+    else:
+        return make_response('access_token required', 500)
+
+    # 记录到数据库
+    myuuid: str = userDB.get_user_by_username(username).uuid
+    cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jasmine').uuid, msgCreateTime=int(time.time()), msgContent=json.dumps(message, ensure_ascii=False), msgType=1)
+    crdb.insert_chat_record(cr)
+    
+    back_data: json = {}
+    back_data['username'] = username
+    back_data['uuid'] = userDB.get_user_by_username(username).uuid
+    
+    dataList: list = list()
+    if ' ' in message:
+        # 如果messages含有空格，说明是短语或句子，否则是单词。让客户端渲染不同的模板
+        back_data['type'] = 104
+        # dataList.append(f"对于单词“`{message}`”，你想直接获得答案 ，还是想通过英文例句上下文来猜测意思？")
+    else:
+        back_data['type'] = 103
+    dataList.append(message)
+    back_data['dataList'] = dataList
+    
+    back_data['createTime'] = int(time.time())
+    id = generate_time_based_client_id(prefix=username)
+    print("chat() /root publish id:", id)
+    sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
+
+    toc = time.perf_counter()
+    print(f"[Processed in {toc - tic:0.4f} seconds]")
+
+    return make_response('', 200)
+
+@app.route('/api/chat-root', methods = ['POST'])
+def chat_root():
     '''
     通过对话的方式，将用户查询的字符串拆分成单个单词，分别查找词根词缀。
     - 可能命中多个词根词缀，所以要有list结构
@@ -288,7 +352,6 @@ def chat():
             return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
         channel = username
     
-
     if message.startswith('/root '):
         back_data: json = {}
         back_data = get_root_by_word(message)
@@ -302,7 +365,6 @@ def chat():
 
         # thread = threading.Thread(target=publish_func1)
         # thread.start()
-        
 
     elif message.startswith('/config '):
         pass
@@ -310,7 +372,7 @@ def chat():
     toc = time.perf_counter()
     print(f"[Processed in {toc - tic:0.4f} seconds]")
 
-    return make_response('', 204)
+    return make_response('', 200)
 
 
 def get_root_by_word(message: str) -> json:
@@ -347,8 +409,8 @@ def get_root_by_word(message: str) -> json:
             dataList.append({word: a_word})
             
     back_data: json = {}
-    back_data['username'] = "Jarvis"
-    back_data['uuid'] = userDB.get_user_by_username("Jarvis").uuid
+    back_data['username'] = "Jasmine"
+    back_data['uuid'] = userDB.get_user_by_username("Jasmine").uuid
     back_data['type'] = 101
     back_data['dataList'] = dataList
     back_data['createTime'] = int(time.time())
@@ -465,12 +527,9 @@ def openai_proxy(path):
     messages = request.json['messages']
     print(num_tokens_from_messages(messages))
     
-    myuuid: str = userDB.get_user_by_username(username).uuid
-    cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jarvis').uuid, msgCreateTime=int(time.time()), msgContent=json.dumps(messages, ensure_ascii=False), msgType=1)
-    crdb.insert_chat_record(cr)
-
-    
-
+    last_message: dict  = messages[-1]
+    if last_message['content'] == '':
+        return make_response(jsonify({"errcode":50007,"errmsg":"Message is empty"}), 500)
 
     # 开发环境需要走本地代理服务器才能访问到openai API
     if os.environ.get('DEBUG_MODE') != None:
@@ -514,7 +573,7 @@ def openai_proxy(path):
             else:
                 completion_text += c
         myuuid: str = userDB.get_user_by_username(username).uuid
-        cr = ChatRecord(msgFrom=userDB.get_user_by_username('Jarvis').uuid, msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=completion_text, msgType=1)
+        cr = ChatRecord(msgFrom=userDB.get_user_by_username('Jasmine').uuid, msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=completion_text, msgType=1)
         crdb.insert_chat_record(cr)
 
     
@@ -565,7 +624,7 @@ def encrypt(text):
     return base64.b64encode(ciphertext).decode()
 
 @app.route('/api/user/chat-history', methods = ['POST'])
-def load_chat_records():
+def chat_history():
     data: dict = request.get_json()
     username: str = data.get('username')
     if request.headers.get('X-access-token'):

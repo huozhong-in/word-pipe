@@ -13,7 +13,6 @@ import 'dart:developer';
 
 // ugly code
 import 'package:wordpipe/MessageController.dart';
-import 'package:wordpipe/MessageModel.dart';
 
 // ignore: must_be_immutable
 class DesktopHome extends StatelessWidget {
@@ -28,14 +27,14 @@ class DesktopHome extends StatelessWidget {
   late String _currentWord = ""; // 文本框中输入光标所在的单词
   late int _leftOrRight = 0; // 此变量用于记录当按下键盘左右键时，光标应向左移动还是向右移动，-1表示向左，1表示向右，0表示未移动
   late final Map<String, String> _wordDetail = <String, String>{}.obs;
-  RxBool _isShowSlashMenu = false.obs;
+  // RxBool _isShowSlashMenu = false.obs;
   ScrollController _scrollController = ScrollController();
 
   void _handleSubmitted(String text) {
     if(text.trim() == ""){
       return;
     }
-    // 向服务端发送消息，如果返回http code 204，则将消息添加到消息列表中
+    // 向服务端发送消息，
     c.getUserName().then((_username){
       Future<bool> r = c.chat(_username, text.trim());
       r.then((ret){
@@ -43,20 +42,8 @@ class DesktopHome extends StatelessWidget {
           _textController.clear();
           _matchWords.clear();
           _indexHighlight = 0;
-          c.getUUID().then((_uuid){
-            messageController.addMessage(
-              MessageModel(
-                dataList: RxList([text.trim()]), 
-                type: WordPipeMessageType.text, 
-                username: _username, 
-                uuid: _uuid,
-                createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-                key: UniqueKey(), 
-              )
-            );
-            if(text.trim().substring(0,1) != "/"){
-              messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
-            }
+          c.getUUID().then((_uuid){            
+            // messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
           });
         }else{
           customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
@@ -73,23 +60,24 @@ class DesktopHome extends StatelessWidget {
     if(settingsController.configEnglishInputHelper == false){
       _matchWords.clear();
       _indexHighlight = 0;
-      _isShowSlashMenu.value = false;
+      // _isShowSlashMenu.value = false;
       return;
     }
     if (text.trim() == ""){
       _matchWords.clear();
       _indexHighlight = 0;
-      _isShowSlashMenu.value = false;
+      // _isShowSlashMenu.value = false;
       return;
     }
-    if (text == "/"){
-      _matchWords.clear();
-      _indexHighlight = 0;
-      _isShowSlashMenu.value = true;
-      return;
-    }else{
-      _isShowSlashMenu.value = false;
-    }
+    // if (text == "/"){
+    //   _matchWords.clear();
+    //   _indexHighlight = 0;
+    //   _isShowSlashMenu.value = true;
+    //   return;
+    // }else{
+    //   _isShowSlashMenu.value = false;
+    // }
+
     // 获取光标的位置。
     // 因捕获键盘事件在前，_textControll.selection.start和end变化在后，
     // 导致此时获得的光标实际位置向左或向右偏移了1个字符，所以要预先设置_leftOrRight，并在这里修正
@@ -360,7 +348,7 @@ class DesktopHome extends StatelessWidget {
           maxLines: 3,
           minLines: 3,
           decoration: InputDecoration(
-            hintText: '输入/或单词' ,
+            hintText: '输入单词或句子' ,
             hintStyle: TextStyle(color: Colors.grey),
             // prefixIcon: IconButton(
             //     color: Colors.grey,
@@ -703,42 +691,42 @@ class DesktopHome extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            Obx(() => Visibility(
-                              visible: _isShowSlashMenu.value, 
-                              child: Positioned(
-                                left: 20,
-                                bottom: 0,
-                                child: Container(
-                                  height: 150,
-                                  width: 220,
-                                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white70,
-                                    borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(16),
-                                      topRight: Radius.circular(16),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.5),
-                                        blurRadius: 5,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ListView(
-                                    children:[
-                                      ListTile(
-                                        title: Text('/root␣word 查词根', style: TextStyle(fontSize: 14)),
-                                      ),
-                                      ListTile(
-                                        title: Text('/config␣[未实现]', style: TextStyle(fontSize: 14)),
-                                      ),
-                                    ]
-                                  ),
-                                ),
-                              ))
-                            ),
+                            // Obx(() => Visibility(
+                            //   visible: _isShowSlashMenu.value, 
+                            //   child: Positioned(
+                            //     left: 20,
+                            //     bottom: 0,
+                            //     child: Container(
+                            //       height: 150,
+                            //       width: 220,
+                            //       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                            //       decoration: BoxDecoration(
+                            //         color: Colors.white70,
+                            //         borderRadius: const BorderRadius.only(
+                            //           topLeft: Radius.circular(16),
+                            //           topRight: Radius.circular(16),
+                            //         ),
+                            //         boxShadow: [
+                            //           BoxShadow(
+                            //             color: Colors.grey.withOpacity(0.5),
+                            //             blurRadius: 5,
+                            //             offset: const Offset(0, 5),
+                            //           ),
+                            //         ],
+                            //       ),
+                            //       child: ListView(
+                            //         children:[
+                            //           ListTile(
+                            //             title: Text('/root␣word 查词根', style: TextStyle(fontSize: 14)),
+                            //           ),
+                            //           ListTile(
+                            //             title: Text('/config␣[未实现]', style: TextStyle(fontSize: 14)),
+                            //           ),
+                            //         ]
+                            //       ),
+                            //     ),
+                            //   ))
+                            // ),
                             Visibility(
                               visible: messageController.isLoading, 
                               child: Positioned(

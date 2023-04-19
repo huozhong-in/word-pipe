@@ -3,6 +3,17 @@ import python_avatars as pa
 # import logging
 
 
+try:
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    # print(ip)
+except Exception as e:
+    ip = '127.0.0.1'
+
+
 # Load config items from config.yaml.
 # Use Path.resolve() to get the absolute path of the parent directory
 # config_dir = Path(__file__).resolve().parent
@@ -39,9 +50,9 @@ MYSQL_CONFIG = {
   'database': 'wordpipe',
   'raise_on_warnings': True,
 }
-
+# ----- OPENAI CONFIG  -----
 OPENAI_PROXY_BASEURL = {
-    "dev": "http://192.168.0.166/api/openai",
+    "dev": f"http://{ip}/api/openai", # for intranet Mobile Web testing
     "prod": "https://wordpipe.huozhong.in/api/openai",
 }
 

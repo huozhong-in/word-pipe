@@ -1,14 +1,14 @@
-import 'package:wordpipe/MessageController.dart';
-import 'package:wordpipe/controller.dart';
-import 'package:flutter/material.dart';
 import 'package:wordpipe/config.dart';
+import 'package:wordpipe/controller.dart';
+import 'package:wordpipe/MessageController.dart';
+import 'package:wordpipe/MessageBubblePainter.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:wordpipe/MessageBubblePainter.dart';
 import 'package:lottie/lottie.dart';
 
 // ignore: must_be_immutable
@@ -49,11 +49,13 @@ class MessageBubble extends StatelessWidget {
         bubbleColor = Colors.green[100]!;
       }
       
+      double edge = GetPlatform.isMobile ? 20 : 80;
+      
       return GestureDetector(
         child: Container(
           margin: isMe
-              ? const EdgeInsets.fromLTRB(80, 8, 8, 8)
-              : const EdgeInsets.fromLTRB(8, 8, 80, 8),
+              ? EdgeInsets.fromLTRB(edge, 8, 8, 8)
+              : EdgeInsets.fromLTRB(8, 8, edge, 8),
           child: Align(
             alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
             child: SizedBox(
@@ -82,7 +84,7 @@ class MessageBubble extends StatelessWidget {
                                 //   minWidth: 320,
                                 // ),
                                 child: Obx(() => SelectableText.rich(
-                                  templateDispatch(context),
+                                  templateDispatcher(context),
                                   minLines: 1,
                                 )),
                               ),
@@ -214,13 +216,13 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  TextSpan templateDispatch(BuildContext context) {
-    if(type == WordPipeMessageType.word2root){
-      // 通过单词查词根
-      return templateWord2Root(context);
-    }else if(type == WordPipeMessageType.root2word){
-      // 通过词根查单词
-      return templateRoot2Word(context);
+  TextSpan templateDispatcher(BuildContext context) {
+    if(type == WordPipeMessageType.word_highlight){
+      // 将句子内单词高亮
+      return templateWordHighlight(context);
+    }else if(type == WordPipeMessageType.system){
+      // 显示系统消息，比如：某某撤回一条消息，某某加入群聊
+      return templateSysMsg(context);
     }else if(type == WordPipeMessageType.stream){
       // 因为机器人的回复是异步且流式，当消息陆续到达，逐一显示
       return templateStream(context);
@@ -228,6 +230,10 @@ class MessageBubble extends StatelessWidget {
       return TextSpan(children: [WidgetSpan(child: Lottie.network('https://assets6.lottiefiles.com/packages/lf20_nZBVpi.json', width: 30, height: 20, repeat: true, animate: true))]);
     }else if(type == WordPipeMessageType.chathistory){
       return templateChatHistory(context);
+    }else if(type == WordPipeMessageType.reply_for_query_sentence){
+      return templateReply4Sentence(context);
+    }else if(type == WordPipeMessageType.reply_for_query_word){
+      return templateReply4Word(context);
     }else{
       return templateText(context);
     }
@@ -247,7 +253,7 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  TextSpan templateWord2Root(BuildContext context) {
+  TextSpan templateRoot2Word(BuildContext context) {
     if ( dataList.length == 0 ) {
       return TextSpan(children: [TextSpan(text: "No root information was found for this word."), WidgetSpan(child: Icon(Icons.sentiment_dissatisfied, color: Colors.red, size: 20))]);
     }
@@ -277,7 +283,7 @@ class MessageBubble extends StatelessWidget {
                         alignment: PlaceholderAlignment.middle,
                         child: TextButton(
                           onPressed: () async {
-                            await c.chat(await c.getUserName(), "/root $example");
+                            c.chat(await c.getUserName(), "/root $example");
                           }, 
                           child: Text(
                             example,
@@ -309,7 +315,7 @@ class MessageBubble extends StatelessWidget {
     );
   }
 
-  TextSpan templateRoot2Word(BuildContext context) {
+  TextSpan templateWord2Root(BuildContext context) {
     return TextSpan(
       style: DefaultTextStyle.of(context).style,
       children: <InlineSpan>[
@@ -328,7 +334,18 @@ class MessageBubble extends StatelessWidget {
   }
 
   TextSpan templateText(BuildContext context) {
-    return TextSpan(text: dataList[0] as String);
+    List<TextSpan> spans = [];
+    int i=0;
+    dataList.forEach((element) {
+      spans.add(TextSpan(text: element as String));
+      if (i < dataList.length - 1)
+        spans.add(TextSpan(text: "\n"));
+      i++;
+    });
+    return TextSpan(
+      style: DefaultTextStyle.of(context).style,
+      children: spans,
+    );
   }
 
   TextSpan templateChatHistory(BuildContext context){
@@ -339,6 +356,99 @@ class MessageBubble extends StatelessWidget {
     return TextSpan(
       style: DefaultTextStyle.of(context).style,
       children: spans,
+    );
+  }
+  
+  TextSpan templateReply4Sentence(BuildContext context) {
+    List<TextSpan> spans = [];
+    // split `scraping`|`process` to two words
+    List<String> dataList = this.dataList[0].split('|');
+
+    // 我猜你想知道[`scraping`|`process`]的具体意思，已经为你高亮。如果我猜错了，你可点击其他单词以获取其意思。或选择通过例句从上下文来猜测意思。
+    dataList.forEach((element) {
+      spans.add(TextSpan(text: element.trim()));
+    });
+    return TextSpan(
+      style: DefaultTextStyle.of(context).style,
+      children: spans,
+    );
+  }
+
+  TextSpan templateReply4Word(BuildContext context) {
+      List<TextSpan> spans = [];
+      dataList.forEach((element) {
+        spans.add(TextSpan(text: element as String));
+      });
+      return TextSpan(
+        style: DefaultTextStyle.of(context).style,
+        children: spans,
+      );
+  }
+  
+  TextSpan templateWordHighlight(BuildContext context) {
+  List<InlineSpan> spans = [];
+  RegExp exp = RegExp(r'(\w+|\w+-*\w+|\W+)');
+  
+  for (int i = 0; i < dataList.length; i++) {
+    String str = dataList[i] as String;
+    int lastEnd = 0;
+    Iterable<RegExpMatch> matches = exp.allMatches(str);
+    
+    for (RegExpMatch match in matches) {
+      if (match.group(0)!.contains(RegExp(r'[a-zA-Z]+')) &&  
+      !match.group(0)!.contains('-')) {
+        spans.add(
+          WidgetSpan(  
+            alignment: PlaceholderAlignment.middle,
+            child: TextButton(
+              style: ButtonStyle(
+                minimumSize: MaterialStateProperty.all<Size>(Size(8, 8)),
+                padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(2)),
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.green[100]!),
+                overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
+                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(2),
+                  )
+                )
+              ),
+              onPressed: () async {
+                c.chat(await c.getUserName(), match.group(0)!);
+              }, 
+              child: Text(
+                match.group(0)!,
+                style: TextStyle(
+                  color: Color.fromARGB(255, 11, 66, 93),
+                  decoration: TextDecoration.underline
+                )
+              )
+            )
+          )
+        ); 
+      } else {
+        spans.add(TextSpan(text: match.group(0)!));
+      }
+      lastEnd = match.end;
+    }
+  }
+  
+  return TextSpan(
+    style: DefaultTextStyle.of(context).style,
+    children: spans,
+  ); 
+}
+  
+  TextSpan templateSysMsg(BuildContext context) {
+    return TextSpan(
+      style: DefaultTextStyle.of(context).style,
+      children: <InlineSpan>[
+        TextSpan(
+          text: dataList[0] as String,
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 10,
+          ),)
+      ],
     );
   }
 }

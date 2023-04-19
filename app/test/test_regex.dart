@@ -23,7 +23,7 @@ Future<String> imageTypes(String url) async {
 }
 
 void main() async{
-  if (await imageTypes("http://127.0.0.1/api/avatar/Jarvis")=="jpeg"){
+  if (await imageTypes("http://127.0.0.1/api/avatar/Jasmine")=="jpeg"){
     print('exists');
   }else{
     print('not exists');

@@ -35,9 +35,14 @@ class MessageView extends StatelessWidget {
               if (lastId == -1){
                 messageController.addMessage(
                   MessageModel(
-                    dataList: RxList(['“Huh? Whoa, whoa, whoa, whoa, whoa.”']), 
+                    dataList: RxList(
+                      [
+                        'Hi, I am Jasmine. I am here to help you. Try to input a word!'
+                        '你好，我是贾维斯。希望我能在外语学习方面帮到你。试着输入一个单词吧！'
+                      ]
+                    ), 
                     type: WordPipeMessageType.text, 
-                    username: 'Jarvis', 
+                    username: 'Jasmine', 
                     uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
                     createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
                     key: UniqueKey(), 

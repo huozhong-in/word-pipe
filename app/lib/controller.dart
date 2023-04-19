@@ -184,7 +184,7 @@ class UserProvider extends GetConnect {
       hs['X-access-token'] = access_token;
     }
     final response = await post(url.toString(), data, headers: hs, contentType: 'application/json');
-    if (response.statusCode == 204) {
+    if (response.statusCode == 200) {
       return true;
     } else {
       // signout

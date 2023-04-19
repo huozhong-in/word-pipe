@@ -46,7 +46,7 @@ class MessageController extends GetxController {
         )
       ],
     );
-    int needUpdate = addMessage("Jarvis is typing...");
+    int needUpdate = addMessage("Jasmine is typing...");
     chatStream.listen((chatStreamEvent) {
       // print(chatStreamEvent);
       OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];

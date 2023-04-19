@@ -58,9 +58,9 @@ class ChatRecordDB:
 if __name__ == '__main__':
     crdb = ChatRecordDB()
     create_time = int(time.time())
-    cr = ChatRecord( msgFrom='dio', msgTo='Jarvis', msgCreateTime=create_time, msgContent='北冰洋冰层厚度？', msgStatus=1, msgType=1, msgSource=1, msgDest=1)
+    cr = ChatRecord( msgFrom='Dio', msgTo='Jasmine', msgCreateTime=create_time, msgContent='北冰洋冰层厚度？', msgStatus=1, msgType=1, msgSource=1, msgDest=1)
     crdb.insert_chat_record(cr)
-    # r = crdb.get_chat_record('Jarvis', -1)
+    # r = crdb.get_chat_record('Jasmine', -1)
     # print(r)
     crdb.close()
     # 反转打印

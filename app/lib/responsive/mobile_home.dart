@@ -203,20 +203,8 @@ class MobileHome extends StatelessWidget {
         if(ret == true){
           _textController.clear();
           _commentFocus.unfocus();
-          c.getUUID().then((_uuid){
-            messageController.addMessage(
-              MessageModel(
-                dataList: RxList([text.trim()]), 
-                type: WordPipeMessageType.text, 
-                username: _username, 
-                uuid: _uuid,
-                createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-                key: UniqueKey(), 
-              )
-            );
-            if(text.trim().substring(0,1) != "/"){
-              messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
-            }
+          c.getUUID().then((_uuid){            
+          // messageController.getChatCompletion('gpt-3.5-turbo', text.trim(), WordPipeMessageType.reply_for_query_word);
           });
         }else{
           customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");

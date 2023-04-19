@@ -10,29 +10,30 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 // final bool kDebugMode = true;
 // final bool isDebug = bool.fromEnvironment('DEBUG', defaultValue: false);
 
-final String SSE_SERVER_HOST = kDebugMode ? "http://192.168.0.166" : "https://wordpipe.huozhong.in";
+final String SSE_SERVER_HOST = kDebugMode ? "http://192.168.2.31" : "https://wordpipe.huozhong.in";
 final String SSE_SERVER_PATH = "/api/stream";
 final String SSE_MSG_TYPE = "prod"; // prod, dev, test
 final String SSE_MSG_DEFAULT_CHANNEL = "users.social";
 
-final String HTTP_SERVER_HOST = kDebugMode ? "http://192.168.0.166/api" : "https://wordpipe.huozhong.in/api";
+final String HTTP_SERVER_HOST = kDebugMode ? "http://192.168.2.31/api" : "https://wordpipe.huozhong.in/api";
 
 final AVATAR_FILE_DIR = "avatar";
 
 
-// 1表示普通文本，3表示图片，34表示语音，43表示视频，47表示表情包，48表示位置，49是卡片消息(文件/视频号/引用/其他),10000表示撤回消息
+// 1表示普通文本，3表示图片，34表示语音，43表示视频，47表示表情包，48表示位置，49是卡片消息(文件/视频号/引用/其他),10000表示系统消息
 class WordPipeMessageType{
   static const int reserved = 0;
   static const int text = 1;
-  static const int word2root = 101;
-  static const int root2word = 102;
+  static const int word_highlight = 101;
+  static const int reply_for_query_sentence = 103;
+  static const int reply_for_query_word = 104;
   static const int image = 3;
   static const int audio = 34;
   static const int video = 43;
   static const int emoticon = 47;
   static const int location = 48;
   static const int card = 49;
-  static const int recall = 10000;
+  static const int system = 10000;
   static const int typing = 10001;
   static const int stream = 10002;
   static const int chathistory = 10003;
@@ -60,6 +61,41 @@ final ThemeData appTheme = ThemeData(
     titleSmall: TextStyle(fontSize: 16.0, fontStyle: FontStyle.italic),
   ),
   colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.orange),
+  visualDensity: VisualDensity.adaptivePlatformDensity,
+  textSelectionTheme: const TextSelectionThemeData(
+    cursorColor: Colors.red,
+    selectionColor: Colors.yellow,
+    selectionHandleColor: Colors.black,
+  )
+);
+final ThemeData appTheme2 = ThemeData(
+  useMaterial3: true,
+  brightness: Brightness.light,
+  primarySwatch: Colors.green,
+  primaryColor: Color(0xFF98F5F8), //青色辅助色
+  scaffoldBackgroundColor: const Color(0xFFF5F7FD),
+  
+  textTheme: TextTheme( //文本主题
+    displayLarge: TextStyle(color: Color(0xFF98F5F8)),
+    displayMedium: TextStyle(color: Color(0xFF06b6d4)),
+    displaySmall: TextStyle(color: Colors.white),
+    headlineMedium: TextStyle(color: Colors.black),
+    headlineSmall: TextStyle(color: Color(0xFF98F5F8)),
+    titleLarge: TextStyle(color: Color(0xFF06b6d4)),
+  ), 
+  colorScheme: ColorScheme(
+    primary: Color(0xFF98F5F8), 
+    secondary: Color(0xFF06b6d4),
+    surface: Colors.white,
+    background: Colors.white, 
+    error: Colors.red,
+    onPrimary: Colors.black,
+    onSecondary: Colors.white,
+    onSurface: Colors.black,
+    onBackground: Colors.black,
+    onError: Colors.white,
+    brightness: Brightness.light,
+  ).copyWith(secondary: Color(0xFF06b6d4)),
   visualDensity: VisualDensity.adaptivePlatformDensity,
   textSelectionTheme: const TextSelectionThemeData(
     cursorColor: Colors.red,

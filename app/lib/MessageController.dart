@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:dart_openai/openai.dart';
 import 'package:wordpipe/MessageModel.dart';
 import 'package:wordpipe/sse_client.dart';
 import 'package:wordpipe/config.dart';
-import 'package:dart_openai/openai.dart';
 import 'package:wordpipe/controller.dart';
+import 'package:wordpipe/prompts/template_vocab.dart';
 import 'dart:developer';
 
 class MessageController extends GetxController{
@@ -93,7 +94,7 @@ class MessageController extends GetxController{
   //   update();
   // }
 
-  Future<void> getChatCompletion(String model, String prompt) async {
+  Future<void> getChatCompletion(String model, String prompt, int requestType) async {
     String curr_user = "";
     String access_token = "";
     String apiKey = "";
@@ -123,7 +124,7 @@ class MessageController extends GetxController{
     Key needUpdate = addMessage(MessageModel(
       dataList: RxList(['...']),
       type: WordPipeMessageType.stream,
-      username: "Jarvis",
+      username: "Jasmine",
       uuid: "b811abd7-c0bb-4301-9664-574d0d8b11f8",
       createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       key: UniqueKey(),
@@ -131,15 +132,23 @@ class MessageController extends GetxController{
     
     OpenAI.apiKey = apiKey;
     OpenAI.baseUrl = baseUrl;
+    List<OpenAIChatCompletionChoiceMessageModel> msg;
+    double temperature = 0;
+    prompt = prompt.trim();
+    if (requestType == WordPipeMessageType.reply_for_query_word){
+      msg = prompt_template_oneword(prompt);
+      temperature = 0;
+    }else if(requestType == WordPipeMessageType.reply_for_query_sentence){
+      msg = prompt_template_sentence(prompt);
+      temperature = 0.6;
+    }else{
+      return;
+    }
     Stream<OpenAIStreamChatCompletionModel> chatStream = OpenAI.instance.chat.createStream(
-      model: "gpt-3.5-turbo",
-      messages: [
-        OpenAIChatCompletionChoiceMessageModel(
-          content: prompt,
-          role: OpenAIChatMessageRole.user,
-        )
-      ],
+      model: model,
+      messages: msg,
       user: curr_user,
+      temperature: temperature,
     );
 
     chatStream.listen((chatStreamEvent) {
