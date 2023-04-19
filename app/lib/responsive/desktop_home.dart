@@ -1,13 +1,14 @@
 import 'dart:math' as math;
-import 'package:wordpipe/config.dart';
-import 'package:wordpipe/responsive/mobile_sign_in.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
+import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageView.dart';
+import 'package:wordpipe/responsive/responsive_layout.dart';
 import 'package:wordpipe/user_profile.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lottie/lottie.dart';
 import 'dart:developer';
 
@@ -43,13 +44,13 @@ class DesktopHome extends StatelessWidget {
           _matchWords.clear();
           _indexHighlight = 0;
           c.getUUID().then((_uuid){            
-            // messageController.getChatCompletion('gpt-3.5-turbo', text.trim());
+            messageController.getChatCompletion('gpt-3.5-turbo', text.trim(), WordPipeMessageType.reply_for_query_sentence);
           });
         }else{
           customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
           // 三秒后跳转到登录页面
           Future.delayed(Duration(seconds: 3), () {
-            Get.offAll(MobileSignIn());
+            Get.offAll(ResponsiveLayout());
           });
         }
       });    
@@ -395,32 +396,6 @@ class DesktopHome extends StatelessWidget {
     
     return Scaffold(
       appBar: null,
-      // PreferredSize(
-      //   child: AppBar(
-      //     title: RichText(
-      //       text: TextSpan(
-      //         text: 'Word Pipe',
-      //         style: Theme.of(context).textTheme.displaySmall?.copyWith(
-      //           color: Colors.black54,
-      //           fontSize: 20,
-      //           fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
-      //           fontWeight: FontWeight.w600),
-      //         children: <TextSpan>[
-      //           TextSpan(
-      //             text: '  alpha',
-      //             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-      //               color: Colors.black54,
-      //               fontSize: 12),
-      //           ),
-      //         ],
-      //       )
-      //     ),
-      //     centerTitle: true,
-      //     backgroundColor: Colors.transparent,
-      //     automaticallyImplyLeading: true,
-      //   ), 
-      // preferredSize: Size(double.infinity, 30),
-      // ),
       body: Center(
         child: Row(
           children: [
@@ -472,11 +447,34 @@ class DesktopHome extends StatelessWidget {
                     ),
                   ),
                   Divider(),
-                  ListTile(
-                    leading: Icon(Icons.message),
-                    title: Text('Messages', style: TextStyle(fontSize: 14)),
-                    minLeadingWidth: 0,
-                    minVerticalPadding: 0,
+                  FutureBuilder<String>(
+                    future: c.getUserName(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return SvgPicture.network(
+                          "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${snapshot.data}",
+                          height: 80,
+                          width: 80,
+                          semanticsLabel: 'avatar',
+                          placeholderBuilder: (BuildContext context) => Container(
+                            width: 80,
+                            height: 80,
+                            color: Colors.black12,
+                            margin: const EdgeInsets.only(right: 8),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        );
+                      } else if (snapshot.hasError) {
+                        return Text("${snapshot.error}");
+                      }
+                      return Container(
+                        width: 80,
+                        height: 80,
+                        color: Colors.black12,
+                        margin: const EdgeInsets.only(right: 8),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    },
                   ),
                   ListTile(
                     leading: Icon(Icons.account_circle),
@@ -538,11 +536,8 @@ class DesktopHome extends StatelessWidget {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
-                                        Text('Jasmine', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green[900])),
-                                        IconButton(
-                                          icon: Icon(Icons.account_circle),
-                                          onPressed: () => {},
-                                        )
+                                        Text('Jasmine', style: TextStyle(fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green[900])),
+                                        IconButton(onPressed: ()=>{}, icon: Icon(Icons.more_vert))
                                       ],
                                     ),
                                   ),

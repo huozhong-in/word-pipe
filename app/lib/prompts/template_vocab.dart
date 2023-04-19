@@ -34,11 +34,11 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_oneword(String oneW
 
   var r_system = OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.system,
-    content: "你是我的英语词汇老师，耐心，专业。你会简单明了的分别用中英文解释单词的意思，给出这个单词的词根词缀信息，并最后附上几个常见的例句。",
+    content: "你是我的英语词汇老师，耐心，专业。你会简单明了的分别用中英文解释单词的意思，给出这个单词的词根词缀信息，并最后附上几个常见的例句（不要翻译）。",
   );
   // var r_user1 = OpenAIChatCompletionChoiceMessageModel(
   //   role: OpenAIChatMessageRole.user, 
-  //   content: "我不认识这个单词：`purpose`，请你简单明了的分别用中英文解释单词的意思，给出这个单词的词根词缀信息，最后附上几个常见的例句。"
+  //   content: "我不认识这个单词：`purpose`，请你简单明了的分别用中英文解释单词的意思，给出这个单词的词根词缀信息，最后附上几个常见的例句（不要翻译）。"
   // );
   // var r_assistant1 =  OpenAIChatCompletionChoiceMessageModel(
   //   role: OpenAIChatMessageRole.assistant,
@@ -46,7 +46,7 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_oneword(String oneW
   // );
   var r_user2 =  OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.user,
-    content: "我不认识这个单词：`" + oneWord + "`，请你简单明了的分别用中英文解释单词的意思，给出这个单词的词根词缀信息，最后附上几个常见的例句。",
+    content: "我不认识这个单词：`" + oneWord + "`，请你简单明了的分别用中英文解释单词的意思，给出这个单词的词根词缀信息，最后附上几个常见的例句（不要翻译）。",
   );
 
   modelList.add(r_system);

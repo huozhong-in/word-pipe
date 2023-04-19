@@ -10,12 +10,12 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 // final bool kDebugMode = true;
 // final bool isDebug = bool.fromEnvironment('DEBUG', defaultValue: false);
 
-final String SSE_SERVER_HOST = kDebugMode ? "http://192.168.2.31" : "https://wordpipe.huozhong.in";
+final String SSE_SERVER_HOST = kDebugMode ? "http://192.168.0.166" : "https://wordpipe.huozhong.in";
 final String SSE_SERVER_PATH = "/api/stream";
 final String SSE_MSG_TYPE = "prod"; // prod, dev, test
 final String SSE_MSG_DEFAULT_CHANNEL = "users.social";
 
-final String HTTP_SERVER_HOST = kDebugMode ? "http://192.168.2.31/api" : "https://wordpipe.huozhong.in/api";
+final String HTTP_SERVER_HOST = kDebugMode ? "http://192.168.0.166/api" : "https://wordpipe.huozhong.in/api";
 
 final AVATAR_FILE_DIR = "avatar";
 

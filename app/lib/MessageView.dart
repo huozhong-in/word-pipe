@@ -28,17 +28,37 @@ class MessageView extends StatelessWidget {
       c.getUserName().then((user_name){
         if (user_name != ""){
           messageController.handleSSE(user_name);
+          // 检查是不是第一次打开MessageView
           if (messageController.messsage_view_first_build == true){
+            // 从数据库里拿最新的一些消息
             Future<int> _lastSegmentBeginId = messageController.chatHistory(user_name, messageController.lastSegmentBeginId);
-            // Welcome message to new user!
+            // Welcome message
             _lastSegmentBeginId.then((lastId) => {
               if (lastId == -1){
+                // -1意味着没有任何历史消息，是新用户，发送欢迎信息
                 messageController.addMessage(
                   MessageModel(
                     dataList: RxList(
                       [
-                        'Hi, I am Jasmine. I am here to help you. Try to input a word!'
-                        '你好，我是贾维斯。希望我能在外语学习方面帮到你。试着输入一个单词吧！'
+                        'Hi, I am Jasmine. I am here to help you. Try to input a word!',
+                        '你好，我是Jasmine。希望我能在外语学习方面帮到你。试着输入一个单词吧！'
+                      ]
+                    ), 
+                    type: WordPipeMessageType.text, 
+                    username: 'Jasmine', 
+                    uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
+                    createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+                    key: UniqueKey(), 
+                  )
+                )
+              }else{
+                // 欢迎老用户回来
+                messageController.addMessage(
+                  MessageModel(
+                    dataList: RxList(
+                      [
+                        'Welcome back! Ask me some words or sentences :)',
+                        '欢迎回来！问我一些的单词或句子吧 :)'
                       ]
                     ), 
                     type: WordPipeMessageType.text, 

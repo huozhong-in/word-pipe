@@ -291,26 +291,21 @@ def chat():
 
     # 记录到数据库
     myuuid: str = userDB.get_user_by_username(username).uuid
-    cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jasmine').uuid, msgCreateTime=int(time.time()), msgContent=json.dumps(message, ensure_ascii=False), msgType=1)
+    s: str = json.loads(json.dumps(message, ensure_ascii=False)) # 防止被SQLAlchemy转义双引号、回车符、制表符和斜杠
+    cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jasmine').uuid, msgCreateTime=int(time.time()), msgContent=s, msgType=1)
     crdb.insert_chat_record(cr)
     
+    dataList: list = list()
+    dataList.append(message)
+
     back_data: json = {}
     back_data['username'] = username
     back_data['uuid'] = userDB.get_user_by_username(username).uuid
-    
-    dataList: list = list()
-    if ' ' in message:
-        # 如果messages含有空格，说明是短语或句子，否则是单词。让客户端渲染不同的模板
-        back_data['type'] = 104
-        # dataList.append(f"对于单词“`{message}`”，你想直接获得答案 ，还是想通过英文例句上下文来猜测意思？")
-    else:
-        back_data['type'] = 103
-    dataList.append(message)
     back_data['dataList'] = dataList
-    
+    back_data['type'] = 101
     back_data['createTime'] = int(time.time())
     id = generate_time_based_client_id(prefix=username)
-    print("chat() /root publish id:", id)
+    # print("chat() /root publish id:", id)
     sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
 
     toc = time.perf_counter()

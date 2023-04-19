@@ -57,6 +57,7 @@ class MessageController extends GetxController{
   }
 
   Future<void> _scrollListener() async {
+    // 监听滚动条是否滚动到顶部，从而请求数据库加载更旧的消息
     if (scrollController.offset == scrollController.position.maxScrollExtent &&
         !scrollController.position.outOfRange) {
         _isLoading.value = true;
@@ -74,6 +75,7 @@ class MessageController extends GetxController{
   Future<int> chatHistory(String username, int last_id) async {
     ChatRecord chatRecord = ChatRecord();
     messsage_view_first_build = false;
+    // 如果已经是数据库最旧的消息了，就不再请求数据库
     if (lastSegmentBeginId == -1)
       return -1;
     lastSegmentBeginId = await chatRecord.chatHistory(username, last_id);
@@ -82,6 +84,7 @@ class MessageController extends GetxController{
   }
 
   Key addMessage(MessageModel message) {
+    // 插消息到ListView最底部
     messages.insert(0, message);
     return message.key;
   }
@@ -123,7 +126,7 @@ class MessageController extends GetxController{
 
     Key needUpdate = addMessage(MessageModel(
       dataList: RxList(['...']),
-      type: WordPipeMessageType.stream,
+      type: WordPipeMessageType.word_highlight,
       username: "Jasmine",
       uuid: "b811abd7-c0bb-4301-9664-574d0d8b11f8",
       createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -250,7 +253,7 @@ class ChatRecord extends GetConnect {
             uuid: msgFromUUID,
             createTime: msgCreateTime, 
             dataList: RxList([msgContent]), 
-            type: WordPipeMessageType.chathistory, 
+            type: WordPipeMessageType.word_highlight, 
             key: UniqueKey()
             )
           );

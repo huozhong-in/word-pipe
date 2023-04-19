@@ -48,8 +48,9 @@ class MessageBubble extends StatelessWidget {
       }else{
         bubbleColor = Colors.green[100]!;
       }
-      
-      double edge = GetPlatform.isMobile ? 20 : 80;
+
+      // 移动端调窄边距
+      double edge = GetPlatform.isMobile ? 8 : 80;
       
       return GestureDetector(
         child: Container(
@@ -227,14 +228,18 @@ class MessageBubble extends StatelessWidget {
       // 因为机器人的回复是异步且流式，当消息陆续到达，逐一显示
       return templateStream(context);
     }else if(type == WordPipeMessageType.typing){
+      // 显示机器人正在输入
       return TextSpan(children: [WidgetSpan(child: Lottie.network('https://assets6.lottiefiles.com/packages/lf20_nZBVpi.json', width: 30, height: 20, repeat: true, animate: true))]);
     }else if(type == WordPipeMessageType.chathistory){
+      // 加载聊天历史
       return templateChatHistory(context);
     }else if(type == WordPipeMessageType.reply_for_query_sentence){
+
       return templateReply4Sentence(context);
     }else if(type == WordPipeMessageType.reply_for_query_word){
       return templateReply4Word(context);
     }else{
+      // 普通多行文本
       return templateText(context);
     }
   }
@@ -283,7 +288,7 @@ class MessageBubble extends StatelessWidget {
                         alignment: PlaceholderAlignment.middle,
                         child: TextButton(
                           onPressed: () async {
-                            c.chat(await c.getUserName(), "/root $example");
+                            c.chat(await c.getUserName(), "$example");
                           }, 
                           child: Text(
                             example,
@@ -326,7 +331,7 @@ class MessageBubble extends StatelessWidget {
               decoration: TextDecoration.underline),
           recognizer: TapGestureRecognizer()
             ..onTap = () async {
-              await c.chat(await c.getUserName(), "/root $value");
+              c.chat(await c.getUserName(), "$value");
             },
         )),
       ],
@@ -403,7 +408,7 @@ class MessageBubble extends StatelessWidget {
             child: TextButton(
               style: ButtonStyle(
                 minimumSize: MaterialStateProperty.all<Size>(Size(8, 8)),
-                padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(2)),
+                padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(1)),
                 backgroundColor: MaterialStateProperty.all<Color>(Colors.green[100]!),
                 overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -419,7 +424,7 @@ class MessageBubble extends StatelessWidget {
                 match.group(0)!,
                 style: TextStyle(
                   color: Color.fromARGB(255, 11, 66, 93),
-                  decoration: TextDecoration.underline
+                  // decoration: TextDecoration.underline
                 )
               )
             )
