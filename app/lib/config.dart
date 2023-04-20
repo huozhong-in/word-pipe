@@ -24,9 +24,10 @@ final AVATAR_FILE_DIR = "avatar";
 class WordPipeMessageType{
   static const int reserved = 0;
   static const int text = 1;
-  static const int word_highlight = 101;
+  static const int flask_reply_for_Word = 101;
   static const int reply_for_query_sentence = 103;
   static const int reply_for_query_word = 104;
+  static const int reply_for_query_word_example_sentence = 105;
   static const int image = 3;
   static const int audio = 34;
   static const int video = 43;
@@ -68,6 +69,7 @@ final ThemeData appTheme = ThemeData(
     selectionHandleColor: Colors.black,
   )
 );
+
 final ThemeData appTheme2 = ThemeData(
   useMaterial3: true,
   brightness: Brightness.light,

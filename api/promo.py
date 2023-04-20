@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import random
 import string
+import time
 import mysql.connector
 # from mysql.connector import errorcode
 from sqlalchemy import create_engine, Column, Integer, String, or_
@@ -19,6 +20,8 @@ class Promo(Base):
     promo = Column(String(32), nullable=False)
     bind_userid = Column(String(36))
     gen_by = Column(String(36), nullable=False)
+    gen_time = Column(Integer, nullable=False, default=0)
+    memo = Column(String(255))
 
 
 class PromoDB():
@@ -50,7 +53,7 @@ class PromoDB():
                 is_exist = self.session.query(Promo).filter_by(promo=promo).first() != None
                 if is_exist:
                     continue
-                promo = Promo(promo=promo, gen_by=gen_by)
+                promo = Promo(promo=promo, gen_by=gen_by, gen_time=int(time.time()))
                 self.session.add(promo)
                 self.session.commit()
                 i += 1

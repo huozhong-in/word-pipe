@@ -9,7 +9,7 @@ import 'package:wordpipe/responsive/responsive_layout.dart';
 import 'package:wordpipe/user_profile.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:lottie/lottie.dart';
+// import 'package:lottie/lottie.dart';
 import 'dart:developer';
 
 // ugly code
@@ -43,8 +43,9 @@ class DesktopHome extends StatelessWidget {
           _textController.clear();
           _matchWords.clear();
           _indexHighlight = 0;
-          c.getUUID().then((_uuid){            
-            messageController.getChatCompletion('gpt-3.5-turbo', text.trim(), WordPipeMessageType.reply_for_query_sentence);
+          c.getUUID().then((_uuid){          
+            // TODO free chat mode，新建一个WordPipeMessageType.freechat的类型。用shared_preferences存储当前是不是free chat模式。
+            // messageController.getChatCompletion('gpt-3.5-turbo', text.trim(), WordPipeMessageType.reply_for_query_sentence);
           });
         }else{
           customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
@@ -579,7 +580,7 @@ class DesktopHome extends StatelessWidget {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text(
-                                              'Live vocabulary helper',
+                                              'Live vocab experience',
                                               style: TextStyle(
                                                 fontSize: 16, 
                                                 fontWeight: FontWeight.w600,
@@ -722,20 +723,20 @@ class DesktopHome extends StatelessWidget {
                             //     ),
                             //   ))
                             // ),
-                            Visibility(
-                              visible: messageController.isLoading, 
-                              child: Positioned(
-                                top: 0,
-                                left: context.width/2 - 25,
-                                child: Container(
-                                  width: 100,
-                                  height: 100,
-                                  // color: Colors.black38,
-                                  padding: EdgeInsets.all(0),
-                                  child: Lottie.network("https://assets2.lottiefiles.com/packages/lf20_p8bfn5to.json", repeat: true, animate: true),
-                                )
-                              )
-                            ),
+                            // Visibility(
+                            //   visible: messageController.isLoading, 
+                            //   child: Positioned(
+                            //     top: 0,
+                            //     left: context.width/2 - 25,
+                            //     child: Container(
+                            //       width: 100,
+                            //       height: 100,
+                            //       // color: Colors.black38,
+                            //       padding: EdgeInsets.all(0),
+                            //       child: Lottie.network("https://assets2.lottiefiles.com/packages/lf20_p8bfn5to.json", repeat: true, animate: true),
+                            //     )
+                            //   )
+                            // ),
                           ],
                         )
                     ),

@@ -21,9 +21,8 @@ class MessageController extends GetxController{
   bool messsage_view_first_build = true;
   int lastSegmentBeginId = 0;
 
-  RxBool _isLoading = false.obs;
-  // set setLoading(bool value) => _isLoading.value = value;
-  bool get isLoading => _isLoading.value;
+  // RxBool _isLoading = false.obs;
+  // bool get isLoading => _isLoading.value;
 
   // find  MessageModel by key
   MessageModel findMessageByKey(Key key) {
@@ -60,7 +59,7 @@ class MessageController extends GetxController{
     // 监听滚动条是否滚动到顶部，从而请求数据库加载更旧的消息
     if (scrollController.offset == scrollController.position.maxScrollExtent &&
         !scrollController.position.outOfRange) {
-        _isLoading.value = true;
+        // _isLoading.value = true;
         String curr_user = "";
         Map<String, dynamic> sessionData = await c.getSessionData();
         if (sessionData.containsKey('error') == false)
@@ -124,9 +123,10 @@ class MessageController extends GetxController{
       return;
     }
 
+    // int addMessageType = WordPipeMessageType.word_highlight;
     Key needUpdate = addMessage(MessageModel(
       dataList: RxList(['...']),
-      type: WordPipeMessageType.word_highlight,
+      type: requestType,
       username: "Jasmine",
       uuid: "b811abd7-c0bb-4301-9664-574d0d8b11f8",
       createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -139,11 +139,14 @@ class MessageController extends GetxController{
     double temperature = 0;
     prompt = prompt.trim();
     if (requestType == WordPipeMessageType.reply_for_query_word){
-      msg = prompt_template_oneword(prompt);
+      msg = prompt_template_word(prompt);
       temperature = 0;
+    }else if(requestType == WordPipeMessageType.reply_for_query_word_example_sentence){
+      msg = prompt_template_word_example_sentence(prompt);
+      temperature = 0.5;
     }else if(requestType == WordPipeMessageType.reply_for_query_sentence){
       msg = prompt_template_sentence(prompt);
-      temperature = 0.6;
+      temperature = 0.5;
     }else{
       return;
     }
@@ -154,12 +157,14 @@ class MessageController extends GetxController{
       temperature: temperature,
     );
 
+    List<String> collected_messages = [];
     chatStream.listen((chatStreamEvent) {
       // print(chatStreamEvent);
       OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];
       final content = choice.delta.content;
       if(content != null){
         // print(content);
+        collected_messages.add(content);
         final message = findMessageByKey(needUpdate);
         if (message.dataList[0] == '...'){
           message.dataList.removeAt(0);
@@ -167,6 +172,33 @@ class MessageController extends GetxController{
         message.dataList.add(content);
         update();
       }
+      if (choice.finishReason != null && choice.finishReason == 'stop'){
+        // TODO 流式传输时不做正则匹配，到传输完毕后做一次即可
+          if (requestType == WordPipeMessageType.reply_for_query_word_example_sentence){
+            // 通过以下方法重整流式消息为按行分割的字符串列表
+            print('refine stream msg. append [W0RDP1PE]');
+            // join collected_messages to a string
+            String joined_messages = collected_messages.join('');
+            // split joined_messages by "\n"
+            List<String> split_messages = joined_messages.split('\n');
+            // append "\n" to split_messages 's every item
+            split_messages = split_messages.map((e) => e + '\n').toList();
+            
+            // redraw ListView THIS item, no flash effect
+            final message = findMessageByKey(needUpdate);
+            // empty message.dataList
+            message.dataList.insert(0, "...");
+            // remove message.dataList every item except first item
+            message.dataList.removeRange(1, message.dataList.length);
+            // append split_message all item to message.dataList
+            message.dataList.addAll(split_messages);
+            // remove message.dataList first item
+            message.dataList.removeAt(0);
+            // add '[W0RDP1PE]' to last
+            message.dataList.add('[W0RDP1PE]');
+            update();
+          }
+        }
     });
   }
 
@@ -232,7 +264,7 @@ class ChatRecord extends GetConnect {
       
       List<dynamic>json = List<dynamic>.from(response.body);
       MessageController messageController = Get.find();
-      messageController._isLoading.value = false;
+      // messageController._isLoading.value = false;
       json.forEach((element ) {
         Map<String, dynamic> e = element as Map<String, dynamic>;
         ret = e['pk_chat_record'] as int;
@@ -253,7 +285,7 @@ class ChatRecord extends GetConnect {
             uuid: msgFromUUID,
             createTime: msgCreateTime, 
             dataList: RxList([msgContent]), 
-            type: WordPipeMessageType.word_highlight, 
+            type: WordPipeMessageType.stream, 
             key: UniqueKey()
             )
           );

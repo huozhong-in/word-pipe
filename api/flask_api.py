@@ -136,7 +136,7 @@ def prefix_search() -> Response:
     if k == '':
         return make_response(jsonify({}), 200)
     
-    tic = time.perf_counter()
+    # tic = time.perf_counter()
 
     global trie    
     r = trie.keys(k)[0:50]
@@ -144,10 +144,10 @@ def prefix_search() -> Response:
     result["result"] = list(r)
     x = list()
     x.append(result)
-    print(f"prefix_search() result: {x}")
+    # print(f"prefix_search() result: {x}")
 
-    toc = time.perf_counter()
-    print(f"[Processed in {toc - tic:0.4f} seconds]")
+    # toc = time.perf_counter()
+    # print(f"[Processed in {toc - tic:0.4f} seconds]")
     response =  make_response(jsonify(x), 200)
     # response.headers.add("Access-Control-Allow-Origin", "*")
     # response.headers.add("Access-Control-Allow-Credentials", "true")
@@ -168,15 +168,15 @@ def point_search():
     if k == '':
         return make_response(jsonify({}), 200)
     
-    tic = time.perf_counter()
+    # tic = time.perf_counter()
     sd = StarDict(Path(Path(__file__).parent.absolute() / 'db/stardict.db'), False)
     r: dict = sd.query(k)
     sd.close()
     x = list()
     x.append(r)
-    toc = time.perf_counter()
-    print(f"point_search() word: {k}")
-    print(f"[Processed in {toc - tic:0.4f} seconds]")
+    # toc = time.perf_counter()
+    # print(f"point_search() word: {k}")
+    # print(f"[Processed in {toc - tic:0.4f} seconds]")
     return make_response(jsonify(x), 200)
 
 @app.route('/api/m', methods = ['GET'])
@@ -271,7 +271,7 @@ def chat():
     if message == '':
         return make_response('message required', 500)
     
-    tic = time.perf_counter()
+    # tic = time.perf_counter()
 
     print(f'[{username}]: {message}')
     # 每个登录用户都分配到一个channel，用于SSE推送，取得这个channel字符串
@@ -289,28 +289,55 @@ def chat():
     else:
         return make_response('access_token required', 500)
 
-    # 记录到数据库
+    # 将用户消息记录到数据库
     myuuid: str = userDB.get_user_by_username(username).uuid
     s: str = json.loads(json.dumps(message, ensure_ascii=False)) # 防止被SQLAlchemy转义双引号、回车符、制表符和斜杠
     cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jasmine').uuid, msgCreateTime=int(time.time()), msgContent=s, msgType=1)
     crdb.insert_chat_record(cr)
-    
-    dataList: list = list()
-    dataList.append(message)
 
+    # 替用户发消息
     back_data: json = {}
     back_data['username'] = username
-    back_data['uuid'] = userDB.get_user_by_username(username).uuid
+    back_data['uuid'] = myuuid
+    dataList: list = list()
+    dataList.append(message)
     back_data['dataList'] = dataList
-    back_data['type'] = 101
+    back_data['type'] = 10002 # WordPipeMessageType.steam format. See: config.dart
     back_data['createTime'] = int(time.time())
     id = generate_time_based_client_id(prefix=username)
-    # print("chat() /root publish id:", id)
     sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
 
-    toc = time.perf_counter()
-    print(f"[Processed in {toc - tic:0.4f} seconds]")
+    # 检查message中是否包含英文单词
+    import re
+    pattern1 = re.compile(r'([a-zA-Z]{3,})') # 注意是3个字符以上的才认为是单词
+    result: list = pattern1.findall(message)
+    print(result)
+    if len(result) == 1:
+        # 句子中只包含一个单词，大概率是用户想要查询单词的意思
+        back_data['username'] = "Jasmine"
+        back_data['uuid'] = userDB.get_user_by_username('Jasmine').uuid
+        dataList: list = list()
+        dataList.append(f"关于`{result[0]}`的具体意思，你是想直接知道答案呢 ，还是想通过例句来猜一猜？")
+        dataList.append(result[0])
+        back_data['dataList'] = dataList
+        back_data['type'] = 101 # WordPipeMessageType.flask_reply_for_Word, See: config.dart
+        back_data['createTime'] = int(time.time())
+        id = generate_time_based_client_id(prefix=username)
+        sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
+        # 
+        pass
+    elif len(result) > 1:
+        # 句子中包含多个单词，可能是用户想要翻译句子
+        # 你想让我帮你翻译这个句子呢（英翻中）？还是说它是问我的问题？
+        pass
+    else:
+        # 句子中不包含英文单词，可能是用户想要翻译中文句子到英文
+        # 你想让我帮你翻译这个句子呢（中翻英）？还是说它是问我的问题？
+        pass
 
+
+    # toc = time.perf_counter()
+    # print(f"[Processed in {toc - tic:0.4f} seconds]")
     return make_response('', 200)
 
 @app.route('/api/chat-root', methods = ['POST'])
@@ -352,14 +379,8 @@ def chat_root():
         back_data = get_root_by_word(message)
         id = generate_time_based_client_id(prefix=username)
         print("chat() /root publish id:", id)
+        # 须publish两次，一次替用户说话，一次返回结果
         sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
-        # def publish_func1():
-        #     time.sleep(1)  # 开发环境要延迟一秒，否则SSE数据比HTTP还先返回，让用户困惑
-        #     with app.app_context():
-        #         sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
-
-        # thread = threading.Thread(target=publish_func1)
-        # thread.start()
 
     elif message.startswith('/config '):
         pass

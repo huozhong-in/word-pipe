@@ -231,16 +231,16 @@ class UserDB:
 
 if __name__ == '__main__':
     userDB = UserDB()
-    # promoDB = PromoDB()
+    promoDB = PromoDB()
 
     # userDB.create_user_by_username('Bonny', '')
     # userDB.refresh_access_token('Dio')
     # user_id = userDB.get_user_by_username('Bonny').uuid
     # promoDB.bind_promo('eAZftT', user_id)
-    userDB.modify_password('Bonny','', '123qwe789', force=True)
+    # userDB.modify_password('Bonny','', '123qwe789', force=True)
     
-    # user_id = userDB.get_user_by_username('Dio').uuid
-    # # promoDB.create_promo(100, user_id)
-    # for promo in  promoDB.get_promos_by_userid(user_id, no_owner_only=False):
-    #     print(promo.promo, promo.bind_userid, promo.gen_by)
+    user_id = userDB.get_user_by_username('Dio').uuid
+    promoDB.create_promo(3, user_id)
+    for promo in promoDB.get_promos_by_userid(user_id, no_owner_only=False):
+        print(promo.promo, promo.bind_userid, promo.gen_by)
 

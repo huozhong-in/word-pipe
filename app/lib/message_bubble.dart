@@ -9,7 +9,7 @@ import 'package:flutter/gestures.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:lottie/lottie.dart';
+// import 'package:lottie/lottie.dart';
 
 // ignore: must_be_immutable
 class MessageBubble extends StatelessWidget {
@@ -218,127 +218,120 @@ class MessageBubble extends StatelessWidget {
   }
 
   TextSpan templateDispatcher(BuildContext context) {
-    if(type == WordPipeMessageType.word_highlight){
-      // 将句子内单词高亮
-      return templateWordHighlight(context);
-    }else if(type == WordPipeMessageType.system){
+    if(type == WordPipeMessageType.system){
       // 显示系统消息，比如：某某撤回一条消息，某某加入群聊
       return templateSysMsg(context);
     }else if(type == WordPipeMessageType.stream){
-      // 因为机器人的回复是异步且流式，当消息陆续到达，逐一显示
+      // 因为AI的回复是异步且流式，当消息陆续到达，逐一显示。可以认为每item是一个字符，包括\n，不需要额外处理
       return templateStream(context);
-    }else if(type == WordPipeMessageType.typing){
-      // 显示机器人正在输入
-      return TextSpan(children: [WidgetSpan(child: Lottie.network('https://assets6.lottiefiles.com/packages/lf20_nZBVpi.json', width: 30, height: 20, repeat: true, animate: true))]);
     }else if(type == WordPipeMessageType.chathistory){
-      // 加载聊天历史
+      // 加载聊天历史。文本里会有\n，所以依次append即可
       return templateChatHistory(context);
-    }else if(type == WordPipeMessageType.reply_for_query_sentence){
-
-      return templateReply4Sentence(context);
+    }else if(type == WordPipeMessageType.flask_reply_for_Word){
+      // 处理从flask server返回的单词问讯消息
+      return templateFlaskReply4Word(context);
     }else if(type == WordPipeMessageType.reply_for_query_word){
+      // 处理从OpenAI API返回的单词查询结果
       return templateReply4Word(context);
+    }else if(type == WordPipeMessageType.reply_for_query_word_example_sentence){
+      // 处理从OpenAI API返回的单词例句生成结果
+      return templateReply4WordExampleSentence(context);
     }else{
-      // 普通多行文本
+      // 普通多行文本，每行是一个字符串
       return templateText(context);
     }
   }
 
   TextSpan templateStream(BuildContext context) {
-    // 将dataList中的每个元素都转换为TextSpan
-    List<TextSpan> spans = [];
-    dataList.forEach((element) {
-      spans.add(TextSpan(text: element as String));
-    });
+    // 处理流式消息，每个item是一个字符，包括\n
     return TextSpan(
       style: DefaultTextStyle.of(context).style,
-      children: <InlineSpan>[
-        ...spans,
-      ],
+      children: _wordHighlight()
     );
   }
 
-  TextSpan templateRoot2Word(BuildContext context) {
-    if ( dataList.length == 0 ) {
-      return TextSpan(children: [TextSpan(text: "No root information was found for this word."), WidgetSpan(child: Icon(Icons.sentiment_dissatisfied, color: Colors.red, size: 20))]);
-    }
+  // TextSpan templateRoot2Word(BuildContext context) {
+  //   if ( dataList.length == 0 ) {
+  //     return TextSpan(children: [TextSpan(text: "No root information was found for this word."), WidgetSpan(child: Icon(Icons.sentiment_dissatisfied, color: Colors.red, size: 20))]);
+  //   }
 
-    List<InlineSpan> spans = [];
+  //   List<InlineSpan> spans = [];
 
-    dataList.forEach((word_list) {
-      word_list.forEach((word_name, root_list) {
-        spans.add(TextSpan(text: word_name, style: TextStyle(
-          fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily,
-          fontFamilyFallback: const ['Arial'],
-          fontWeight: FontWeight.bold, fontSize: 16)));
-        spans.add(TextSpan(text: "\n"));
-        root_list.forEach((root) {
-          root.forEach((root_name, attr_list) {
-            spans.add(TextSpan(text: root_name, style: TextStyle(color: Colors.blue)));
-            spans.add(TextSpan(text: "\n"));
-            attr_list.forEach((attr) {
-              attr.forEach((key, value) {
-                if (key == 'example') {
-                  // Handle 'example' key, which contains a list of strings
-                  List<String> examples = List<String>.from(value);
-                  spans.add(TextSpan(text: "Examples:\n"));
-                  examples.forEach((example) {
-                    spans.add(
-                      WidgetSpan(
-                        alignment: PlaceholderAlignment.middle,
-                        child: TextButton(
-                          onPressed: () async {
-                            c.chat(await c.getUserName(), "$example");
-                          }, 
-                          child: Text(
-                            example,
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 11, 66, 93),
-                              fontSize: 14,
-                              decoration: TextDecoration.underline
-                            )
-                          )
-                        )
-                      )
-                    );
-                  });
-                  spans.add(TextSpan(text: "\n"));
-                } else {
-                  // Handle other keys, which contain strings
-                  spans.add(TextSpan(text: "    ${key}: ${(value as String).trim()}\n", style: TextStyle(color: Colors.blueGrey)));
-                }
-              });
-            });
-          });
-        });
-      });
-    });
+  //   dataList.forEach((word_list) {
+  //     word_list.forEach((word_name, root_list) {
+  //       spans.add(TextSpan(text: word_name, style: TextStyle(
+  //         fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily,
+  //         fontFamilyFallback: const ['Arial'],
+  //         fontWeight: FontWeight.bold, fontSize: 16)));
+  //       spans.add(TextSpan(text: "\n"));
+  //       root_list.forEach((root) {
+  //         root.forEach((root_name, attr_list) {
+  //           spans.add(TextSpan(text: root_name, style: TextStyle(color: Colors.blue)));
+  //           spans.add(TextSpan(text: "\n"));
+  //           attr_list.forEach((attr) {
+  //             attr.forEach((key, value) {
+  //               if (key == 'example') {
+  //                 // Handle 'example' key, which contains a list of strings
+  //                 List<String> examples = List<String>.from(value);
+  //                 spans.add(TextSpan(text: "Examples:\n"));
+  //                 examples.forEach((example) {
+  //                   spans.add(
+  //                     WidgetSpan(
+  //                       alignment: PlaceholderAlignment.middle,
+  //                       child: TextButton(
+  //                         onPressed: () async {
+  //                           c.chat(await c.getUserName(), "$example");
+  //                         }, 
+  //                         child: Text(
+  //                           example,
+  //                           style: TextStyle(
+  //                             color: Color.fromARGB(255, 11, 66, 93),
+  //                             fontSize: 14,
+  //                             decoration: TextDecoration.underline
+  //                           )
+  //                         )
+  //                       )
+  //                     )
+  //                   );
+  //                 });
+  //                 spans.add(TextSpan(text: "\n"));
+  //               } else {
+  //                 // Handle other keys, which contain strings
+  //                 spans.add(TextSpan(text: "    ${key}: ${(value as String).trim()}\n", style: TextStyle(color: Colors.blueGrey)));
+  //               }
+  //             });
+  //           });
+  //         });
+  //       });
+  //     });
+  //   });
 
-    return TextSpan(
-      style: DefaultTextStyle.of(context).style,
-      children: spans,
-    );
-  }
+  //   return TextSpan(
+  //     style: DefaultTextStyle.of(context).style,
+  //     children: spans,
+  //   );
+  // }
 
-  TextSpan templateWord2Root(BuildContext context) {
-    return TextSpan(
-      style: DefaultTextStyle.of(context).style,
-      children: <InlineSpan>[
-        ...dataList.map((value) => TextSpan(
-          text: value,
-          style: TextStyle(
-              color: Color.fromARGB(255, 210, 10, 220),
-              decoration: TextDecoration.underline),
-          recognizer: TapGestureRecognizer()
-            ..onTap = () async {
-              c.chat(await c.getUserName(), "$value");
-            },
-        )),
-      ],
-    );
-  }
+  // TextSpan templateWord2Root(BuildContext context) {
+  //   return TextSpan(
+  //     style: DefaultTextStyle.of(context).style,
+  //     children: <InlineSpan>[
+  //       ...dataList.map((value) => TextSpan(
+  //         text: value,
+  //         style: TextStyle(
+  //             color: Color.fromARGB(255, 210, 10, 220),
+  //             decoration: TextDecoration.underline),
+  //         recognizer: TapGestureRecognizer()
+  //           ..onTap = () async {
+  //             c.chat(await c.getUserName(), "$value");
+  //           },
+  //       )),
+  //     ],
+  //   );
+  // }
 
   TextSpan templateText(BuildContext context) {
+    // 处理多行长字符串，所以要手动加回车符
     List<TextSpan> spans = [];
     int i=0;
     dataList.forEach((element) {
@@ -354,18 +347,14 @@ class MessageBubble extends StatelessWidget {
   }
 
   TextSpan templateChatHistory(BuildContext context){
-    List<TextSpan> spans = [];
-    dataList.forEach((element) {
-      spans.add(TextSpan(text: element as String));
-    });
     return TextSpan(
       style: DefaultTextStyle.of(context).style,
-      children: spans,
+      children: _wordHighlight(),
     );
   }
   
-  TextSpan templateReply4Sentence(BuildContext context) {
-    List<TextSpan> spans = [];
+  TextSpan templateReplyGenSentence(BuildContext context) {
+    List<InlineSpan> spans = [];
     // split `scraping`|`process` to two words
     List<String> dataList = this.dataList[0].split('|');
 
@@ -378,70 +367,120 @@ class MessageBubble extends StatelessWidget {
       children: spans,
     );
   }
-
   TextSpan templateReply4Word(BuildContext context) {
-      List<TextSpan> spans = [];
-      dataList.forEach((element) {
-        spans.add(TextSpan(text: element as String));
-      });
+    // 处理流式消息，每个item是一个字符，包括\n
+    return TextSpan(
+      style: DefaultTextStyle.of(context).style,
+      children: <InlineSpan>[
+        ..._wordHighlight(),
+      ],
+    );
+  }
+  TextSpan templateFlaskReply4Word(BuildContext context) {
+      List<InlineSpan> spans = [];
+      spans.add(TextSpan(text: dataList[0] as String));
+      spans.add(TextSpan(text: "\n"));
+      spans.add(
+        WidgetSpan(  
+          alignment: PlaceholderAlignment.middle,
+          child: TextButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
+              overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
+              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                )
+              )
+            ),
+            onPressed: () async {
+              messageController.getChatCompletion('gpt-3.5-turbo', dataList[1] as String, WordPipeMessageType.reply_for_query_word);
+            }, 
+            child: Text(
+              "直接告诉我答案",
+              style: TextStyle(
+                color: Color.fromARGB(255, 11, 66, 93),
+                // decoration: TextDecoration.underline
+              )
+            )
+          )
+        )
+      );
+      spans.add(TextSpan(text: " 或 "));
+      spans.add(
+        WidgetSpan(  
+          alignment: PlaceholderAlignment.middle,
+          child: TextButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
+              overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
+              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                )
+              )
+            ),
+            onPressed: () async {
+              messageController.getChatCompletion('gpt-3.5-turbo', dataList[1] as String, WordPipeMessageType.reply_for_query_word_example_sentence);
+            }, 
+            child: Text(
+              "生成例句猜猜看",
+              style: TextStyle(
+                color: Color.fromARGB(255, 11, 66, 93),
+              )
+            )
+          )
+        )
+      );
       return TextSpan(
         style: DefaultTextStyle.of(context).style,
         children: spans,
       );
   }
   
-  TextSpan templateWordHighlight(BuildContext context) {
-  List<InlineSpan> spans = [];
-  RegExp exp = RegExp(r'(\w+|\w+-*\w+|\W+)');
-  
-  for (int i = 0; i < dataList.length; i++) {
-    String str = dataList[i] as String;
-    int lastEnd = 0;
-    Iterable<RegExpMatch> matches = exp.allMatches(str);
-    
-    for (RegExpMatch match in matches) {
-      if (match.group(0)!.contains(RegExp(r'[a-zA-Z]+')) &&  
-      !match.group(0)!.contains('-')) {
+  List<InlineSpan> _wordHighlight() {
+    List<InlineSpan> spans = [];
+    RegExp exp = RegExp(r'\b[a-zA-Z]{3,}(?:-[a-zA-Z]{3,})*\b');
+    for (int i = 0; i < dataList.length; i++) {
+      String text = dataList[i] as String;
+      var matches = exp.allMatches(text);
+      int lastIndex = 0;
+      for (Match match in matches) {
+        spans.add(TextSpan(text: text.substring(lastIndex, match.start)));
         spans.add(
-          WidgetSpan(  
-            alignment: PlaceholderAlignment.middle,
-            child: TextButton(
-              style: ButtonStyle(
-                minimumSize: MaterialStateProperty.all<Size>(Size(8, 8)),
-                padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(1)),
-                backgroundColor: MaterialStateProperty.all<Color>(Colors.green[100]!),
-                overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(2),
+            WidgetSpan(  
+              alignment: PlaceholderAlignment.middle,
+              child: TextButton(
+                style: ButtonStyle(
+                  minimumSize: MaterialStateProperty.all<Size>(Size(8, 8)),
+                  padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(1)),
+                  backgroundColor: isMe? MaterialStateProperty.all<Color>(Color.fromRGBO(40, 178, 95, 1)) : MaterialStateProperty.all<Color>(Colors.green[100]!),
+                  overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
+                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(2),
+                    )
                   )
-                )
-              ),
-              onPressed: () async {
-                c.chat(await c.getUserName(), match.group(0)!);
-              }, 
-              child: Text(
-                match.group(0)!,
-                style: TextStyle(
-                  color: Color.fromARGB(255, 11, 66, 93),
-                  // decoration: TextDecoration.underline
+                ),
+                onPressed: () async {
+                  c.chat(await c.getUserName(), match.group(0)!);
+                }, 
+                child: Text(
+                  match.group(0)!,
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 11, 66, 93),
+                  )
                 )
               )
             )
-          )
-        ); 
-      } else {
-        spans.add(TextSpan(text: match.group(0)!));
+          );
+        lastIndex = match.end;
       }
-      lastEnd = match.end;
+      spans.add(TextSpan(text: text.substring(lastIndex)));
     }
+    
+    return spans; 
   }
-  
-  return TextSpan(
-    style: DefaultTextStyle.of(context).style,
-    children: spans,
-  ); 
-}
   
   TextSpan templateSysMsg(BuildContext context) {
     return TextSpan(
@@ -454,6 +493,51 @@ class MessageBubble extends StatelessWidget {
             fontSize: 10,
           ),)
       ],
+    );
+  }
+  
+  TextSpan templateReply4WordExampleSentence(BuildContext context) {
+    List<InlineSpan> spans = [];
+    spans = _wordHighlight();
+
+    String last_item = dataList.last as String;
+    if (last_item == '[W0RDP1PE]'){
+      // 将最后2个元素删掉，然后增加一个具有点击效果的WidgetSpan，以便用户可以查看答案
+      // spans.removeLast();
+      // spans.removeLast();
+      spans.add(TextSpan(text: "\n"));
+      spans.add(
+        WidgetSpan(  
+          alignment: PlaceholderAlignment.middle,
+          child: TextButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
+              overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
+              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                )
+              )
+            ),
+            onPressed: () async {
+              // 将 dataList 倒数第二个元素作为答案
+              customSnackBar(title: "答案", content: dataList[dataList.length - 2] as String);
+            }, 
+            child: Text(
+              "查看答案",
+              style: TextStyle(
+                color: Color.fromARGB(255, 11, 66, 93),
+                // decoration: TextDecoration.underline
+              )
+            )
+          )
+        )
+      );
+    }
+    
+    return TextSpan(
+      style: DefaultTextStyle.of(context).style,
+      children: spans,
     );
   }
 }
