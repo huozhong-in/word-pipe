@@ -5,9 +5,7 @@ import 'package:wordpipe/MessageBubblePainter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:flutter/gestures.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+// import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 // import 'package:lottie/lottie.dart';
 
@@ -142,64 +140,64 @@ class MessageBubble extends StatelessWidget {
     );  
   }
 
-  Widget showAvatar() {
-    return FutureBuilder<String>(
-      future: c.imageTypes("${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}"),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          if (snapshot.hasError) {
-            return Icon(Icons.error);
-          }
-          if (snapshot.data == 'jpeg') {
-            return CachedNetworkImage(
-              imageUrl: "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}",
-              imageBuilder: (context, imageProvider) => Container(
-                width: 50,
-                height: 50,
-                margin: const EdgeInsets.only(right: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(3),
-                  image: DecorationImage(
-                    image: imageProvider,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              placeholder: (context, url) => Container(
-                width: 50,
-                height: 50,
-                color: Colors.black12,
-                margin: const EdgeInsets.only(right: 8),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              errorWidget: (context, url, error) => Icon(Icons.error),
-            );
-          } else {
-            return SvgPicture.network(
-              "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}",
-              height: 40,
-              width: 40,
-              semanticsLabel: 'avatar',
-              placeholderBuilder: (BuildContext context) => Container(
-                width: 50,
-                height: 50,
-                color: Colors.black12,
-                margin: const EdgeInsets.only(right: 8),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            );
-          }
-        }
-        return Container(
-          width: 50,
-          height: 50,
-          color: Colors.black12,
-          margin: const EdgeInsets.only(right: 8),
-          child: Center(child: CircularProgressIndicator()),
-        );
-      },
-    );
-  }
+  // Widget showAvatar() {
+  //   return FutureBuilder<String>(
+  //     future: c.imageTypes("${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}"),
+  //     builder: (context, snapshot) {
+  //       if (snapshot.connectionState == ConnectionState.done) {
+  //         if (snapshot.hasError) {
+  //           return Icon(Icons.error);
+  //         }
+  //         if (snapshot.data == 'jpeg') {
+  //           return CachedNetworkImage(
+  //             imageUrl: "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}",
+  //             imageBuilder: (context, imageProvider) => Container(
+  //               width: 50,
+  //               height: 50,
+  //               margin: const EdgeInsets.only(right: 8),
+  //               decoration: BoxDecoration(
+  //                 borderRadius: BorderRadius.circular(3),
+  //                 image: DecorationImage(
+  //                   image: imageProvider,
+  //                   fit: BoxFit.cover,
+  //                 ),
+  //               ),
+  //             ),
+  //             placeholder: (context, url) => Container(
+  //               width: 50,
+  //               height: 50,
+  //               color: Colors.black12,
+  //               margin: const EdgeInsets.only(right: 8),
+  //               child: Center(child: CircularProgressIndicator()),
+  //             ),
+  //             errorWidget: (context, url, error) => Icon(Icons.error),
+  //           );
+  //         } else {
+  //           return SvgPicture.network(
+  //             "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}",
+  //             height: 40,
+  //             width: 40,
+  //             semanticsLabel: 'avatar',
+  //             placeholderBuilder: (BuildContext context) => Container(
+  //               width: 50,
+  //               height: 50,
+  //               color: Colors.black12,
+  //               margin: const EdgeInsets.only(right: 8),
+  //               child: Center(child: CircularProgressIndicator()),
+  //             ),
+  //           );
+  //         }
+  //       }
+  //       return Container(
+  //         width: 50,
+  //         height: 50,
+  //         color: Colors.black12,
+  //         margin: const EdgeInsets.only(right: 8),
+  //         child: Center(child: CircularProgressIndicator()),
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget showAvatar2() {
     return SvgPicture.network(
@@ -227,15 +225,22 @@ class MessageBubble extends StatelessWidget {
     }else if(type == WordPipeMessageType.chathistory){
       // 加载聊天历史。文本里会有\n，所以依次append即可
       return templateChatHistory(context);
-    }else if(type == WordPipeMessageType.flask_reply_for_Word){
-      // 处理从flask server返回的单词问讯消息
+    }else if(type == WordPipeMessageType.flask_reply_for_word){
+      // 处理从flask server返回的单词问询消息
       return templateFlaskReply4Word(context);
+    }else if(type == WordPipeMessageType.flask_reply_for_sentence){
+      // 处理从flask server返回的单词例句生成消息
+      return templateFlaskReply4Sentence(context);
     }else if(type == WordPipeMessageType.reply_for_query_word){
       // 处理从OpenAI API返回的单词查询结果
       return templateReply4Word(context);
     }else if(type == WordPipeMessageType.reply_for_query_word_example_sentence){
       // 处理从OpenAI API返回的单词例句生成结果
       return templateReply4WordExampleSentence(context);
+    }else if(type == WordPipeMessageType.reply_for_translate_sentence){
+      return templateReply4TranslateSentence(context);
+    }else if(type == WordPipeMessageType.reply_for_answer_question){
+      return templateReply4AnswerQuestion(context);
     }else{
       // 普通多行文本，每行是一个字符串
       return templateText(context);
@@ -246,7 +251,7 @@ class MessageBubble extends StatelessWidget {
     // 处理流式消息，每个item是一个字符，包括\n
     return TextSpan(
       style: DefaultTextStyle.of(context).style,
-      children: _wordHighlight()
+      children: _wordHighlight(dataList),
     );
   }
 
@@ -347,9 +352,14 @@ class MessageBubble extends StatelessWidget {
   }
 
   TextSpan templateChatHistory(BuildContext context){
+    // 直接拼接结果，不需要换行，也不需要单词高亮
+    List<TextSpan> spans = [];
+    dataList.forEach((element) {
+      spans.add(TextSpan(text: element as String));
+    });
     return TextSpan(
       style: DefaultTextStyle.of(context).style,
-      children: _wordHighlight(),
+      children: spans,
     );
   }
   
@@ -372,7 +382,7 @@ class MessageBubble extends StatelessWidget {
     return TextSpan(
       style: DefaultTextStyle.of(context).style,
       children: <InlineSpan>[
-        ..._wordHighlight(),
+        ..._wordHighlight(dataList),
       ],
     );
   }
@@ -438,7 +448,7 @@ class MessageBubble extends StatelessWidget {
       );
   }
   
-  List<InlineSpan> _wordHighlight() {
+  List<InlineSpan> _wordHighlight(List<dynamic> dataList, {bool autoNewline = false}) {
     List<InlineSpan> spans = [];
     RegExp exp = RegExp(r'\b[a-zA-Z]{3,}(?:-[a-zA-Z]{3,})*\b');
     for (int i = 0; i < dataList.length; i++) {
@@ -448,35 +458,38 @@ class MessageBubble extends StatelessWidget {
       for (Match match in matches) {
         spans.add(TextSpan(text: text.substring(lastIndex, match.start)));
         spans.add(
-            WidgetSpan(  
-              alignment: PlaceholderAlignment.middle,
-              child: TextButton(
-                style: ButtonStyle(
-                  minimumSize: MaterialStateProperty.all<Size>(Size(8, 8)),
-                  padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(1)),
-                  backgroundColor: isMe? MaterialStateProperty.all<Color>(Color.fromRGBO(40, 178, 95, 1)) : MaterialStateProperty.all<Color>(Colors.green[100]!),
-                  overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
-                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(2),
-                    )
+          WidgetSpan(  
+            alignment: PlaceholderAlignment.middle,
+            child: TextButton(
+              style: ButtonStyle(
+                minimumSize: MaterialStateProperty.all<Size>(Size(8, 8)),
+                padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(1)),
+                backgroundColor: isMe? MaterialStateProperty.all<Color>(Color.fromRGBO(40, 178, 95, 1)) : MaterialStateProperty.all<Color>(Colors.green[100]!),
+                overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
+                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(2),
                   )
-                ),
-                onPressed: () async {
-                  c.chat(await c.getUserName(), match.group(0)!);
-                }, 
-                child: Text(
-                  match.group(0)!,
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 11, 66, 93),
-                  )
+                )
+              ),
+              onPressed: () async {
+                c.chat(await c.getUserName(), match.group(0)!);
+              }, 
+              child: Text(
+                match.group(0)!,
+                style: TextStyle(
+                  color: Color.fromARGB(255, 11, 66, 93),
                 )
               )
             )
-          );
+          )
+        );
         lastIndex = match.end;
       }
       spans.add(TextSpan(text: text.substring(lastIndex)));
+      if (autoNewline) {
+        spans.add(TextSpan(text: "\n"));
+      }
     }
     
     return spans; 
@@ -498,16 +511,16 @@ class MessageBubble extends StatelessWidget {
   
   TextSpan templateReply4WordExampleSentence(BuildContext context) {
     List<InlineSpan> spans = [];
-    spans = _wordHighlight();
-
     String last_item = dataList.last as String;
     if (last_item == '[W0RDP1PE]'){
       // 将最后2个元素删掉，然后增加一个具有点击效果的WidgetSpan，以便用户可以查看答案
-      // spans.removeLast();
-      // spans.removeLast();
+      dataList.removeLast();
+      String last_before_item = dataList.last as String;
+      dataList.removeLast();
+      spans = _wordHighlight(dataList);
       spans.add(TextSpan(text: "\n"));
       spans.add(
-        WidgetSpan(  
+        WidgetSpan(
           alignment: PlaceholderAlignment.middle,
           child: TextButton(
             style: ButtonStyle(
@@ -521,7 +534,7 @@ class MessageBubble extends StatelessWidget {
             ),
             onPressed: () async {
               // 将 dataList 倒数第二个元素作为答案
-              customSnackBar(title: "答案", content: dataList[dataList.length - 2] as String);
+              customSnackBar(title: "答案", content: last_before_item);
             }, 
             child: Text(
               "查看答案",
@@ -533,11 +546,84 @@ class MessageBubble extends StatelessWidget {
           )
         )
       );
+    }else{
+      dataList.forEach((element) {
+        spans.add(TextSpan(text: element as String));
+      });
     }
     
     return TextSpan(
       style: DefaultTextStyle.of(context).style,
       children: spans,
     );
+  }
+  
+  TextSpan templateFlaskReply4Sentence(BuildContext context) {
+    List<InlineSpan> spans = [];
+    spans = _wordHighlight(dataList, autoNewline: true);
+    spans.add(
+      WidgetSpan(  
+        alignment: PlaceholderAlignment.middle,
+        child: TextButton(
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
+            overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
+            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              )
+            )
+          ),
+          onPressed: () async {
+            messageController.getChatCompletion('gpt-3.5-turbo', dataList[0] as String, WordPipeMessageType.reply_for_translate_sentence);
+          }, 
+          child: Text(
+            "帮我翻译这个句子",
+            style: TextStyle(
+              color: Color.fromARGB(255, 11, 66, 93),
+              // decoration: TextDecoration.underline
+            )
+          )
+        )
+      )
+    );
+    spans.add(TextSpan(text: " 或 "));
+    spans.add(
+      WidgetSpan(  
+        alignment: PlaceholderAlignment.middle,
+        child: TextButton(
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
+            overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
+            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              )
+            )
+          ),
+          onPressed: () async {
+            messageController.getChatCompletion('gpt-3.5-turbo', dataList[0] as String, WordPipeMessageType.reply_for_answer_question);
+          }, 
+          child: Text(
+            "回答这个问题",
+            style: TextStyle(
+              color: Color.fromARGB(255, 11, 66, 93),
+            )
+          )
+        )
+      )
+    );
+    return TextSpan(
+      style: DefaultTextStyle.of(context).style,
+      children: spans,
+    );
+  }
+  
+  TextSpan templateReply4TranslateSentence(BuildContext context) {
+    return templateChatHistory(context);
+  }
+  
+  TextSpan templateReply4AnswerQuestion(BuildContext context) {
+    return templateChatHistory(context);
   }
 }

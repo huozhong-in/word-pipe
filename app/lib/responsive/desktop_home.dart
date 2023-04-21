@@ -91,7 +91,7 @@ class DesktopHome extends StatelessWidget {
       cursorPosition = math.min(text.length, cursorPosition + 1);
     }
     _leftOrRight = 0;
-    log("Cursor position: $cursorPosition");
+    // log("Cursor position: $cursorPosition");
 
     // 获取当前光标所在的单词。单词用正则表达式从句子中匹配拆分出来，正则判读条件为所有大小写字母和带连字符“-”的单词
     bool isFound = false;
@@ -103,11 +103,11 @@ class DesktopHome extends StatelessWidget {
       String? word = match.group(0);
       startIndex = match.start;
       endIndex = match.end;
-      log('Found "$word" at position $startIndex-$endIndex');
+      // log('Found "$word" at position $startIndex-$endIndex');
       if(cursorPosition > startIndex && cursorPosition <= endIndex){
         _currentWord = word!;
         isFound = true;
-        log("_currentWord: $word");
+        // log("_currentWord: $word");
         break;
       }
     }
@@ -231,7 +231,7 @@ class DesktopHome extends StatelessWidget {
       String? word = match.group(0);
       startIndex = match.start;
       endIndex = match.end;
-      log('get_word_index_range_in_text(): Found "$word" at position $startIndex-$endIndex');
+      // log('get_word_index_range_in_text(): Found "$word" at position $startIndex-$endIndex');
       if(cursorPosition > startIndex && cursorPosition <= endIndex){
         _currentWord = word!;
         return [startIndex, endIndex];    
@@ -500,7 +500,7 @@ class DesktopHome extends StatelessWidget {
                   Divider(),
                   Obx(() {
                     return SwitchListTile(
-                      activeColor: Colors.blue,
+                      // activeColor: Colors.blue,
                       title: Text('English Input Helper', 
                       style: TextStyle(fontSize: 12)), 
                       value: settingsController.configEnglishInputHelper.obs.value, 
@@ -509,7 +509,16 @@ class DesktopHome extends StatelessWidget {
                       }
                       )
                     );
-                  })
+                  }),
+                  SwitchListTile(
+                    subtitle: Text('for PRO', style: TextStyle(fontSize: 10, color: Colors.blue)),
+                    title: Text('Free Chat Mode', style: TextStyle(fontSize: 12)), 
+                    value: false, 
+                    onChanged: ((bool value) {
+                      
+                    }
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -538,7 +547,9 @@ class DesktopHome extends StatelessWidget {
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
                                         Text('Jasmine', style: TextStyle(fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green[900])),
-                                        IconButton(onPressed: ()=>{}, icon: Icon(Icons.more_vert))
+                                        IconButton(onPressed: ()=>{
+                                          customSnackBar(title: "Info", content: "not open yet")
+                                        }, icon: Icon(Icons.more_vert))
                                       ],
                                     ),
                                   ),
@@ -766,7 +777,7 @@ class DesktopHome extends StatelessWidget {
                             color: Colors.grey,
                             hoverColor: Colors.black54,
                             onPressed: () {
-                              customSnackBar(title: "not open yet", content: "not open yet");
+                              customSnackBar(title: "Info", content: "not open yet");
                             }, 
                             icon: const Icon(Icons.mic_rounded)
                           ),

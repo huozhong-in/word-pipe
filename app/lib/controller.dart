@@ -109,7 +109,7 @@ class WordsProvider extends GetConnect {
   Future<List<dynamic>> searchWords(String word) async{
     // 检查缓存中是否有数据
     if (await CacheHelper.hasData(word)) {
-      print('Fetching data from cache in searchWords("$word")');
+      // print('Fetching data from cache in searchWords("$word")');
       return await CacheHelper.getData(word) as List<dynamic>;
     }
     // 如果缓存中没有数据，则发起网络请求
@@ -127,7 +127,7 @@ class WordsProvider extends GetConnect {
 
   Future<List<dynamic>> getWord(String word) async{
     if (await CacheHelper.hasData(word)) {
-      print('Fetching data from cache in getWord("$word")');
+      // print('Fetching data from cache in getWord("$word")');
       return await CacheHelper.getData(word) as List<dynamic>;
     }
     final response = await get('$HTTP_SERVER_HOST/p?k=$word');

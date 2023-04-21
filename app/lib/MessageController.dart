@@ -88,14 +88,6 @@ class MessageController extends GetxController{
     return message.key;
   }
 
-  // void updateMessage(MessageModel message, List<dynamic> newDataList) {
-  //   if (message.dataList[0] == '...'){
-  //     message.dataList.removeAt(0);
-  //   }
-  //   message.dataList.value = List<String>.from(newDataList);
-  //   update();
-  // }
-
   Future<void> getChatCompletion(String model, String prompt, int requestType) async {
     String curr_user = "";
     String access_token = "";
@@ -123,7 +115,6 @@ class MessageController extends GetxController{
       return;
     }
 
-    // int addMessageType = WordPipeMessageType.word_highlight;
     Key needUpdate = addMessage(MessageModel(
       dataList: RxList(['...']),
       type: requestType,
@@ -144,8 +135,11 @@ class MessageController extends GetxController{
     }else if(requestType == WordPipeMessageType.reply_for_query_word_example_sentence){
       msg = prompt_template_word_example_sentence(prompt);
       temperature = 0.5;
-    }else if(requestType == WordPipeMessageType.reply_for_query_sentence){
-      msg = prompt_template_sentence(prompt);
+    }else if(requestType == WordPipeMessageType.reply_for_translate_sentence){
+      msg = prompt_template_translate_sentence(prompt);
+      temperature = 0.5;
+    }else if(requestType == WordPipeMessageType.reply_for_answer_question){
+      msg = prompt_template_answer_question(prompt);
       temperature = 0.5;
     }else{
       return;
@@ -170,33 +164,23 @@ class MessageController extends GetxController{
           message.dataList.removeAt(0);
         }
         message.dataList.add(content);
-        update();
       }
       if (choice.finishReason != null && choice.finishReason == 'stop'){
-        // TODO 流式传输时不做正则匹配，到传输完毕后做一次即可
+        // 通过往消息的末尾附加一个关键字[W0RDP1PE]的方式，让模板可以在消息气泡上增加按钮等互动元素
           if (requestType == WordPipeMessageType.reply_for_query_word_example_sentence){
             // 通过以下方法重整流式消息为按行分割的字符串列表
-            print('refine stream msg. append [W0RDP1PE]');
-            // join collected_messages to a string
             String joined_messages = collected_messages.join('');
-            // split joined_messages by "\n"
             List<String> split_messages = joined_messages.split('\n');
-            // append "\n" to split_messages 's every item
             split_messages = split_messages.map((e) => e + '\n').toList();
             
-            // redraw ListView THIS item, no flash effect
+            // 重新画ListView的指定item，解决屏幕会闪一下的问题
             final message = findMessageByKey(needUpdate);
-            // empty message.dataList
             message.dataList.insert(0, "...");
-            // remove message.dataList every item except first item
             message.dataList.removeRange(1, message.dataList.length);
-            // append split_message all item to message.dataList
             message.dataList.addAll(split_messages);
-            // remove message.dataList first item
             message.dataList.removeAt(0);
-            // add '[W0RDP1PE]' to last
             message.dataList.add('[W0RDP1PE]');
-            update();
+            // print('refine stream msg. append [W0RDP1PE]');
           }
         }
     });
@@ -218,8 +202,6 @@ class MessageController extends GetxController{
           }
         });  
       }
-      // 订阅消息流
-      
     } catch (e) {
       log('handleSSE error: $e');
       sse_connected = false;
@@ -285,7 +267,7 @@ class ChatRecord extends GetConnect {
             uuid: msgFromUUID,
             createTime: msgCreateTime, 
             dataList: RxList([msgContent]), 
-            type: WordPipeMessageType.stream, 
+            type: WordPipeMessageType.chathistory, 
             key: UniqueKey()
             )
           );
