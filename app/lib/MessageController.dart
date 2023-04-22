@@ -14,12 +14,12 @@ class MessageController extends GetxController{
   final Controller c = Get.find();
 
   final messages = <MessageModel>[].obs;
+  bool messsage_view_first_build = true;
+  int lastSegmentBeginId = 0;
   
   late final SSEClient sseClient;
   bool sse_connected = false;
   
-  bool messsage_view_first_build = true;
-  int lastSegmentBeginId = 0;
 
   // RxBool _isLoading = false.obs;
   // bool get isLoading => _isLoading.value;
@@ -46,6 +46,7 @@ class MessageController extends GetxController{
   void onInit() {
     super.onInit();
     scrollController.addListener(_scrollListener);
+
   }
 
   @override
@@ -70,6 +71,7 @@ class MessageController extends GetxController{
         }
     }
   }
+
 
   Future<int> chatHistory(String username, int last_id) async {
     ChatRecord chatRecord = ChatRecord();
@@ -131,15 +133,18 @@ class MessageController extends GetxController{
     prompt = prompt.trim();
     if (requestType == WordPipeMessageType.reply_for_query_word){
       msg = prompt_template_word(prompt);
-      temperature = 0;
+      temperature = 0.2;
     }else if(requestType == WordPipeMessageType.reply_for_query_word_example_sentence){
       msg = prompt_template_word_example_sentence(prompt);
-      temperature = 0.5;
+      temperature = 0.8;
     }else if(requestType == WordPipeMessageType.reply_for_translate_sentence){
       msg = prompt_template_translate_sentence(prompt);
       temperature = 0.5;
     }else if(requestType == WordPipeMessageType.reply_for_answer_question){
       msg = prompt_template_answer_question(prompt);
+      temperature = 0.5;
+    }else if(requestType == WordPipeMessageType.reply_for_translate_sentence_zh_en){
+      msg = prompt_template_translate_sentence_zh_en(prompt);
       temperature = 0.5;
     }else{
       return;
@@ -152,35 +157,44 @@ class MessageController extends GetxController{
     );
 
     List<String> collected_messages = [];
+    String lastPackage = "";
+    String answer = "";
     chatStream.listen((chatStreamEvent) {
       // print(chatStreamEvent);
       OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];
       final content = choice.delta.content;
       if(content != null){
-        // print(content);
-        collected_messages.add(content);
+        print(content);
         final message = findMessageByKey(needUpdate);
         if (message.dataList[0] == '...'){
           message.dataList.removeAt(0);
         }
-        message.dataList.add(content);
+
+        // 截留最后的答案，给“单词生成例句”功能使用
+        if (lastPackage == '>>>'){
+          answer = content;
+        }else{
+          collected_messages.add(content);
+          message.dataList.add(content);
+          lastPackage = content;
+        }
       }
       if (choice.finishReason != null && choice.finishReason == 'stop'){
-        // 通过往消息的末尾附加一个关键字[W0RDP1PE]的方式，让模板可以在消息气泡上增加按钮等互动元素
+          // 通过以下方法重整流式消息为按行分割的字符串列表
+          String joined_messages = collected_messages.join('');
+          List<String> split_messages = joined_messages.split('\n');
+          split_messages = split_messages.map((e) => e + '\n').toList();
+          
+          // 重新画ListView的指定item，解决屏幕会闪一下的问题
+          final message = findMessageByKey(needUpdate);
+          message.dataList.insert(0, "...");
+          message.dataList.removeRange(1, message.dataList.length);
+          message.dataList.addAll(split_messages);
+          message.dataList.removeAt(0);
+          
+          // 对于流式消息，通过往消息的最后位置插入一个关键字'[W0RDP1PE]$answer'的方式，把正确答案往后传递
           if (requestType == WordPipeMessageType.reply_for_query_word_example_sentence){
-            // 通过以下方法重整流式消息为按行分割的字符串列表
-            String joined_messages = collected_messages.join('');
-            List<String> split_messages = joined_messages.split('\n');
-            split_messages = split_messages.map((e) => e + '\n').toList();
-            
-            // 重新画ListView的指定item，解决屏幕会闪一下的问题
-            final message = findMessageByKey(needUpdate);
-            message.dataList.insert(0, "...");
-            message.dataList.removeRange(1, message.dataList.length);
-            message.dataList.addAll(split_messages);
-            message.dataList.removeAt(0);
-            message.dataList.add('[W0RDP1PE]');
-            // print('refine stream msg. append [W0RDP1PE]');
+            message.dataList.add('[W0RDP1PE]$answer');
           }
         }
     });
@@ -275,5 +289,105 @@ class ChatRecord extends GetConnect {
 
     }
     return ret;
+  }
+}
+
+
+
+// ignore: must_be_immutable
+class QuestionButtons extends StatelessWidget {
+  final settingsController = Get.find<SettingsController>();
+  
+  final String answer;
+  RxString iconA = 'help_outline'.obs;
+  RxString iconB = 'help_outline'.obs;
+  RxString iconC = 'help_outline'.obs;
+  RxString iconD = 'help_outline'.obs;
+  
+  QuestionButtons({required this.answer});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+
+      children: [
+        Container(
+          margin: EdgeInsetsDirectional.symmetric(horizontal: 10),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              if(answer == 'A') {
+                iconA.value = 'check'; 
+              } else {
+                iconA.value = 'close';
+              }
+            },
+            icon: Obx(() => Icon(
+              iconA.value == 'help_outline' ? Icons.help_outline :
+              iconA.value == 'check' ? Icons.check : 
+              Icons.close,
+              color: Colors.blue[900],
+            )),
+            label: Text('A', style: TextStyle(fontSize: settingsController.fontSizeConfig.value, color: Colors.blue[900]),)   
+          ),
+        ),
+        Container(
+          margin: EdgeInsetsDirectional.symmetric(horizontal: 10),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              if(answer == 'B') {
+                iconB.value = 'check'; 
+              } else {
+                iconB.value = 'close';
+              }
+            },
+            icon: Obx(() => Icon(
+              iconB.value == 'help_outline' ? Icons.help_outline :
+              iconB.value == 'check' ? Icons.check : 
+              Icons.close,
+              color: Colors.blue[900],
+            )),
+            label: Text('B', style: TextStyle(fontSize: settingsController.fontSizeConfig.value, color: Colors.blue[900]),)   
+          ),
+        ),
+        Container(
+          margin: EdgeInsetsDirectional.symmetric(horizontal: 10),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              if(answer == 'C') {
+                iconC.value = 'check'; 
+              } else {
+                iconC.value = 'close';
+              }
+            },
+            icon: Obx(() => Icon(
+              iconC.value == 'help_outline' ? Icons.help_outline :
+              iconC.value == 'check' ? Icons.check : 
+              Icons.close,
+              color: Colors.blue[900],
+            )),
+            label: Text('C', style: TextStyle(fontSize: settingsController.fontSizeConfig.value, color: Colors.blue[900]),)   
+          ),
+        ),
+        Container(
+          margin: EdgeInsetsDirectional.symmetric(horizontal: 10),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              if(answer == 'D') {
+                iconD.value = 'check'; 
+              } else {
+                iconD.value = 'close';
+              }
+            },
+            icon: Obx(() => Icon(
+              iconD.value == 'help_outline' ? Icons.help_outline :
+              iconD.value == 'check' ? Icons.check : 
+              Icons.close,
+              color: Colors.blue[900],
+            )),
+            label: Text('D', style: TextStyle(fontSize: settingsController.fontSizeConfig.value, color: Colors.blue[900]),)   
+          ),
+        )
+      ],
+    );
   }
 }

@@ -3,7 +3,7 @@ import 'package:wordpipe/config.dart';
 import 'package:wordpipe/cache_helper.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
-// import 'package:shared_preferences/shared_preferences.dart'; // TODO 换掉cache_helper
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class Controller extends GetxController{
@@ -266,10 +266,26 @@ class SettingsBinding implements Bindings {
   }
 }
 class SettingsController extends GetxController {
-  RxBool _configEnglishInputHelper = true.obs;
-  bool get configEnglishInputHelper => _configEnglishInputHelper.value; 
+  late SharedPreferences prefs;
   
-  void toggleEnglishInputHelper(bool value) {
-    _configEnglishInputHelper.value = value;
+  RxBool englishInputHelperConfig = true.obs;
+  RxDouble fontSizeConfig = 16.0.obs;
+  
+  
+  @override
+  void onInit() async {
+    super.onInit();
+    prefs = await SharedPreferences.getInstance();
+    englishInputHelperConfig.value = prefs.getBool('englishInputHelperConfig') ?? englishInputHelperConfig.value;
+    fontSizeConfig.value = await prefs.getDouble('fontSizeConfig') ?? fontSizeConfig.value;
+  }
+ 
+  void toggleEnglishInputHelper(bool value) async {
+    englishInputHelperConfig.value = value;
+    await prefs.setBool('englishInputHelperConfig', value);
+  }
+  void setFontSize(double value) async {
+    fontSizeConfig.value = value.toDouble();
+    await prefs.setDouble('fontSizeConfig', value.toDouble());
   }
 }

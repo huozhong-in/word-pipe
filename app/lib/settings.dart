@@ -1,18 +1,15 @@
-import 'package:wordpipe/config.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
-import 'package:wordpipe/MessageController.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:wordpipe/responsive/responsive_layout.dart';
-
+import 'package:get/get.dart';
 
 
 // ignore: must_be_immutable
-class UserProfile extends StatelessWidget {
-  UserProfile({Key? key}) : super(key: key);
+class Settings extends StatelessWidget {
+  Settings({Key? key}) : super(key: key);
   final Controller c = Get.find();
-  final MessageController messageController = Get.find();
+  final SettingsController settingsController = Get.find<SettingsController>();
   late String username = "";
 
   Future<bool> checkUserLogin() async {
@@ -27,21 +24,16 @@ class UserProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
-
     return FutureBuilder(
       future: checkUserLogin(), // 调用异步方法检查用户是否登录
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         if (snapshot.hasError) {
             return Text('Error initializing.');
-          } else if (snapshot.connectionState ==
-              ConnectionState.done) {
+          } else if (snapshot.connectionState == ConnectionState.done) {
             if (username != "") {
-                return MaterialApp(
-                  debugShowCheckedModeBanner: false,
-                  home: Scaffold(
+                return Scaffold(
                     appBar: AppBar(
-                      title: Text('User Profile'),
+                      title: Text('Settings'),
                       centerTitle: true,
                       backgroundColor: Colors.green.withOpacity(0.6),
                       automaticallyImplyLeading: false,
@@ -56,39 +48,45 @@ class UserProfile extends StatelessWidget {
                       child: Column(
                         children: [
                           SizedBox(height: 20),
-                          Text('User ID: $username'),
+                          Text('Chat conversion font size'),
                           SizedBox(height: 20),                          
                           Container(
-                            width: 200,
-                            height: 200,
+                            // width: 200,
+                            // height: 200,
                             // color: Colors.black12,
-                            margin: const EdgeInsets.only(left: 8),
-                            child: SvgPicture.network(
-                              "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${username}",
-                              height: 200,
-                              width: 200,
-                              semanticsLabel: 'user avatar',
-                              placeholderBuilder: (BuildContext context) => Container(
-                                  padding: const EdgeInsets.all(40.0),
-                                  child: const CircularProgressIndicator()),
-                              )
+                            margin: const EdgeInsets.all(20),
+                            child: Obx(() {  
+                              return Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text('Small'),
+                                      Expanded(
+                                        child: Slider(
+                                            value: settingsController.fontSizeConfig.value,
+                                            min: 12,
+                                            max: 24,
+                                            divisions: 12,
+                                            label: settingsController.fontSizeConfig.value.round().toString(),
+                                            activeColor: Colors.green[700],
+                                            onChanged: (double value) {
+                                              settingsController.setFontSize(value);
+                                            },
+                                          )
+                                      ),
+                                      Text('Large'),
+                                    ],
+                                  ),
+                                  Text('Current font size: ' + settingsController.fontSizeConfig.value.round().toString()),
+                                ],
+                              );
+                            },)
                           ),
                           SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () async {
-                              await c.signout();
-                              // 登出后清空消息列表
-                              messageController.messages.clear();
-                              messageController.closeSSE();
-                              Get.offAll(ResponsiveLayout());
-                            },
-                            child: Text('Sign Out'),
-                          ),
                         ],
                       )
                     ),
-                  )
-                );
+                  );
             }else{
               Get.offAll(ResponsiveLayout());
             }
@@ -120,6 +118,4 @@ class UserProfile extends StatelessWidget {
       },
     );
   }
-
-  
 }

@@ -30,7 +30,8 @@ class WordPipeMessageType{
   static const int reply_for_query_word = 104;
   static const int reply_for_query_word_example_sentence = 105;
   static const int reply_for_answer_question = 106;
-  static const int reply_for_translate_sentence_zh_en = 107;
+  static const int flask_reply_for_sentence_zh_en = 107;
+  static const int reply_for_translate_sentence_zh_en = 108;
   static const int image = 3;
   static const int audio = 34;
   static const int video = 43;

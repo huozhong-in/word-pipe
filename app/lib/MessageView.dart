@@ -12,18 +12,11 @@ class MessageView extends StatelessWidget {
   
   final Controller c = Get.find();
   final MessageController messageController = Get.find();
-  
+  RxBool newMessageArrived = false.obs;
+
   @override
   Widget build(BuildContext context) {
     
-    // void _scrollToBottom() {
-    //   _scrollController.animateTo(
-    //     _scrollController.position.minScrollExtent,
-    //     duration: const Duration(milliseconds: 300),
-    //     curve: Curves.easeOut,
-    //   );
-    // }
-
     Future<void> getChatHistory() async {
       c.getUserName().then((user_name){
         if (user_name != ""){
@@ -76,25 +69,83 @@ class MessageView extends StatelessWidget {
     }
     
     Widget _buildListView() {
+
+      // 判断有新消息过来，而且滚动条不在最底端，则显示一个提示气泡，点击后滚动到最底端。因为dataList是一个RxList，所以只要dataList有变化，就会触发这个“滚动条位置判定”函数。
+      // messageController.messages.listen((messages) {
+      //   messageController.messages.listen((messages) {
+      //     // print(messages.length); // TODO 被触发2000多次，这里有性能问题
+      //     // if (!messageController.scrollController.position.atEdge && messageController.scrollController.offset != messageController.scrollController.position.minScrollExtent) {
+      //     //   newMessageArrived.value = true;
+      //     // }
+      //   });
+      //   // if (messageController.scrollController.offset != messageController.scrollController.position.minScrollExtent){
+      //   //   newMessageArrived.value = true;
+      //   // }
+      // });
+
       return Obx(() {
-        return ListView.builder(
-        controller: messageController.scrollController,
-        itemCount: messageController.messages.length,
-        itemBuilder: (context, index) {
-          MessageModel message = messageController.messages[index];
-          // print("_buildListView(index ${index}): ${message.username} ${message.dataList} ${message.type}");
-          return MessageBubble(
-            key: message.key,
-            sender: message.username,
-            sender_uuid: message.uuid,
-            dataList: message.dataList,
-            type: message.type,
-          );
-        },
-        shrinkWrap: true,
-        reverse: true,
-      );
-    }); 
+        return Stack(
+          children: [
+            ListView.builder(
+            controller: messageController.scrollController,
+            itemCount: messageController.messages.length,
+            itemBuilder: (context, index) {
+              MessageModel message = messageController.messages[index];
+              // print("_buildListView(index ${index}): ${message.username} ${message.dataList} ${message.type}");
+              return MessageBubble(
+                key: message.key,
+                sender: message.username,
+                sender_uuid: message.uuid,
+                dataList: message.dataList,
+                type: message.type,
+              );
+            },
+            shrinkWrap: true,
+            reverse: true,
+            ),
+            Visibility(
+              visible: newMessageArrived.value,
+              child: Positioned(
+                left: Get.width / 3,
+                bottom: 0,
+                child: Container(
+                  height: 30,
+                  width: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.white70,
+                    borderRadius: const BorderRadius.all(Radius.circular(5)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey,
+                        blurRadius: 2,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  margin: const EdgeInsets.only(bottom: 5),
+                  // button with text and icon
+                  child: TextButton.icon(
+                    label: Text('New Message Arrived!', style: TextStyle(color: Colors.black)),
+                    icon: const Padding(
+                      padding: EdgeInsets.only(right: 5),
+                      child: Icon(Icons.keyboard_double_arrow_down_rounded, color: Colors.black),
+                    ),
+                    onPressed: () {
+                      messageController.scrollController.animateTo(
+                        messageController.scrollController.position.minScrollExtent,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
+                      );
+                      // hide self
+                      newMessageArrived.value = false;
+                    },
+                  )
+                ),
+              ),
+            ),
+          ],
+        );
+      }); 
     }
 
     return FutureBuilder<void>(

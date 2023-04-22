@@ -28,6 +28,7 @@ class MessageBubble extends StatelessWidget {
 
   final Controller c = Get.find();
   final MessageController messageController = Get.find();
+  final SettingsController settingsController = Get.find<SettingsController>();
   bool isMe = false;
   
 
@@ -221,10 +222,10 @@ class MessageBubble extends StatelessWidget {
       return templateSysMsg(context);
     }else if(type == WordPipeMessageType.stream){
       // 因为AI的回复是异步且流式，当消息陆续到达，逐一显示。可以认为每item是一个字符，包括\n，不需要额外处理
-      return templateStream(context);
+      return templateStreamWithHighlight(context);
     }else if(type == WordPipeMessageType.chathistory){
       // 加载聊天历史。文本里会有\n，所以依次append即可
-      return templateChatHistory(context);
+      return templateRawText(context);
     }else if(type == WordPipeMessageType.flask_reply_for_word){
       // 处理从flask server返回的单词问询消息
       return templateFlaskReply4Word(context);
@@ -241,16 +242,20 @@ class MessageBubble extends StatelessWidget {
       return templateReply4TranslateSentence(context);
     }else if(type == WordPipeMessageType.reply_for_answer_question){
       return templateReply4AnswerQuestion(context);
+    }else if(type == WordPipeMessageType.flask_reply_for_sentence_zh_en){
+      return templateFlaskReply4SentenceZhEn(context);
+    }else if(type == WordPipeMessageType.reply_for_translate_sentence_zh_en){
+      return templateReply4TranslateSentenceZhEn(context);
     }else{
       // 普通多行文本，每行是一个字符串
       return templateText(context);
     }
   }
 
-  TextSpan templateStream(BuildContext context) {
+  TextSpan templateStreamWithHighlight(BuildContext context) {
     // 处理流式消息，每个item是一个字符，包括\n
     return TextSpan(
-      style: DefaultTextStyle.of(context).style,
+      style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
       children: _wordHighlight(dataList),
     );
   }
@@ -312,14 +317,14 @@ class MessageBubble extends StatelessWidget {
   //   });
 
   //   return TextSpan(
-  //     style: DefaultTextStyle.of(context).style,
+  //     style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
   //     children: spans,
   //   );
   // }
 
   // TextSpan templateWord2Root(BuildContext context) {
   //   return TextSpan(
-  //     style: DefaultTextStyle.of(context).style,
+  //     style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
   //     children: <InlineSpan>[
   //       ...dataList.map((value) => TextSpan(
   //         text: value,
@@ -346,19 +351,19 @@ class MessageBubble extends StatelessWidget {
       i++;
     });
     return TextSpan(
-      style: DefaultTextStyle.of(context).style,
+      style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
       children: spans,
     );
   }
 
-  TextSpan templateChatHistory(BuildContext context){
+  TextSpan templateRawText(BuildContext context){
     // 直接拼接结果，不需要换行，也不需要单词高亮
     List<TextSpan> spans = [];
     dataList.forEach((element) {
       spans.add(TextSpan(text: element as String));
     });
     return TextSpan(
-      style: DefaultTextStyle.of(context).style,
+      style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
       children: spans,
     );
   }
@@ -373,14 +378,14 @@ class MessageBubble extends StatelessWidget {
       spans.add(TextSpan(text: element.trim()));
     });
     return TextSpan(
-      style: DefaultTextStyle.of(context).style,
+      style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
       children: spans,
     );
   }
   TextSpan templateReply4Word(BuildContext context) {
     // 处理流式消息，每个item是一个字符，包括\n
     return TextSpan(
-      style: DefaultTextStyle.of(context).style,
+      style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
       children: <InlineSpan>[
         ..._wordHighlight(dataList),
       ],
@@ -443,7 +448,7 @@ class MessageBubble extends StatelessWidget {
         )
       );
       return TextSpan(
-        style: DefaultTextStyle.of(context).style,
+        style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
         children: spans,
       );
   }
@@ -478,7 +483,9 @@ class MessageBubble extends StatelessWidget {
               child: Text(
                 match.group(0)!,
                 style: TextStyle(
+                  fontSize: settingsController.fontSizeConfig.value,
                   color: Color.fromARGB(255, 11, 66, 93),
+                  textBaseline: TextBaseline.alphabetic,
                 )
               )
             )
@@ -497,7 +504,7 @@ class MessageBubble extends StatelessWidget {
   
   TextSpan templateSysMsg(BuildContext context) {
     return TextSpan(
-      style: DefaultTextStyle.of(context).style,
+      style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
       children: <InlineSpan>[
         TextSpan(
           text: dataList[0] as String,
@@ -511,39 +518,18 @@ class MessageBubble extends StatelessWidget {
   
   TextSpan templateReply4WordExampleSentence(BuildContext context) {
     List<InlineSpan> spans = [];
+
     String last_item = dataList.last as String;
-    if (last_item == '[W0RDP1PE]'){
-      // 将最后2个元素删掉，然后增加一个具有点击效果的WidgetSpan，以便用户可以查看答案
-      dataList.removeLast();
-      String last_before_item = dataList.last as String;
+    if (last_item.contains('[W0RDP1PE]')){
+      print(last_item);
+      String answer = last_item.split('[W0RDP1PE]')[1];
       dataList.removeLast();
       spans = _wordHighlight(dataList);
       spans.add(TextSpan(text: "\n"));
       spans.add(
         WidgetSpan(
           alignment: PlaceholderAlignment.middle,
-          child: TextButton(
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
-              overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
-              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                )
-              )
-            ),
-            onPressed: () async {
-              // 将 dataList 倒数第二个元素作为答案
-              customSnackBar(title: "答案", content: last_before_item);
-            }, 
-            child: Text(
-              "查看答案",
-              style: TextStyle(
-                color: Color.fromARGB(255, 11, 66, 93),
-                // decoration: TextDecoration.underline
-              )
-            )
-          )
+          child: QuestionButtons(answer: answer)
         )
       );
     }else{
@@ -552,8 +538,10 @@ class MessageBubble extends StatelessWidget {
       });
     }
     
+
+    
     return TextSpan(
-      style: DefaultTextStyle.of(context).style,
+      style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
       children: spans,
     );
   }
@@ -614,16 +602,82 @@ class MessageBubble extends StatelessWidget {
       )
     );
     return TextSpan(
-      style: DefaultTextStyle.of(context).style,
+      style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
       children: spans,
     );
   }
   
   TextSpan templateReply4TranslateSentence(BuildContext context) {
-    return templateChatHistory(context);
+    return templateRawText(context);
   }
   
   TextSpan templateReply4AnswerQuestion(BuildContext context) {
-    return templateChatHistory(context);
+    return templateStreamWithHighlight(context);
+  }
+  
+  TextSpan templateFlaskReply4SentenceZhEn(BuildContext context) {
+    List<InlineSpan> spans = [];
+    spans = _wordHighlight(dataList, autoNewline: true);
+    spans.add(
+      WidgetSpan(  
+        alignment: PlaceholderAlignment.middle,
+        child: TextButton(
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
+            overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
+            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              )
+            )
+          ),
+          onPressed: () async {
+            messageController.getChatCompletion('gpt-3.5-turbo', dataList[0] as String, WordPipeMessageType.reply_for_translate_sentence_zh_en);
+          }, 
+          child: Text(
+            "帮我翻译这个句子",
+            style: TextStyle(
+              color: Color.fromARGB(255, 11, 66, 93),
+              // decoration: TextDecoration.underline
+            )
+          )
+        )
+      )
+    );
+    spans.add(TextSpan(text: " 或 "));
+    spans.add(
+      WidgetSpan(  
+        alignment: PlaceholderAlignment.middle,
+        child: TextButton(
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
+            overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
+            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              )
+            )
+          ),
+          onPressed: () async {
+            // TODO 可指定AI用英文回复
+            messageController.getChatCompletion('gpt-3.5-turbo', dataList[0] as String, WordPipeMessageType.reply_for_answer_question);
+          }, 
+          child: Text(
+            "回答这个问题",
+            style: TextStyle(
+              color: Color.fromARGB(255, 11, 66, 93),
+            )
+          )
+        )
+      )
+    );
+    return TextSpan(
+      style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
+      children: spans,
+    );
+  }
+  
+  TextSpan templateReply4TranslateSentenceZhEn(BuildContext context) {
+    return templateStreamWithHighlight(context);
   }
 }

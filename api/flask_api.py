@@ -330,7 +330,7 @@ def chat():
         # 句子中不包含英文单词，可能是用户想要翻译中文到英文
         dataList.append(message)
         dataList.append("你想让我翻译成英文呢？还是在问我问题？")
-        back_data['type'] = 107 # WordPipeMessageType.reply_for_translate_sentence_zh_en, See: config.dart
+        back_data['type'] = 107 # WordPipeMessageType.flask_reply_for_sentence_zh_en, See: config.dart
     back_data['dataList'] = dataList
     back_data['createTime'] = int(time.time())
     id = generate_time_based_client_id(prefix=username)
@@ -452,6 +452,19 @@ def get_user_avatar(user_name: str):
         return Response(svg, mimetype='image/svg+xml')
     else:
         return make_response('', 404)
+
+@app.route('/api/contact-us')
+def contact_us():
+    '''
+    联系我们
+    '''
+    imgFilePrefix = Path(Path(__file__).parent.absolute() / 'assets')
+    jpgImgFile = Path(imgFilePrefix / 'contact-us.jpg')
+    img = Image.open(jpgImgFile)
+    img_byte_arr = BytesIO()
+    img.save(img_byte_arr, format='JPEG')
+    img_byte_arr.seek(0)
+    return send_file(img_byte_arr, mimetype='image/jpeg')
 
 # @app.route('/api/user/signup', methods = ['POST'])
 # def signup():

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
+import 'package:wordpipe/MessageController.dart';
 import 'package:get/get.dart';
 import 'package:wordpipe/responsive/desktop_home.dart';
 import 'package:wordpipe/responsive/desktop_sign_in.dart';
@@ -13,6 +14,8 @@ class ResponsiveLayout extends StatelessWidget {
   ResponsiveLayout({super.key});
 
   Controller c = Get.put(Controller());
+  final MessageController messageController = Get.put(MessageController());
+  final SettingsController settingsController = Get.put<SettingsController>( SettingsController());
   String user_name = "";
 
   Widget builder(BuildContext context, AsyncSnapshot snapshot) {

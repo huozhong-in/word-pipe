@@ -1,21 +1,19 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/responsive/mobile_sign_in.dart';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:get/get.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageView.dart';
 import 'package:wordpipe/user_profile.dart';
-
-// ugly code
 import 'package:wordpipe/MessageController.dart';
-import 'package:wordpipe/MessageModel.dart';
+// import 'package:wordpipe/MessageModel.dart';
 
 class MobileHome extends StatelessWidget {
   MobileHome({super.key});
 
   final Controller c = Get.find();
-  final MessageController messageController = Get.put(MessageController());
+  final MessageController messageController = Get.find<MessageController>();
   final TextEditingController _textController = TextEditingController();
   final FocusNode _commentFocus = FocusNode();
 
@@ -45,7 +43,7 @@ class MobileHome extends StatelessWidget {
         backgroundColor: Colors.greenAccent[100],
         automaticallyImplyLeading: true,
       ),
-      resizeToAvoidBottomInset : false,
+      resizeToAvoidBottomInset : true,
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -62,10 +60,6 @@ class MobileHome extends StatelessWidget {
                 ),
               ),
             ),
-            // ListTile(
-            //   leading: Icon(Icons.message),
-            //   title: Text('Messages'),
-            // ),
             ListTile(
               leading: Icon(Icons.account_circle),
               title: Text('Profile'),
@@ -78,7 +72,7 @@ class MobileHome extends StatelessWidget {
             Divider(),
             ListTile(
               leading: Icon(Icons.info),
-              title: Text('About Us'),
+              title: Text('About WordPipe'),
             ),
           ],
         ),
@@ -122,15 +116,29 @@ class MobileHome extends StatelessWidget {
                       child: _myTextFild(context),
                     )
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.send_rounded),
-                    color: Colors.green[400],
-                    onPressed: () {
-                      _handleSubmitted(_textController.text);
-                      _commentFocus.requestFocus();
-                    },
-                    hoverColor: Colors.black54,
-                  ),
+                  Container(
+                          width: 45,
+                          height: 40,
+                          margin: EdgeInsets.only(left: 5),
+                          decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5.0),
+                                color: Colors.green[900],
+                          ),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green[800],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5.0),
+                                ),
+                              padding: const EdgeInsets.all(0),
+                            ),
+                            onPressed: () {
+                              _handleSubmitted(_textController.text);
+                              _commentFocus.unfocus();
+                            },
+                            child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                          )
+                        )
                 ],
               ),
             )
@@ -146,18 +154,16 @@ class MobileHome extends StatelessWidget {
       autofocus: true,
       controller: _textController,
       textInputAction: TextInputAction.newline,
-      style: TextStyle(fontWeight: FontWeight.bold),
       maxLines: 1,
       minLines: 1,
       decoration: InputDecoration(
-        hintText: 'ask some questions',
+        hintText: '输入单词或句子',
         hintStyle: TextStyle(color: Colors.grey),
         prefixIcon: IconButton(
             color: Colors.grey,
             hoverColor: Colors.black54,
             onPressed: () {
-              // messageController.getChatCompletion('gpt-3.5-turbo', 'What is hallucinate?');
-              customSnackBar(title: "not open yet", content: "not open yet");
+              customSnackBar(title: "Info", content: "not open yet");
             }, 
             icon: const Icon(Icons.mic_rounded)
           ),
@@ -196,16 +202,13 @@ class MobileHome extends StatelessWidget {
     if(text.trim() == ""){
       return;
     }
-    // 向服务端发送消息，如果返回http code 204，则将消息添加到消息列表中
+    // 向服务端发送消息
     c.getUserName().then((_username){
       Future<bool> r = c.chat(_username, text.trim());
       r.then((ret){
         if(ret == true){
           _textController.clear();
           _commentFocus.unfocus();
-          c.getUUID().then((_uuid){            
-          // messageController.getChatCompletion('gpt-3.5-turbo', text.trim(), WordPipeMessageType.reply_for_query_word);
-          });
         }else{
           customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
           // 三秒后跳转到登录页面

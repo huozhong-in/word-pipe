@@ -7,19 +7,18 @@ import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageView.dart';
 import 'package:wordpipe/responsive/responsive_layout.dart';
 import 'package:wordpipe/user_profile.dart';
+import 'package:wordpipe/MessageController.dart';
+import 'package:wordpipe/settings.dart';
+import 'package:wordpipe/about_us.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-// import 'package:lottie/lottie.dart';
 import 'dart:developer';
-
-// ugly code
-import 'package:wordpipe/MessageController.dart';
 
 // ignore: must_be_immutable
 class DesktopHome extends StatelessWidget {
   DesktopHome({super.key});
   final Controller c = Get.find<Controller>();
-  final MessageController messageController = Get.put(MessageController());
+  final MessageController messageController = Get.find<MessageController>();
   final SettingsController settingsController = Get.find<SettingsController>();
   final List<MatchWords> _matchWords = <MatchWords>[].obs;
   final TextEditingController _textController = TextEditingController();
@@ -28,7 +27,6 @@ class DesktopHome extends StatelessWidget {
   late String _currentWord = ""; // 文本框中输入光标所在的单词
   late int _leftOrRight = 0; // 此变量用于记录当按下键盘左右键时，光标应向左移动还是向右移动，-1表示向左，1表示向右，0表示未移动
   late final Map<String, String> _wordDetail = <String, String>{}.obs;
-  // RxBool _isShowSlashMenu = false.obs;
   ScrollController _scrollController = ScrollController();
 
   void _handleSubmitted(String text) {
@@ -43,10 +41,10 @@ class DesktopHome extends StatelessWidget {
           _textController.clear();
           _matchWords.clear();
           _indexHighlight = 0;
-          c.getUUID().then((_uuid){          
-            // TODO free chat mode，新建一个WordPipeMessageType.freechat的类型。用shared_preferences存储当前是不是free chat模式。
+          // c.getUUID().then((_uuid){
+            // TODO 'free chat mode'，从云端读取用户权限
             // messageController.getChatCompletion('gpt-3.5-turbo', text.trim(), WordPipeMessageType.reply_for_query_sentence);
-          });
+          // });
         }else{
           customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
           // 三秒后跳转到登录页面
@@ -59,27 +57,16 @@ class DesktopHome extends StatelessWidget {
   }
   
   void _handleMatchWords(String text) {
-    if(settingsController.configEnglishInputHelper == false){
+    if(settingsController.englishInputHelperConfig == false){
       _matchWords.clear();
       _indexHighlight = 0;
-      // _isShowSlashMenu.value = false;
       return;
     }
     if (text.trim() == ""){
       _matchWords.clear();
       _indexHighlight = 0;
-      // _isShowSlashMenu.value = false;
       return;
     }
-    // if (text == "/"){
-    //   _matchWords.clear();
-    //   _indexHighlight = 0;
-    //   _isShowSlashMenu.value = true;
-    //   return;
-    // }else{
-    //   _isShowSlashMenu.value = false;
-    // }
-
     // 获取光标的位置。
     // 因捕获键盘事件在前，_textControll.selection.start和end变化在后，
     // 导致此时获得的光标实际位置向左或向右偏移了1个字符，所以要预先设置_leftOrRight，并在这里修正
@@ -401,10 +388,10 @@ class DesktopHome extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 150,
+              width: 180,
               constraints: BoxConstraints(
-                maxWidth: 150,
-                minWidth: 150,
+                maxWidth: 180,
+                minWidth: 180,
               ),
               decoration: BoxDecoration(
                 // color: Color.fromARGB(255, 131, 198, 175),
@@ -489,6 +476,7 @@ class DesktopHome extends StatelessWidget {
                     title: Text('Settings', style: TextStyle(fontSize: 14)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
+                    onTap: () => Get.offAll(Settings()),
                   ),
                   
                   ListTile(
@@ -496,14 +484,18 @@ class DesktopHome extends StatelessWidget {
                     title: Text('About WordPipe', style: TextStyle(fontSize: 14)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
+                    onTap: () => Get.offAll(AboutUs()),
                   ),
                   Divider(),
                   Obx(() {
                     return SwitchListTile(
-                      // activeColor: Colors.blue,
+                      activeColor: Colors.green[600],
+                      activeTrackColor: Colors.green[100],
+                      inactiveThumbColor: Colors.green[200],
+                      inactiveTrackColor: Colors.green[100],
                       title: Text('English Input Helper', 
                       style: TextStyle(fontSize: 12)), 
-                      value: settingsController.configEnglishInputHelper.obs.value, 
+                      value:  settingsController.englishInputHelperConfig.value, 
                       onChanged: ((bool value) {
                         settingsController.toggleEnglishInputHelper(value);
                       }
@@ -511,11 +503,15 @@ class DesktopHome extends StatelessWidget {
                     );
                   }),
                   SwitchListTile(
-                    subtitle: Text('for PRO', style: TextStyle(fontSize: 10, color: Colors.blue)),
-                    title: Text('Free Chat Mode', style: TextStyle(fontSize: 12)), 
+                    activeColor: Colors.green[600],
+                      activeTrackColor: Colors.green[100],
+                      inactiveThumbColor: Colors.green[200],
+                      inactiveTrackColor: Colors.green[100],
+                    title: Text('Free-Chat Mode', style: TextStyle(fontSize: 12)), 
+                    subtitle: Text('PRO only', style: TextStyle(fontSize: 10, color: Colors.blue)),
                     value: false, 
                     onChanged: ((bool value) {
-                      
+                      customSnackBar(title: "Info", content: "Not available in free version");
                     }
                     ),
                   ),
@@ -698,56 +694,6 @@ class DesktopHome extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            // Obx(() => Visibility(
-                            //   visible: _isShowSlashMenu.value, 
-                            //   child: Positioned(
-                            //     left: 20,
-                            //     bottom: 0,
-                            //     child: Container(
-                            //       height: 150,
-                            //       width: 220,
-                            //       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                            //       decoration: BoxDecoration(
-                            //         color: Colors.white70,
-                            //         borderRadius: const BorderRadius.only(
-                            //           topLeft: Radius.circular(16),
-                            //           topRight: Radius.circular(16),
-                            //         ),
-                            //         boxShadow: [
-                            //           BoxShadow(
-                            //             color: Colors.grey.withOpacity(0.5),
-                            //             blurRadius: 5,
-                            //             offset: const Offset(0, 5),
-                            //           ),
-                            //         ],
-                            //       ),
-                            //       child: ListView(
-                            //         children:[
-                            //           ListTile(
-                            //             title: Text('/root␣word 查词根', style: TextStyle(fontSize: 14)),
-                            //           ),
-                            //           ListTile(
-                            //             title: Text('/config␣[未实现]', style: TextStyle(fontSize: 14)),
-                            //           ),
-                            //         ]
-                            //       ),
-                            //     ),
-                            //   ))
-                            // ),
-                            // Visibility(
-                            //   visible: messageController.isLoading, 
-                            //   child: Positioned(
-                            //     top: 0,
-                            //     left: context.width/2 - 25,
-                            //     child: Container(
-                            //       width: 100,
-                            //       height: 100,
-                            //       // color: Colors.black38,
-                            //       padding: EdgeInsets.all(0),
-                            //       child: Lottie.network("https://assets2.lottiefiles.com/packages/lf20_p8bfn5to.json", repeat: true, animate: true),
-                            //     )
-                            //   )
-                            // ),
                           ],
                         )
                     ),
@@ -810,18 +756,6 @@ class DesktopHome extends StatelessWidget {
                             },
                             child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
                           )
-                          // IconButton(
-                          //   icon: const Icon(Icons.send_rounded),
-                          //   color: Colors.white,
-                          //   iconSize: 20,
-
-                          //   onPressed: () {
-                          //     _handleSubmitted(_textController.text);
-                          //     _commentFocus.requestFocus();
-                          //   },
-                          //   tooltip: "cmd+enter",
-                          //   hoverColor: Colors.green[700],
-                          // ),
                         ),
                       ],
                     ),

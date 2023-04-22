@@ -47,7 +47,7 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_word_example_senten
   }
   var r_user1 = OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.user, 
-    content: "我们来玩一个猜词游戏：对于单词：`plagiarsim`，请不要直接告诉我它的意思，而是造几个相对简单英文例句（注意不要中文翻译），我来猜猜它的意思。这样我能更好的理解它，学习到它在不同语境的细微差别。"
+    content: "我们来玩一个猜词游戏：对于单词：`plagiarsim`，请不要直接告诉我它的意思，而是造几个相对简单英文例句（注意不要中文翻译），我来猜猜它的意思。这样我能更好的理解它，学习到它在不同语境的细微差别。注意正确答案选项（单项选择）放在最后的位置，前面放三个大于号，以确保我能用程序正确解析它。"
   );
   var r_assistant1 =  OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.assistant,
@@ -61,11 +61,11 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_word_example_senten
       "B. 抄袭;剽窃\n"
       "C. 误导;欺诈\n"
       "D. 侵犯;侵害\n"
-      "The correct answer is: B"
+      ">>>B"
   );
   var r_user2 =  OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.user,
-    content: "我们来玩一个猜词游戏：对于单词：`" + oneWord + "`，请不要直接告诉我它的意思，而是造几个相对简单的英文例句（注意不要中文翻译）$insertion，我来猜猜它的意思。这样我能更好的理解它，学习到它在不同语境的细微差别。",
+    content: "我们来玩一个猜词游戏：对于单词：`" + oneWord + "`，请不要直接告诉我它的意思，而是造几个相对简单的英文例句（注意不要中文翻译）$insertion，我来猜猜它的意思。这样我能更好的理解它，学习到它在不同语境的细微差别。注意正确答案选项（单项选择）放在最后的位置，前面放三个大于号，以确保我能用程序正确解析它。",
   );
 
   modelList.add(r_system);
@@ -83,23 +83,24 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_translate_sentence(
   );
   var r_user1 = OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.user, 
-    content: "我输入一些英文，请你帮我翻译成中文 ，并解释其中的语法知识：`Imagine if your face had been digitally edited into a porn video without your consent and then shared on the internet. One woman reveals the horror of it happening to her.`"
+    content: "我输入一些英文，请你帮我翻译成中文 ，并解释其中的语法知识：`\"AI companies that make product claims about identifying or supporting mental health, or that are designed to influence your emotional state, or mental well-being, should be classified as health products, and subject to quality and safety standards accordingly,\" she says.`"
   );
   var  r_assistant1 =  OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.assistant,
-    content: "翻译成中文为:想象一下,如果你的脸被人未经允许地数字编辑到色情视频中,然后在互联网上分享。一位女性揭示这种恐怖事件发生在她身上。\n"
-      "这句话中的语法知识点:\n"
-      "1. `Imagine if...`表示假设,相当于如果...那么...的意思。\n"
-      "2. `your face had been` 使用了虚拟语气,表示事情并没有真的发生,只是假设的情况。had been是过去完成时态,表示过去发生的动作对现在造成的影响。\n"
-      "3. `digitally edited into` 使用了过去分词(edited)作定语,修饰前面的face。into表示面部被编辑进色情视频里。\n"
-      "4. `without your consent` 是独立主格结构,your consent在句中作状语,表示未经你允许。\n"
-      "5. `One woman reveals` 主语为One woman,reveals是动词,女性揭示、揭发的意思。\n"
-      "6. `the horror of it happening to her it happening to her`是主语从句,作the horror的定语,说明女性遭遇的恐怖情况。\n"
-      "7. 整个句子可以理解为一位女性描述了这样一个恐怖的假设情况:如果你的脸被未经允许地编辑到色情视频中,然后发布到互联网,她揭露这种事情发生在她自己身上,这究竟有多可怕。"
+    content: "翻译成中文为: 她说:“声称可以识别或支持心理健康,或者被设计来影响你的情感状态或心理健康的AI公司,应该被归类为健康产品,并根据此受到质量和安全标准的约束。”\n"
+      "语法解释:\n"
+      "1. `AI companies that make product claims`  做产品声明的AI公司。that make product claims修饰AI companies。\n"
+      "2. `about identifying or supporting mental health`  关于识别或支持心理健康。about为介词,identifying或supporting mental health作宾语。\n"
+      "3. `or that are designed to influence`  或者被设计来影响。or连接两个并列句。that are designed 修饰companies。\n"
+      "4. `your emotional state, or mental well-being`   你的情感状态或心理健康。your emotional state和mental well-being并列,作designed的宾语。\n"
+      "5. `should be classified as`    应该被归类为。should被归类为虚拟语气,表示“应该”。\n"
+      "6. `health products, and subject to`   健康产品,并受......约束。health products作后置定语,修饰be classified as的宾语。subject to 表示“受......约束”。\n"
+      "7. `quality and safety standards accordingly`   相应的质量和安全标准。修饰subject to。\n"
+      "8. `she says`   她说。she作主语,says为谓语动词。引导直接引语。"
   );
   var  r_user2 =  OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.user,
-    content: "我输入一段英文，请你帮我翻译成中文，并解释其中的语法知识：`" + sentence + "`",
+    content: "我输入一些英文，请你帮我翻译成中文，并解释其中的语法知识：`" + sentence + "`",
   );
 
   modelList.add(r_system);
@@ -109,7 +110,7 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_translate_sentence(
   return modelList;
 }
 
-List<OpenAIChatCompletionChoiceMessageModel> prompt_template_answer_question(String sentence, {bool useEnglish=false}){
+List<OpenAIChatCompletionChoiceMessageModel> prompt_template_answer_question(String sentence, {bool useEnglish=true}){
   List<OpenAIChatCompletionChoiceMessageModel> modelList = [];
   var r_system = OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.system,
@@ -129,7 +130,33 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_answer_question(Str
   }
   var  r_user2 =  OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.user,
-    content: "我有一些问题，如果你知道就请你依次有条理的、简洁明了的$insertion回答。如果你不知道，就回复`抱歉，这个问题我暂时不知道。`：`" + sentence + "`",
+    content: "我有一些问题，如果你知道就请你依次有条理的、简洁明了的$insertion回答。如果你不知道，就回复\"抱歉，这个问题我暂时不知道。\"：`" + sentence + "`",
+  );
+
+  modelList.add(r_system);
+  // modelList.add(r_user1);
+  // modelList.add(r_assistant1);
+  modelList.add(r_user2);
+  return modelList;
+}
+
+List<OpenAIChatCompletionChoiceMessageModel> prompt_template_translate_sentence_zh_en(String sentence){
+  List<OpenAIChatCompletionChoiceMessageModel> modelList = [];
+  var r_system = OpenAIChatCompletionChoiceMessageModel(
+    role: OpenAIChatMessageRole.system,
+    content: "你是我的英语翻译专家。",
+  );
+  // var r_user1 = OpenAIChatCompletionChoiceMessageModel(
+  //   role: OpenAIChatMessageRole.user, 
+  //   content: "我输入一些中文，请你帮我翻译成英文 ，并用中文解释译文涉及的语法知识：``"
+  // );
+  // var  r_assistant1 =  OpenAIChatCompletionChoiceMessageModel(
+  //   role: OpenAIChatMessageRole.assistant,
+  //   content: "翻译成英文为:"
+  // );
+  var  r_user2 =  OpenAIChatCompletionChoiceMessageModel(
+    role: OpenAIChatMessageRole.user,
+    content: "我输入一些中文，请你帮我翻译成英文 ，并用中文解释译文涉及的语法知识：`" + sentence + "`",
   );
 
   modelList.add(r_system);
@@ -141,8 +168,8 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_answer_question(Str
 
 List<OpenAIChatCompletionChoiceMessageModel> prompt_template_guess_word_from_sentence(String sentence){
   List<OpenAIChatCompletionChoiceMessageModel> modelList = [];
-  // 从英文句子中猜测生词
-  // TODO 根据我的职业资料，猜测我已经熟悉某些行业单词，就把这些单词权重调低
+  // 从英文句子中猜用户生词
+  // TODO 根据我的生词本、职业资料，猜测我已经熟悉某些行业单词，就把这些单词权重调低
 
   var r_system = OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.system,

@@ -36,7 +36,7 @@ class MobileSignIn extends StatelessWidget {
           backgroundColor: CustomColors.appBarColor2,
           automaticallyImplyLeading: false,
         ),
-        resizeToAvoidBottomInset : false,
+        resizeToAvoidBottomInset : true,
         body: Container(
           height: Get.height,
           width: Get.width,
