@@ -1,4 +1,6 @@
+import 'package:get/get.dart';
 import 'package:dart_openai/openai.dart';
+import 'package:wordpipe/controller.dart';
 
 List<OpenAIChatCompletionChoiceMessageModel> prompt_template_word(String oneWord){
   List<OpenAIChatCompletionChoiceMessageModel> modelList = [];
@@ -34,15 +36,16 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_word(String oneWord
   return modelList;
 }
 
-List<OpenAIChatCompletionChoiceMessageModel> prompt_template_word_example_sentence(String oneWord, {bool lemma=false}){
+List<OpenAIChatCompletionChoiceMessageModel> prompt_template_word_example_sentence(String oneWord){
   List<OpenAIChatCompletionChoiceMessageModel> modelList = [];
 
   var r_system = OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.system,
     content: "请你扮演我的英语词汇老师",
   );
+  final SettingsController settingsController = Get.find<SettingsController>();
   String insertion = "";
-  if (lemma){
+  if (settingsController.useOtherWordForms.value){
     insertion = "，可以使用这个单词的其他词性形式";
   }
   var r_user1 = OpenAIChatCompletionChoiceMessageModel(
@@ -110,7 +113,7 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_translate_sentence(
   return modelList;
 }
 
-List<OpenAIChatCompletionChoiceMessageModel> prompt_template_answer_question(String sentence, {bool useEnglish=true}){
+List<OpenAIChatCompletionChoiceMessageModel> prompt_template_answer_question(String sentence){
   List<OpenAIChatCompletionChoiceMessageModel> modelList = [];
   var r_system = OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.system,
@@ -124,8 +127,11 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_answer_question(Str
   //   role: OpenAIChatMessageRole.assistant,
   //   content: "``",
   // );
+  final SettingsController settingsController = Get.find<SettingsController>();
   String insertion = "";
-  if (useEnglish){
+  if (settingsController.aiAssistantLanguage.value == 1){
+    insertion = "用中文";
+  }else{
     insertion = "用英文";
   }
   var  r_user2 =  OpenAIChatCompletionChoiceMessageModel(

@@ -48,7 +48,7 @@ class Settings extends StatelessWidget {
                       child: Column(
                         children: [
                           SizedBox(height: 20),
-                          Text('Chat conversion font size'),
+                          Text('Chat conversion font size', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
                           SizedBox(height: 20),                          
                           Container(
                             // width: 200,
@@ -68,7 +68,7 @@ class Settings extends StatelessWidget {
                                             max: 24,
                                             divisions: 12,
                                             label: settingsController.fontSizeConfig.value.round().toString(),
-                                            activeColor: Colors.green[700],
+                                            activeColor: Colors.green[600],
                                             onChanged: (double value) {
                                               settingsController.setFontSize(value);
                                             },
@@ -82,7 +82,78 @@ class Settings extends StatelessWidget {
                               );
                             },)
                           ),
+                          SizedBox(height: 20,),
+                          Divider(height: 1, thickness: 1, color: Colors.black12, indent: 20, endIndent: 20,),
+                          SizedBox(height: 20,),
+                          Text('When Jasmine answer question, use', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
                           SizedBox(height: 20),
+                          Container(
+                            margin: const EdgeInsets.all(20),
+                            child: Obx(() {  
+                              return Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: RadioListTile(
+                                          value: 0,
+                                          activeColor: Colors.green[600],
+                                          groupValue: settingsController.aiAssistantLanguage.value,
+                                          title: Text('English'),
+                                          onChanged: (value) {
+                                            settingsController.setAiAssistantLanguage(value as int);
+                                          },
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: RadioListTile(
+                                          value: 1,
+                                          activeColor: Colors.green[600],
+                                          groupValue: settingsController.aiAssistantLanguage.value,
+                                          title: Text('中文'),
+                                          onChanged: (value) {
+                                            settingsController.setAiAssistantLanguage(value as int);
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text('Current language: ' + (settingsController.aiAssistantLanguage.value == 0 ? 'English' : '中文')),
+                                  SizedBox(height: 20,),
+                                  Divider(height: 1, thickness: 1, color: Colors.black12, indent: 20, endIndent: 20,),
+                                  SizedBox(height: 20,),
+                                  Text('When Jasmine make new sentences, can use word\'s varity forms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                                  SizedBox(height: 20),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: RadioListTile(
+                                          value: true,
+                                          activeColor: Colors.green[600],
+                                          groupValue: settingsController.useOtherWordForms.value,
+                                          title: Text('Yes'),
+                                          onChanged: (value) {
+                                            settingsController.toggleUseOtherWordForms(value as bool);
+                                          },
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: RadioListTile(
+                                          value: false,
+                                          activeColor: Colors.green[600],
+                                          groupValue: settingsController.useOtherWordForms.value,
+                                          title: Text('No'),
+                                          onChanged: (value) {
+                                            settingsController.toggleUseOtherWordForms(value as bool);
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              );
+                            },)
+                          ),
                         ],
                       )
                     ),

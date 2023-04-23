@@ -15,7 +15,7 @@ class ResponsiveLayout extends StatelessWidget {
 
   Controller c = Get.put(Controller());
   final MessageController messageController = Get.put(MessageController());
-  final SettingsController settingsController = Get.put<SettingsController>( SettingsController());
+  final SettingsController settingsController = Get.put(SettingsController());
   String user_name = "";
 
   Widget builder(BuildContext context, AsyncSnapshot snapshot) {

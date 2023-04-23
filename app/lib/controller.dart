@@ -268,8 +268,14 @@ class SettingsBinding implements Bindings {
 class SettingsController extends GetxController {
   late SharedPreferences prefs;
   
+  // 关闭英语输入助手
   RxBool englishInputHelperConfig = true.obs;
+  // 聊天区域字体大小
   RxDouble fontSizeConfig = 16.0.obs;
+  // AI助手回答问题使用语言配置
+  RxInt aiAssistantLanguage = 0.obs; // 0-English, 1-Chinese
+  // 用单词造句时可以使用这个单词其他词性形式
+  RxBool useOtherWordForms = false.obs;
   
   
   @override
@@ -278,6 +284,8 @@ class SettingsController extends GetxController {
     prefs = await SharedPreferences.getInstance();
     englishInputHelperConfig.value = prefs.getBool('englishInputHelperConfig') ?? englishInputHelperConfig.value;
     fontSizeConfig.value = await prefs.getDouble('fontSizeConfig') ?? fontSizeConfig.value;
+    aiAssistantLanguage.value = await prefs.getInt('aiAssistantLanguage') ?? aiAssistantLanguage.value;
+    useOtherWordForms.value = await prefs.getBool('useOtherWordForms') ?? useOtherWordForms.value;
   }
  
   void toggleEnglishInputHelper(bool value) async {
@@ -287,5 +295,13 @@ class SettingsController extends GetxController {
   void setFontSize(double value) async {
     fontSizeConfig.value = value.toDouble();
     await prefs.setDouble('fontSizeConfig', value.toDouble());
+  }
+  void setAiAssistantLanguage(int value) async {
+    aiAssistantLanguage.value = value;
+    await prefs.setInt('aiAssistantLanguage', value);
+  }
+  void toggleUseOtherWordForms(bool value) async {
+    useOtherWordForms.value = value;
+    await prefs.setBool('useOtherWordForms', value);
   }
 }

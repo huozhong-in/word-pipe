@@ -756,19 +756,22 @@ class DesktopHome extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(5.0),
                                 color: Colors.green[900],
                           ),
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green[800],
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5.0),
-                                ),
-                              padding: const EdgeInsets.all(0),
+                          child: Tooltip(
+                            message: GetPlatform.isMacOS ? '⌘+Enter to send' : 'Ctrl+Enter to send',
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green[800],
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5.0),
+                                  ),
+                                padding: const EdgeInsets.all(0),
+                              ),
+                              onPressed: () {
+                                _handleSubmitted(_textController.text);
+                                _commentFocus.requestFocus();
+                              },
+                              child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
                             ),
-                            onPressed: () {
-                              _handleSubmitted(_textController.text);
-                              _commentFocus.requestFocus();
-                            },
-                            child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
                           )
                         ),
                       ],
