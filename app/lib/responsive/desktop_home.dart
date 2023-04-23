@@ -556,7 +556,7 @@ class DesktopHome extends StatelessWidget {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
-                                        Text('Jasmine', style: TextStyle(fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green[900])),
+                                        Text('Jasmine', style: TextStyle(fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,fontSize: 18, fontWeight: FontWeight.w600, color: Colors.green[900])),
                                         IconButton(onPressed: ()=>{
                                           customSnackBar(title: "Info", content: "not open yet")
                                         }, icon: Icon(Icons.more_vert))
