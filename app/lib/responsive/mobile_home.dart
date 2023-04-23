@@ -7,6 +7,8 @@ import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageView.dart';
 import 'package:wordpipe/user_profile.dart';
 import 'package:wordpipe/MessageController.dart';
+import 'package:wordpipe/settings.dart';
+import 'package:wordpipe/about_us.dart';
 // import 'package:wordpipe/MessageModel.dart';
 
 class MobileHome extends StatelessWidget {
@@ -68,11 +70,13 @@ class MobileHome extends StatelessWidget {
             ListTile(
               leading: Icon(Icons.settings),
               title: Text('Settings'),
+              onTap: () => Get.offAll(Settings()),
             ),
             Divider(),
             ListTile(
               leading: Icon(Icons.info),
               title: Text('About WordPipe'),
+              onTap: () => Get.offAll(AboutUs()),
             ),
           ],
         ),

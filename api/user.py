@@ -227,6 +227,15 @@ class UserDB:
                     promo.bind_userid = user.user_name
 
         return result
+    
+    def write_user_ip(self, user_name, ip) -> bool:
+        user = self.get_user_by_username(user_name)
+        if user is not None:
+            user.last_ip = ip
+            self.session.commit()
+            return True
+        else:
+            return False
 
 
 if __name__ == '__main__':
@@ -240,7 +249,7 @@ if __name__ == '__main__':
     # userDB.modify_password('Bonny','', '123qwe789', force=True)
     
     user_id = userDB.get_user_by_username('Dio').uuid
-    promoDB.create_promo(3, user_id)
+    promoDB.create_promo(30, user_id)
     for promo in promoDB.get_promos_by_userid(user_id, no_owner_only=False):
         print(promo.promo, promo.bind_userid, promo.gen_by)
 

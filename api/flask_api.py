@@ -535,6 +535,15 @@ def signin():
     r: dict = userDB.check_password(username, password)
     if r == {}:
         return make_response(jsonify({"errcode":50004,"errmsg":"Username Or Password is incorrect"}), 500)
+    ip = request.headers.get('X-Forwarded-For')
+    if ip:
+        ip = ip.split(',')[0]
+    else:
+        ip = request.headers.get('X-Real-IP')
+    if not ip:
+        ip = request.remote_addr
+    if ip:
+        userDB.write_user_ip(username, ip)
     r.update(get_openai_apikey())
     r['errcode'] = 0
     r['errmsg'] = 'Success'

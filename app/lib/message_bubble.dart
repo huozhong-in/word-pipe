@@ -521,7 +521,7 @@ class MessageBubble extends StatelessWidget {
 
     String last_item = dataList.last as String;
     if (last_item.contains('[W0RDP1PE]')){
-      print(last_item);
+      // print(last_item);
       String answer = last_item.split('[W0RDP1PE]')[1];
       dataList.removeLast();
       spans = _wordHighlight(dataList);
@@ -659,7 +659,6 @@ class MessageBubble extends StatelessWidget {
             )
           ),
           onPressed: () async {
-            // TODO 可指定AI用英文回复
             messageController.getChatCompletion('gpt-3.5-turbo', dataList[0] as String, WordPipeMessageType.reply_for_answer_question);
           }, 
           child: Text(

@@ -164,7 +164,7 @@ class MessageController extends GetxController{
       OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];
       final content = choice.delta.content;
       if(content != null){
-        print(content);
+        // print(content);
         final message = findMessageByKey(needUpdate);
         if (message.dataList[0] == '...'){
           message.dataList.removeAt(0);
@@ -312,7 +312,7 @@ class QuestionButtons extends StatelessWidget {
 
       children: [
         Container(
-          margin: EdgeInsetsDirectional.symmetric(horizontal: 10),
+          margin: EdgeInsetsDirectional.symmetric(horizontal: 8),
           child: ElevatedButton.icon(
             onPressed: () {
               if(answer == 'A') {
@@ -331,7 +331,7 @@ class QuestionButtons extends StatelessWidget {
           ),
         ),
         Container(
-          margin: EdgeInsetsDirectional.symmetric(horizontal: 10),
+          margin: EdgeInsetsDirectional.symmetric(horizontal: 8),
           child: ElevatedButton.icon(
             onPressed: () {
               if(answer == 'B') {
@@ -350,7 +350,7 @@ class QuestionButtons extends StatelessWidget {
           ),
         ),
         Container(
-          margin: EdgeInsetsDirectional.symmetric(horizontal: 10),
+          margin: EdgeInsetsDirectional.symmetric(horizontal: 8),
           child: ElevatedButton.icon(
             onPressed: () {
               if(answer == 'C') {
@@ -369,7 +369,7 @@ class QuestionButtons extends StatelessWidget {
           ),
         ),
         Container(
-          margin: EdgeInsetsDirectional.symmetric(horizontal: 10),
+          margin: EdgeInsetsDirectional.symmetric(horizontal: 8),
           child: ElevatedButton.icon(
             onPressed: () {
               if(answer == 'D') {
