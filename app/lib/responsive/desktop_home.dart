@@ -231,12 +231,26 @@ class DesktopHome extends StatelessWidget {
   Widget _myTextFild(BuildContext context){
     return Focus(
       onKey: (node, RawKeyEvent event) {
-          // cmd+enter发送信息
-          if (event.isMetaPressed && event.isKeyPressed(LogicalKeyboardKey.enter)) {
-            // log("cmd+enter: ${_textController.text.trim()}");
-            _handleSubmitted(_textController.text);
-            _commentFocus.requestFocus();
-            return KeyEventResult.handled;
+          // 判断在Windows平台则用Ctrl+Enter发送信息
+          // 判断在macOS平台则用CMD+Enter发送信息
+          if ( GetPlatform.isWindows || GetPlatform.isLinux || GetPlatform.isFuchsia) {
+            if (event is RawKeyDownEvent) {
+              if (event.isControlPressed && event.isKeyPressed(LogicalKeyboardKey.enter)) {
+                // log("ctrl+enter: ${_textController.text.trim()}");
+                _handleSubmitted(_textController.text);
+                _commentFocus.requestFocus();
+                return KeyEventResult.handled;
+              }
+            }
+          }else if (GetPlatform.isMacOS) {
+            if (event is RawKeyDownEvent) {
+              if (event.isMetaPressed && event.isKeyPressed(LogicalKeyboardKey.enter)) {
+                // log("cmd+enter: ${_textController.text.trim()}");
+                _handleSubmitted(_textController.text);
+                _commentFocus.requestFocus();
+                return KeyEventResult.handled;
+              }
+            }
           }
           // 按下回车，从匹配到的词列表中选中一个单词加到文本框中
           if (event.isKeyPressed(LogicalKeyboardKey.enter)) {
