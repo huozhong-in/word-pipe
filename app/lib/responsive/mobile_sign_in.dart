@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-// import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:wordpipe/config.dart';
-import 'package:wordpipe/responsive/desktop_home.dart';
 import 'package:wordpipe/controller.dart';
-import 'package:wordpipe/responsive/mobile_home.dart';
 import 'package:wordpipe/responsive/responsive_layout.dart';
 import 'package:wordpipe/validator.dart';
 import 'package:wordpipe/responsive/sign_up.dart';
-// import 'package:wordpipe/reset_password.dart';
 
 
 // ignore: must_be_immutable
@@ -256,10 +252,7 @@ class MobileSignIn extends StatelessWidget {
                                   if (_formKey.currentState!.validate()) {
                                     Map<String, dynamic> rsp = await c.signin(_usernameField.text, _passwordField.text);
                                     if (rsp['errcode'] == 0) {
-                                      if (GetPlatform.isDesktop)
-                                        Get.offAll(DesktopHome());
-                                      else
-                                        Get.offAll(MobileHome());
+                                        Get.offAll(ResponsiveLayout());
                                     }else{
                                       customSnackBar(title: "Errcode:${rsp['errcode']}", content: '${rsp['errmsg']}');
                                     }

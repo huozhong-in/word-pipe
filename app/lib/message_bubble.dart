@@ -5,9 +5,9 @@ import 'package:wordpipe/MessageBubblePainter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-// import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-// import 'package:lottie/lottie.dart';
+import 'package:just_audio/just_audio.dart';
+
 
 // ignore: must_be_immutable
 class MessageBubble extends StatelessWidget {
@@ -30,6 +30,9 @@ class MessageBubble extends StatelessWidget {
   final MessageController messageController = Get.find();
   final SettingsController settingsController = Get.find<SettingsController>();
   bool isMe = false;
+  late AudioPlayer audioPlayer;
+  final isPlaying = false.obs;
+
   
 
   @override
@@ -71,48 +74,85 @@ class MessageBubble extends StatelessWidget {
                   ],
                   Flexible(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end ,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Stack(
-                          children: [
-                            CustomPaint(
-                              painter:
-                                MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                // constraints: BoxConstraints(
-                                //   minWidth: 320,
-                                // ),
-                                child: Obx(() => SelectableText.rich(
-                                  templateDispatcher(context),
-                                  minLines: 1,
-                                )),
-                              ),
-                            ),
-                          ],
+                        CustomPaint(
+                          painter:
+                            MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            // constraints: BoxConstraints(
+                            //   minWidth: 320,
+                            // ),
+                            child: Obx(() => SelectableText.rich(
+                              templateDispatcher(context),
+                              minLines: 1,
+                            )),
+                          ),
                         ),
-                        Container(
-                          width: 30,
-                          height: 30,
-                          // color: Colors.black12,
-                          margin: const EdgeInsets.all(1),
-                          child: IconButton(
-                            onPressed: () {
-                              if (dataList.length > 0){
-                                String total_text = "";
-                                for (var i = 0; i < dataList.length; i++) {
-                                  // if dataList[i] is String, join them
-                                  if (dataList[i] is String)
-                                    total_text += dataList[i];
-                                }
-                                Clipboard.setData(ClipboardData(text: total_text));
-                                if (total_text.length > 0)
-                                  customSnackBar(title: "Success", content: "Copied to clipboard");
-                              }                              
-                            },
-                            icon: Icon(Icons.copy, size: 15, color: Colors.black26)
-                            ),
-                        )
+                        Visibility(
+                          visible: type != WordPipeMessageType.autoreply,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Tooltip(
+                                message: "Play audio",
+                                child: Container(
+                                  width: 30,
+                                  height: 30,
+                                  margin: const EdgeInsets.all(1),
+                                  child: IconButton(
+                                    onPressed: () async {
+                                      messageController.addToTTSJobs(key.hashCode.toString(), dataList.join(' '));
+                                      // isPlaying.value= true;
+                                      // if (messageController.ttsJobs[key.hashCode.toString()] != null){
+                                      //   String mp3Url = messageController.ttsJobs[key.hashCode.toString()] as String;
+                                      // audioPlayer = AudioPlayer();
+                                      // await audioPlayer.setUrl(mp3Url);
+                                      // await audioPlayer.play();
+                                      // isPlaying.value = false;
+                                      // audioPlayer.dispose();
+                                      // }                    
+                                    },
+                                    icon: Obx(() {
+                                      if (isPlaying.value){
+                                        return CircularProgressIndicator();
+                                      }else{
+                                        return Icon(Icons.play_arrow, size: 15, color: Colors.black26);
+                                      }
+                                      
+                                    }),
+                                  ),
+                                ),
+                              ),
+                              Tooltip(
+                                message: "Copy to clipboard",
+                                child: Container(
+                                  width: 30,
+                                  height: 30,
+                                  // color: Colors.black12,
+                                  margin: const EdgeInsets.all(1),
+                                  child: IconButton(
+                                    onPressed: () {
+                                      if (dataList.length > 0){
+                                        String total_text = "";
+                                        for (var i = 0; i < dataList.length; i++) {
+                                          // if dataList[i] is String, join them
+                                          if (dataList[i] is String)
+                                            total_text += dataList[i];
+                                        }
+                                        Clipboard.setData(ClipboardData(text: total_text));
+                                        if (total_text.length > 0)
+                                          customSnackBar(title: "Success", content: "Copied to clipboard");
+                                      }                              
+                                    },
+                                    icon: Icon(Icons.copy, size: 15, color: Colors.black26)
+                                    ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -220,6 +260,9 @@ class MessageBubble extends StatelessWidget {
     if(type == WordPipeMessageType.system){
       // 显示系统消息，比如：某某撤回一条消息，某某加入群聊
       return templateSysMsg(context);
+    }else if(type == WordPipeMessageType.autoreply){
+      // 显示自动回复，比如：你好，我是机器人
+      return templateAutoReply(context);
     }else if(type == WordPipeMessageType.stream){
       // 因为AI的回复是异步且流式，当消息陆续到达，逐一显示。可以认为每item是一个字符，包括\n，不需要额外处理
       return templateStreamWithHighlight(context);
@@ -678,5 +721,9 @@ class MessageBubble extends StatelessWidget {
   
   TextSpan templateReply4TranslateSentenceZhEn(BuildContext context) {
     return templateStreamWithHighlight(context);
+  }
+  
+  TextSpan templateAutoReply(BuildContext context) {
+    return templateText(context);
   }
 }

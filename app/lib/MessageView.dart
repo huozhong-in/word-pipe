@@ -37,7 +37,7 @@ class MessageView extends StatelessWidget {
                         '你好，我是Jasmine。希望我能在外语学习方面帮到你。试着输入一个单词吧！'
                       ]
                     ), 
-                    type: WordPipeMessageType.text, 
+                    type: WordPipeMessageType.autoreply, 
                     username: 'Jasmine', 
                     uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
                     createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -51,10 +51,10 @@ class MessageView extends StatelessWidget {
                     dataList: RxList(
                       [
                         'Welcome back! Ask me some words or sentences :)',
-                        '欢迎回来！问我一些的单词或句子吧 :)'
+                        '欢迎回来！问我一些单词或句子吧 :)'
                       ]
                     ), 
-                    type: WordPipeMessageType.text, 
+                    type: WordPipeMessageType.autoreply, 
                     username: 'Jasmine', 
                     uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
                     createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -73,7 +73,8 @@ class MessageView extends StatelessWidget {
       // 判断有新消息过来，而且滚动条不在最底端，则显示一个提示气泡，点击后滚动到最底端。因为dataList是一个RxList，所以只要dataList有变化，就会触发这个“滚动条位置判定”函数。
       // messageController.messages.listen((messages) {
       //   messageController.messages.listen((messages) {
-      //     // print(messages.length); // TODO 被触发2000多次，这里有性能问题
+         // TODO 被触发2000多次，这里有性能问题
+      //     // print(messages.length);
       //     // if (!messageController.scrollController.position.atEdge && messageController.scrollController.offset != messageController.scrollController.position.minScrollExtent) {
       //     //   newMessageArrived.value = true;
       //     // }

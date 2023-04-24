@@ -16,6 +16,9 @@ class MessageController extends GetxController{
   final messages = <MessageModel>[].obs;
   bool messsage_view_first_build = true;
   int lastSegmentBeginId = 0;
+
+  final ttsJobs = Map<String, String>().obs;
+  
   
   late final SSEClient sseClient;
   bool sse_connected = false;
@@ -208,7 +211,13 @@ class MessageController extends GetxController{
           log('from SSE Server: $message');
           try {
             Map<String, dynamic> json = Map<String, dynamic>.from(jsonDecode(message));
-            messages.insert(0, MessageModel.fromJson(json));
+            int type = json['type'];
+            if (type == WordPipeMessageType.tts_audio){
+              print(HTTP_SERVER_HOST + json['mp3_url']);
+              ttsJobs[json['key']] = HTTP_SERVER_HOST + json['mp3_url'];
+            }else{
+              messages.insert(0, MessageModel.fromJson(json));
+            }
             sse_connected = true;
           } catch (e) {
             log('sse message error: $e');
@@ -231,9 +240,55 @@ class MessageController extends GetxController{
     }
   }
 
+  void addToTTSJobs(String key, String text){
+    // 请求服务器端生成TTS语音
+    if (ttsJobs[key] == null){
+      ttsJobs[key] = text;
+      ttsJobs['mp3_url'] = '';
+      final ttsAudio = TTSAudio();
+      ttsAudio.t(key, text).then((value) {
+        if (value == true){
+          print('ttsJobs send to server: $key');
+        }
+      });
+    }
+  }
+
 
 }
+class TTSAudio extends GetConnect {
+  final Controller c = Get.find();
+  
+  @override
+  void onInit() {
+    
+  }
 
+  Future<bool> t(String key, String text) async {
+    bool ret = false;
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/tts');
+    Map data = {};
+    data['key'] = key;
+    data['text'] = text;
+    String curr_user = "";
+    String  access_token = "";
+    Map<String, dynamic> sessionData = await c.getSessionData();
+    if (sessionData.containsKey('error') == false){
+        curr_user = sessionData['username'] as String;
+        access_token = sessionData['access_token'] as String;
+    }else
+        return ret;
+    
+    Map<String,String> hs = {};
+    hs['X-access-token'] = access_token;
+    data['username'] = curr_user;
+    final response = await post(url.toString(), data, headers: hs, contentType: 'application/json');
+    if (response.statusCode == 200) {
+      ret = true;
+    }
+    return ret;
+  }
+}
 class ChatRecord extends GetConnect {
   final Controller c = Get.find();
   

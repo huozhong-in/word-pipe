@@ -341,6 +341,66 @@ def chat():
     # print(f"[Processed in {toc - tic:0.4f} seconds]")
     return make_response('', 200)
 
+@app.route('/api/tts', methods = ['POST'])
+def tts():
+    '''
+    语音合成
+    '''
+    if request.method != 'POST':
+        return make_response('Please use POST method', 500)
+    try:
+        data: dict = request.get_json()
+        username: str = data.get('username')
+        text: str = data.get('text')
+        key: str = data.get('key')
+    except:
+        return make_response('JSON data required', 500)
+    if text == '':
+        return make_response('text required', 500)
+    
+    print(f'[{username}]: {text}')
+    # 每个登录用户都分配到一个channel，用于SSE推送，取得这个channel字符串
+    channel: str = ''
+    if request.headers.get('X-access-token'):
+        # print('X-access-token: ', request.headers['X-access-token'])
+        u: User = userDB.get_user_by_username(username)
+        if u is None:
+            return make_response('', 500)
+        if u.access_token != request.headers['X-access-token']:
+            return make_response('', 500)
+        if u.access_token_expire_at < int(time.time()):
+            return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
+        channel = username
+    else:
+        return make_response('access_token required', 500)
+
+    import asyncio
+    import edge_tts
+    async def _main(key: str, text: str) -> None:
+        with app.app_context():
+            back_data: json = {}
+            back_data['type'] = 35 # WordPipeMessageType.tts_audio format. See: config.dart
+            voice = "zh-CN-XiaoxiaoNeural"
+            communicate = edge_tts.Communicate(text, voice)
+            mp3FilePrefix = Path(Path(__file__).parent.absolute() / 'assets/tts')
+            mp3File = Path(mp3FilePrefix / f'{key}.mp3')
+            if not mp3File.exists():
+                await communicate.save(mp3File)
+            back_data['key'] = key
+            back_data['mp3_url'] = '/tts/' + f'{key}.mp3'
+            id = generate_time_based_client_id(prefix=username)
+            sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
+    
+    def fn_thread(key: str, text: str):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(_main(key=key, text=text))
+    
+    thread = threading.Thread(target=fn_thread, args=(key, text))
+    thread.start()
+
+    return make_response('', 200)
+
 @app.route('/api/chat-root', methods = ['POST'])
 def chat_root():
     '''
@@ -452,6 +512,14 @@ def get_user_avatar(user_name: str):
         return Response(svg, mimetype='image/svg+xml')
     else:
         return make_response('', 404)
+
+@app.route('/api/tts/<key>.mp3', methods = ['GET'])
+def tts_audio(key: str):
+    mp3FilePrefix = Path(Path(__file__).parent.absolute() / 'assets/tts')
+    mp3File = Path(mp3FilePrefix / f'{key}.mp3')
+    if not mp3File.exists():
+        return make_response('', 404)
+    return send_file(mp3File, 'audio/mpeg')
 
 @app.route('/api/contact-us')
 def contact_us():

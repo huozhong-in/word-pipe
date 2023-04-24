@@ -122,7 +122,7 @@ class Settings extends StatelessWidget {
                                   SizedBox(height: 20,),
                                   Divider(height: 1, thickness: 1, color: Colors.black12, indent: 20, endIndent: 20,),
                                   SizedBox(height: 20,),
-                                  Text('When Jasmine make new sentences, can use word\'s varity forms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                                  Text('When Jasmine make new sentences, can use word\'s various forms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
                                   SizedBox(height: 20),
                                   Row(
                                     children: [

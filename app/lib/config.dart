@@ -34,12 +34,13 @@ class WordPipeMessageType{
   static const int reply_for_translate_sentence_zh_en = 108;
   static const int image = 3;
   static const int audio = 34;
+  static const int tts_audio = 35;
   static const int video = 43;
   static const int emoticon = 47;
   static const int location = 48;
   static const int card = 49;
   static const int system = 10000;
-  static const int typing = 10001;
+  static const int autoreply = 10001;
   static const int stream = 10002;
   static const int chathistory = 10003;
 }

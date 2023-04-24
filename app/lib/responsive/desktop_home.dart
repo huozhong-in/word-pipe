@@ -733,13 +733,16 @@ class DesktopHome extends StatelessWidget {
                             color: CustomColors.gradientEnd,
                             shape: CircleBorder(),
                           ),
-                          child: IconButton(
-                            color: Colors.grey,
-                            hoverColor: Colors.black54,
-                            onPressed: () {
-                              customSnackBar(title: "Info", content: "not open yet");
-                            }, 
-                            icon: const Icon(Icons.mic_rounded)
+                          child: Tooltip(
+                            message: 'Not open yet',
+                            child: IconButton(
+                              color: Colors.grey,
+                              hoverColor: Colors.black54,
+                              onPressed: () {
+                          
+                              }, 
+                              icon: const Icon(Icons.mic_rounded)
+                            ),
                           ),
                         ),
                         Expanded(
