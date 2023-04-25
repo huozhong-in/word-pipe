@@ -50,7 +50,6 @@ dependencies:
   pointycastle: ^3.7.2
   keyboard_utils: ^1.3.4
   just_audio: ^0.9.32
-  rxdart: ^0.27.7
 
 dev_dependencies:
   flutter_test:

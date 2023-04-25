@@ -128,7 +128,6 @@ class MessageBubble extends StatelessWidget {
                                               messageController.addToTTSJobs(keyString, dataList.join(' '));
                                             });
                                           }else{
-                                            
                                             messageController.whichIsPlaying.value = keyString;
                                             messageController.buttonNotifier.value = ButtonState.loading;
                                             messageController.addToTTSJobs(keyString, dataList.join(' '));

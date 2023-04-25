@@ -330,7 +330,7 @@ class SignUp extends StatelessWidget {
                           if (await c.signup_with_promo(_usernameField.text, _passwordField.text, _promoField.text)){
                             Get.offAll(ResponsiveLayout());
                           }else{
-                            customSnackBar(title: "Error", content: "Please check your invite code.");
+                            customSnackBar(title: "Error", content: "Please check your invite code or username already exist.");
                           }
                         }else{
                           customSnackBar(title: "Error", content: "Please check your username or password length.");

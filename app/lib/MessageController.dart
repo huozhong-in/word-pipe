@@ -63,6 +63,7 @@ class MessageController extends GetxController{
       if (jobs.isNotEmpty) {
         // jobs.forEach((key, value) { print('$key: $value'); });
         if (jobs[whichIsPlaying.value] == null) {
+          whichIsPlaying.value = '';
           return;
         }else{
           final mp3Url = jobs[whichIsPlaying.value] as String;
@@ -81,6 +82,7 @@ class MessageController extends GetxController{
               } else {
                 ttsPlayer.seek(Duration.zero);
                 ttsPlayer.pause();
+                whichIsPlaying.value = '';
               }
             });
           });
