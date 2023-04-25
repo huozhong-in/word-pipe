@@ -353,6 +353,8 @@ def tts():
         username: str = data.get('username')
         text: str = data.get('text')
         key: str = data.get('key')
+        voice: str = data.get('voice')
+        rate: str = data.get('rate')
     except:
         return make_response('JSON data required', 500)
     if text == '':
@@ -382,8 +384,14 @@ def tts():
             mp3FilePrefix = Path(Path(__file__).parent.absolute() / 'assets/tts')
             mp3File = Path(mp3FilePrefix / f'{key}.mp3')
             if not mp3File.exists():
-                voice = "en-US-AriaNeural"
-                communicate = edge_tts.Communicate(text, voice)
+                if int(rate) == 0:
+                    communicate = edge_tts.Communicate(text=text, voice=voice)
+                else:
+                    rate_str = f'{rate}%'
+                    if rate > 0:
+                        rate_str = f'+{rate_str}'
+                    communicate = edge_tts.Communicate(text=text, voice=voice, rate=rate_str)
+                
                 await communicate.save(mp3File)
             back_data['key'] = key
             back_data['mp3_url'] = '/tts/' + f'{key}.mp3'

@@ -30,6 +30,8 @@ class MessageBubble extends StatelessWidget {
   final SettingsController settingsController = Get.find<SettingsController>();
   bool isMe = false;
 
+  // 
+  RxString toolTip = "".obs;
 
   
 
@@ -51,7 +53,7 @@ class MessageBubble extends StatelessWidget {
 
       // 移动端调窄边距
       double edge = GetPlatform.isMobile ? 8 : 80;
-      
+
       return GestureDetector(
         child: Container(
           margin: isMe
@@ -104,8 +106,9 @@ class MessageBubble extends StatelessWidget {
                                     margin: const EdgeInsets.all(1),
                                     child: IconButton(
                                       onPressed: () {
+                                        String keyString = key.hashCode.toString();
                                         // 判断已经是当前音频的播放状态，则点击暂停
-                                        if (messageController.whichIsPlaying.value == key.hashCode.toString()) {
+                                        if (messageController.whichIsPlaying.value == keyString) {
                                           if (messageController.buttonNotifier.value == ButtonState.playing) {
                                             messageController.buttonNotifier.value = ButtonState.paused;
                                             messageController.ttsPlayer.pause();
@@ -113,25 +116,30 @@ class MessageBubble extends StatelessWidget {
                                             messageController.buttonNotifier.value = ButtonState.playing;
                                             messageController.ttsPlayer.play();
                                           }
-                                          return;
+                                          if (messageController.ttsJobs.containsKey(keyString)) {
+                                            messageController.ttsJobs.remove(keyString);
+                                          }
                                         }else{
-                                          // 如果是在播放其他音频，则先停止播放
-                                          messageController.ttsPlayer.stop();
-                                          messageController.buttonNotifier.value = ButtonState.loading;
-                                          // 重新设置正在播放的音频
-                                          String keyString = key.hashCode.toString();
-                                          messageController.whichIsPlaying.value = keyString;
-                                          messageController.addToTTSJobs(keyString, dataList.join(' '));
+                                          // 如果是在播放其他音频，则先停止播放，重新设置正在播放的音频
+                                          if (messageController.ttsPlayer.playerState.playing){
+                                            messageController.ttsPlayer.pause().then((value) {
+                                              messageController.whichIsPlaying.value = keyString;
+                                              messageController.buttonNotifier.value = ButtonState.loading;
+                                              messageController.addToTTSJobs(keyString, dataList.join(' '));
+                                            });
+                                          }else{
+                                            
+                                            messageController.whichIsPlaying.value = keyString;
+                                            messageController.buttonNotifier.value = ButtonState.loading;
+                                            messageController.addToTTSJobs(keyString, dataList.join(' '));
+                                          }
                                         }
                                       },
                                       icon: Obx(() {
                                         if (messageController.whichIsPlaying.value == key.hashCode.toString()) {
                                           switch (messageController.buttonNotifier.value) {
                                             case ButtonState.loading:
-                                              return CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: Colors.black26,
-                                              );
+                                              return CircularProgressIndicator(strokeWidth: 2,color: Colors.black26,);
                                             case ButtonState.paused:
                                               return Icon(Icons.play_arrow, size: 15, color: Colors.black26);
                                             case ButtonState.playing:
@@ -597,6 +605,7 @@ class MessageBubble extends StatelessWidget {
           child: QuestionButtons(answer: answer)
         )
       );
+      dataList.add(last_item);
     }else{
       dataList.forEach((element) {
         spans.add(TextSpan(text: element as String));

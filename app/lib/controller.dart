@@ -276,6 +276,12 @@ class SettingsController extends GetxController {
   RxInt aiAssistantLanguage = 0.obs; // 0-English, 1-Chinese
   // 用单词造句时可以使用这个单词其他词性形式
   RxBool useOtherWordForms = false.obs;
+  // AI助手TTS语音发声人选择-纯英语
+  RxString aiAssistantTtsVoice = 'en-US-AnaNeural'.obs;
+  // AI助手TTS语音发声人选择-中英混合
+  RxString aiAssistantTtsVoiceZhEn = 'zh-CN-XiaoxiaoNeural'.obs;
+  // AI助手TTS语音语速
+  RxDouble aiAssistantTtsRate = 0.0.obs;
   
   
   @override
@@ -286,6 +292,9 @@ class SettingsController extends GetxController {
     fontSizeConfig.value = await prefs.getDouble('fontSizeConfig') ?? fontSizeConfig.value;
     aiAssistantLanguage.value = await prefs.getInt('aiAssistantLanguage') ?? aiAssistantLanguage.value;
     useOtherWordForms.value = await prefs.getBool('useOtherWordForms') ?? useOtherWordForms.value;
+    aiAssistantTtsVoice.value = await prefs.getString('aiAssistantTtsVoice') ?? aiAssistantTtsVoice.value;
+    aiAssistantTtsVoiceZhEn.value = await prefs.getString('aiAssistantTtsVoiceZhEn') ?? aiAssistantTtsVoiceZhEn.value;
+    aiAssistantTtsRate.value = await prefs.getDouble('aiAssistantTtsRate') ?? aiAssistantTtsRate.value;
   }
  
   void toggleEnglishInputHelper(bool value) async {
@@ -303,5 +312,17 @@ class SettingsController extends GetxController {
   void toggleUseOtherWordForms(bool value) async {
     useOtherWordForms.value = value;
     await prefs.setBool('useOtherWordForms', value);
+  }
+  void setAiAssistantTtsVoice(String value) async {
+    aiAssistantTtsVoice.value = value;
+    await prefs.setString('aiAssistantTtsVoice', value);
+  }
+  void setAiAssistantTtsVoiceZhEn(String value) async {
+    aiAssistantTtsVoiceZhEn.value = value;
+    await prefs.setString('aiAssistantTtsVoiceZhEn', value);
+  }
+  void setAiAssistantTtsRate(double value) async {
+    aiAssistantTtsRate.value = value;
+    await prefs.setDouble('aiAssistantTtsRate', value);
   }
 }

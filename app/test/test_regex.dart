@@ -1,3 +1,16 @@
+import 'dart:core';
+
+
+bool isEnglishAndSymbols(String text) {
+  for (int i = 0; i < text.length; i++) {
+    int codeUnit = text.codeUnitAt(i);
+    if (!((codeUnit >= 32 && codeUnit <= 126) || (codeUnit >= 9 && codeUnit <= 13) || codeUnit == 133)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 
 
 List<int> get_word_index_range_in_text(String text){
@@ -18,15 +31,19 @@ List<int> get_word_index_range_in_text(String text){
   }
 
 void main() {
-  String text = '''单词 `hallucinate`
-中文解释：产生幻觉，幻想
-英文解释：to see, hear, or feel things that are not really there because of a mental illness or drug
-词根词缀信息：词根是“hallucin-”，意为“幻觉”，后缀是“-ate”，表示动词。
-例句：
-- The patient was hallucinating after taking the medication.（这位病人在服药后产生了幻觉。）
-- He claimed to have seen a ghost, but we suspected he was hallucinating.（他声称看到了鬼，但我们怀疑他是在产生幻觉。）
-- The drug can cause users to hallucinate and experience vivid, unrealistic sensations.（这种药物会导致使用者产生幻觉，体验到生动而不真实的感觉。）''';
-  String text2 = '''Hello啊，饭已OK，下来mixi吧''';
-  List<int> range = get_word_index_range_in_text(text);
-  print(range);
+  String text = '''Sure, here are a few sentences containing `flavor`:
+- This soup has a strong tomato flavor.
+- I love the flavor of cinnamon in my coffee.
+- The ice cream parlor has a wide variety of flavors to choose from.
+- The restaurant offers different flavors of wings, from mild to spicy. 
+Now please choose the correct meaning of flavor:
+A. 香气;气味
+B. 食欲;胃口
+C. 口味;味道
+D. 营养;成分
+>>>C''';
+  String pureEnglishText = "When feeling down, what should one do? \n\nThere are several things one can do when feeling down or low in mood. Some suggestions include:\n\n1. Engage in physical activity, such as going for a walk or doing some light exercise.\n2. Practice relaxation techniques, such as deep breathing or meditation.\n3. Connect with others, whether it be talking to a friend or joining a support group.\n4. Do something enjoyable or rewarding, such as reading a book or listening to music.\n5. Seek professional help if the low mood persists or interferes with daily functioning.\n\nRemember that it's okay to not feel okay and seeking help is a sign of strength.";
+
+  print(isEnglishAndSymbols(pureEnglishText));  
+  print(isEnglishAndSymbols(text));
 }

@@ -61,10 +61,8 @@ class MessageController extends GetxController{
     ttsPlayer = AudioPlayer();
     ttsJobs.listen((Map<String, String> jobs) {
       if (jobs.isNotEmpty) {
-        jobs.forEach((key, value) { print('$key: $value'); });
+        // jobs.forEach((key, value) { print('$key: $value'); });
         if (jobs[whichIsPlaying.value] == null) {
-          ttsPlayer.seek(Duration.zero);
-          ttsPlayer.stop();
           return;
         }else{
           final mp3Url = jobs[whichIsPlaying.value] as String;
@@ -207,7 +205,7 @@ class MessageController extends GetxController{
       OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];
       final content = choice.delta.content;
       if(content != null){
-        // print(content);
+        print(content);
         final message = findMessageByKey(needUpdate);
         if (message.dataList[0] == '...'){
           message.dataList.removeAt(0);
@@ -215,7 +213,7 @@ class MessageController extends GetxController{
 
         // 截留最后的答案，给“单词生成例句”功能使用
         if (lastPackage == '>>>'){
-          answer = content;
+          answer = content.trim();
         }else{
           collected_messages.add(content);
           message.dataList.add(content);
@@ -253,7 +251,7 @@ class MessageController extends GetxController{
             Map<String, dynamic> json = Map<String, dynamic>.from(jsonDecode(message));
             int type = json['type'];
             if (type == WordPipeMessageType.tts_audio){
-              print(HTTP_SERVER_HOST + json['mp3_url']);
+              // print(HTTP_SERVER_HOST + json['mp3_url']);
               ttsJobs[json['key']] = HTTP_SERVER_HOST + json['mp3_url'];
             }else{
               messages.insert(0, MessageModel.fromJson(json));
@@ -284,15 +282,15 @@ class MessageController extends GetxController{
     // 请求服务器端生成TTS语音
     if (ttsJobs[key] == null){
       final ttsAudio = TTSAudio();
-      ttsAudio.t(key, text).then((value) {
+      ttsAudio.query_for_tts(key, text).then((value) {
         if (value == true){
-          print('ttsJobs send to server: $key');
+          // print('ttsJobs send to server: $key');
         }
       });
     }else{
       // 重新加一次，以便激活ttsJobs.listen()，即可重新播放
       String mp3_url = ttsJobs[key] as String;
-      ttsJobs.remove(key);
+      // print(mp3_url + " exists");
       ttsJobs[key] = mp3_url;
     }
   }
@@ -300,18 +298,26 @@ class MessageController extends GetxController{
 
 class TTSAudio extends GetConnect {
   final Controller c = Get.find();
+  final settingsController = Get.find<SettingsController>();
   
   @override
   void onInit() {
     
   }
 
-  Future<bool> t(String key, String text) async {
+  Future<bool> query_for_tts(String key, String text) async {
     bool ret = false;
     Uri url = Uri.parse('$HTTP_SERVER_HOST/tts');
     Map data = {};
     data['key'] = key;
     data['text'] = text;
+    // 如果是纯英文字符串，则用外国人语音，否则用中国人语音
+    if (isEnglishAndSymbols(text)){
+      data['voice'] = settingsController.aiAssistantTtsVoice.value;
+    }else{
+      data['voice'] = settingsController.aiAssistantTtsVoiceZhEn.value;
+    }
+    data['rate'] = settingsController.aiAssistantTtsRate.value;
     String curr_user = "";
     String  access_token = "";
     Map<String, dynamic> sessionData = await c.getSessionData();
@@ -330,6 +336,16 @@ class TTSAudio extends GetConnect {
     }
     return ret;
   }
+
+  bool isEnglishAndSymbols(String text) {
+  for (int i = 0; i < text.length; i++) {
+    int codeUnit = text.codeUnitAt(i);
+    if (!((codeUnit >= 32 && codeUnit <= 126) || (codeUnit >= 9 && codeUnit <= 13) || codeUnit == 133)) {
+      return false;
+    }
+  }
+  return true;
+}
 }
 class ChatRecord extends GetConnect {
   final Controller c = Get.find();
