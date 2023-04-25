@@ -13,3 +13,4 @@ openai
 streamtologger
 pycryptodome
 tiktoken
+edge-tts

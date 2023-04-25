@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:just_audio/just_audio.dart';
 
 
 // ignore: must_be_immutable
@@ -30,8 +29,7 @@ class MessageBubble extends StatelessWidget {
   final MessageController messageController = Get.find();
   final SettingsController settingsController = Get.find<SettingsController>();
   bool isMe = false;
-  late AudioPlayer audioPlayer;
-  final isPlaying = false.obs;
+
 
   
 
@@ -94,34 +92,58 @@ class MessageBubble extends StatelessWidget {
                           visible: type != WordPipeMessageType.autoreply,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Tooltip(
-                                message: "Play audio",
-                                child: Container(
-                                  width: 30,
-                                  height: 30,
-                                  margin: const EdgeInsets.all(1),
-                                  child: IconButton(
-                                    onPressed: () async {
-                                      messageController.addToTTSJobs(key.hashCode.toString(), dataList.join(' '));
-                                      // isPlaying.value= true;
-                                      // if (messageController.ttsJobs[key.hashCode.toString()] != null){
-                                      //   String mp3Url = messageController.ttsJobs[key.hashCode.toString()] as String;
-                                      // audioPlayer = AudioPlayer();
-                                      // await audioPlayer.setUrl(mp3Url);
-                                      // await audioPlayer.play();
-                                      // isPlaying.value = false;
-                                      // audioPlayer.dispose();
-                                      // }                    
-                                    },
-                                    icon: Obx(() {
-                                      if (isPlaying.value){
-                                        return CircularProgressIndicator();
-                                      }else{
-                                        return Icon(Icons.play_arrow, size: 15, color: Colors.black26);
-                                      }
-                                      
-                                    }),
+                              Visibility(
+                                visible: isMe == false,
+                                child: Tooltip(
+                                  message: "Play audio",
+                                  child: Container(
+                                    width: 30,
+                                    height: 30,
+                                    margin: const EdgeInsets.all(1),
+                                    child: IconButton(
+                                      onPressed: () {
+                                        // 判断已经是当前音频的播放状态，则点击暂停
+                                        if (messageController.whichIsPlaying.value == key.hashCode.toString()) {
+                                          if (messageController.buttonNotifier.value == ButtonState.playing) {
+                                            messageController.buttonNotifier.value = ButtonState.paused;
+                                            messageController.ttsPlayer.pause();
+                                          } else if (messageController.buttonNotifier.value == ButtonState.paused) {
+                                            messageController.buttonNotifier.value = ButtonState.playing;
+                                            messageController.ttsPlayer.play();
+                                          }
+                                          return;
+                                        }else{
+                                          // 如果是在播放其他音频，则先停止播放
+                                          messageController.ttsPlayer.stop();
+                                          messageController.buttonNotifier.value = ButtonState.loading;
+                                          // 重新设置正在播放的音频
+                                          String keyString = key.hashCode.toString();
+                                          messageController.whichIsPlaying.value = keyString;
+                                          messageController.addToTTSJobs(keyString, dataList.join(' '));
+                                        }
+                                      },
+                                      icon: Obx(() {
+                                        if (messageController.whichIsPlaying.value == key.hashCode.toString()) {
+                                          switch (messageController.buttonNotifier.value) {
+                                            case ButtonState.loading:
+                                              return CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.black26,
+                                              );
+                                            case ButtonState.paused:
+                                              return Icon(Icons.play_arrow, size: 15, color: Colors.black26);
+                                            case ButtonState.playing:
+                                              return Icon(Icons.pause, size: 15, color: Colors.black26);
+                                            default:
+                                              return Icon(Icons.play_arrow, size: 15, color: Colors.black26);
+                                          }
+                                        } else {
+                                          return Icon(Icons.play_arrow, size: 15, color: Colors.black26);
+                                        }
+                                      }),
+                                    ),
                                   ),
                                 ),
                               ),

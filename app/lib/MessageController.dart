@@ -8,7 +8,10 @@ import 'package:wordpipe/sse_client.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/prompts/template_vocab.dart';
+import 'package:just_audio/just_audio.dart';
 import 'dart:developer';
+
+enum ButtonState { paused, playing, loading }
 
 class MessageController extends GetxController{
   final Controller c = Get.find();
@@ -18,7 +21,10 @@ class MessageController extends GetxController{
   int lastSegmentBeginId = 0;
 
   final ttsJobs = Map<String, String>().obs;
-  
+  late AudioPlayer ttsPlayer;
+  final whichIsPlaying = "".obs;
+  Rx<ButtonState> buttonNotifier = ButtonState.paused.obs;
+
   
   late final SSEClient sseClient;
   bool sse_connected = false;
@@ -45,17 +51,51 @@ class MessageController extends GetxController{
   }
   
   final scrollController = ScrollController();
+
   @override
   void onInit() {
     super.onInit();
-    scrollController.addListener(_scrollListener);
 
+    scrollController.addListener(_scrollListener);
+    // 文字转语音播放器的控制，根据服务端返回数据播放
+    ttsPlayer = AudioPlayer();
+    ttsJobs.listen((Map<String, String> jobs) {
+      if (jobs.isNotEmpty) {
+        jobs.forEach((key, value) { print('$key: $value'); });
+        if (jobs[whichIsPlaying.value] == null) {
+          ttsPlayer.seek(Duration.zero);
+          ttsPlayer.stop();
+          return;
+        }else{
+          final mp3Url = jobs[whichIsPlaying.value] as String;
+          ttsPlayer.setUrl(mp3Url).then((_) {
+            ttsPlayer.play();
+            ttsPlayer.playerStateStream.listen((playerState) {
+              final isPlaying = playerState.playing;
+              final processingState = playerState.processingState;
+              if (processingState == ProcessingState.loading ||
+                  processingState == ProcessingState.buffering) {
+                buttonNotifier.value = ButtonState.loading;
+              } else if (!isPlaying) {
+                buttonNotifier.value = ButtonState.paused;
+              } else if (processingState != ProcessingState.completed) {
+                buttonNotifier.value = ButtonState.playing;
+              } else {
+                ttsPlayer.seek(Duration.zero);
+                ttsPlayer.pause();
+              }
+            });
+          });
+        }
+      }
+    });
   }
 
   @override
   void onClose() {
     scrollController.removeListener(_scrollListener);
     sseClient.close();
+    ttsPlayer.dispose();
     super.onClose();
   }
 
@@ -243,19 +283,21 @@ class MessageController extends GetxController{
   void addToTTSJobs(String key, String text){
     // 请求服务器端生成TTS语音
     if (ttsJobs[key] == null){
-      ttsJobs[key] = text;
-      ttsJobs['mp3_url'] = '';
       final ttsAudio = TTSAudio();
       ttsAudio.t(key, text).then((value) {
         if (value == true){
           print('ttsJobs send to server: $key');
         }
       });
+    }else{
+      // 重新加一次，以便激活ttsJobs.listen()，即可重新播放
+      String mp3_url = ttsJobs[key] as String;
+      ttsJobs.remove(key);
+      ttsJobs[key] = mp3_url;
     }
   }
-
-
 }
+
 class TTSAudio extends GetConnect {
   final Controller c = Get.find();
   

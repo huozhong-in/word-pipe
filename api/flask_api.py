@@ -358,7 +358,6 @@ def tts():
     if text == '':
         return make_response('text required', 500)
     
-    print(f'[{username}]: {text}')
     # 每个登录用户都分配到一个channel，用于SSE推送，取得这个channel字符串
     channel: str = ''
     if request.headers.get('X-access-token'):
@@ -380,11 +379,11 @@ def tts():
         with app.app_context():
             back_data: json = {}
             back_data['type'] = 35 # WordPipeMessageType.tts_audio format. See: config.dart
-            voice = "zh-CN-XiaoxiaoNeural"
-            communicate = edge_tts.Communicate(text, voice)
             mp3FilePrefix = Path(Path(__file__).parent.absolute() / 'assets/tts')
             mp3File = Path(mp3FilePrefix / f'{key}.mp3')
             if not mp3File.exists():
+                voice = "en-US-AriaNeural"
+                communicate = edge_tts.Communicate(text, voice)
                 await communicate.save(mp3File)
             back_data['key'] = key
             back_data['mp3_url'] = '/tts/' + f'{key}.mp3'
