@@ -347,7 +347,7 @@ class DesktopHome extends StatelessWidget {
             _handleMatchWords(_textController.text);
           },
           textInputAction: TextInputAction.newline,
-          style: TextStyle(fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily,fontFamilyFallback: ['Arial'], fontWeight: FontWeight.w400, fontSize: 16, color: Colors.black),
+          style: TextStyle(fontSize: 16, color: Colors.black),
           maxLines: 3,
           minLines: 3,
           decoration: InputDecoration(

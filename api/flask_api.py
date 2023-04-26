@@ -42,7 +42,7 @@ CORS(app)
 if not os.path.exists('logs'):
     os.mkdir('logs')
 logging.basicConfig(
-    filename='logs/api_{starttime}.log'.format(starttime=time.strftime('%Y%m%d%H%M%S', time.localtime(time.time()))),
+    filename='logs/api_{starttime}.log'.format(starttime=time.strftime('%Y%m%d', time.localtime(time.time()))),
     filemode='a',
     level=logging.DEBUG,
     format='%(levelname)s:%(asctime)s:%(message)s'

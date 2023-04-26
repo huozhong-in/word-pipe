@@ -342,9 +342,7 @@ class MessageBubble extends StatelessWidget {
   //   dataList.forEach((word_list) {
   //     word_list.forEach((word_name, root_list) {
   //       spans.add(TextSpan(text: word_name, style: TextStyle(
-  //         fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily,
-  //         fontFamilyFallback: const ['Arial'],
-  //         fontWeight: FontWeight.bold, fontSize: 16)));
+   //         fontSize: 16)));
   //       spans.add(TextSpan(text: "\n"));
   //       root_list.forEach((root) {
   //         root.forEach((root_name, attr_list) {

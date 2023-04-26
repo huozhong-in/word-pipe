@@ -107,12 +107,6 @@ flutter:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
-    - family: Roboto
-      fonts:
-        - asset: google_fonts/Roboto-Regular.ttf
-    - family: SourceSansPro
-      fonts:
-        - asset: google_fonts/SourceSansPro-Regular.ttf
     - family: Comfortaa
       fonts:
         - asset: google_fonts/Comfortaa-SemiBold.ttf

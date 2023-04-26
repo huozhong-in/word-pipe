@@ -2,7 +2,6 @@ import 'dart:core';
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:pointycastle/export.dart';
 import 'dart:typed_data';
 
@@ -52,8 +51,8 @@ final ThemeData appTheme = ThemeData(
   primarySwatch: Colors.green,
   primaryColor: Colors.green,
   scaffoldBackgroundColor: const Color(0xFFF5F7FD),
-  fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, // 'Georgia'
-  fontFamilyFallback: ["PingFang SC" , "Heiti SC" , 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans CJK HK'],
+  // fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, // 'Georgia'
+  // fontFamilyFallback: ["PingFang SC" , "Heiti SC" , 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans CJK HK'],
   // Define the default `TextTheme`. Use this to specify the default
   // text styling for headlines, titles, bodies of text, and more.
   // appBarTheme: ,
@@ -139,12 +138,6 @@ const double MOBILE_LAYOUT_WIDTH = 600;
 const double DESKTOP_LAYOUT_WIDTH = 1000;
 
 
-var textFontStyle = TextStyle(
-  color: Colors.black,
-  fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily,
-  fontFamilyFallback: const ['Arial'],
-);
-var titleFontStyle = GoogleFonts.knewave(color: Colors.black, fontSize: 24, fontWeight: FontWeight.bold);
 //
 // 用到的地方用 .copyWith 这个方法, 如：
 // Text(

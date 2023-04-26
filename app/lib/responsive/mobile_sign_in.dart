@@ -41,9 +41,6 @@ class MobileSignIn extends StatelessWidget {
             child: FractionallySizedBox(
               widthFactor: 0.8,
               child: Column(
-                // mainAxisSize: MainAxisSize.max,
-                // mainAxisAlignment: MainAxisAlignment.center,
-                // crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -71,7 +68,6 @@ class MobileSignIn extends StatelessWidget {
                       )
                     ],
                   ),
-                  // SizedBox(height: MediaQuery.of(context).size.height / 35,),
                   Form(
                     key: _formKey,
                     child: Column(
