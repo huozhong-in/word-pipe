@@ -179,11 +179,11 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_guess_word_from_sen
 
   var r_system = OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.system,
-    content: "你是我的英语老师。你会根据BN词频来猜测当我遇到一个英文句子时，其中的哪些会是我的生词。",
+    content: "你是我的英语老师。你会根据COCA(Corpus of Contemporary American English)词频来猜测当我遇到一个英文句子时，其中的哪些会是我的生词。",
   );
   var r_user1 = OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.user, 
-    content: "我输入一些英文，你根据BN词频来猜猜其中哪些可能是我的生词：`That is, after all, the whole purpose of the scraping process.`"
+    content: "我输入一些英文，你根据COCA(Corpus of Contemporary American English)词频来猜猜其中哪些可能是我的生词：`That is, after all, the whole purpose of the scraping process.`"
   );
   var  r_assistant1 =  OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.assistant,
@@ -191,7 +191,7 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_guess_word_from_sen
   );
   var  r_user2 =  OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.user,
-    content: "我输入一些英文，你根据BN词频来猜猜其中哪些可能是我的生词：`" + sentence + "`",
+    content: "我输入一些英文，你根据COCA(Corpus of Contemporary American English)词频来猜猜其中哪些可能是我的生词：`" + sentence + "`",
   );
 
   modelList.add(r_system);

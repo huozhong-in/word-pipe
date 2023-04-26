@@ -1,9 +1,10 @@
 flask
+Flask-Cors
+flask_sse
+gunicorn
 marisa-trie
 pillow
-gunicorn
 gevent
-flask_sse
 sqlalchemy
 mysql-connector-python
 python_avatars

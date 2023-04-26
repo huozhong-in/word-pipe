@@ -1,6 +1,8 @@
 # 使用方法
 
-- 下载解压 https://github.com/skywind3000/ECDICT/raw/master/stardict.7z 放在api/db/stardict.db
+`https://github.com/skywind3000/ECDICT/releases/download/1.0.28/ecdict-sqlite-28.zip`
+- 下载解压 放在api/db/stardict.db
+
 
 - install miniconda
 `conda config --set auto_activate_base false`

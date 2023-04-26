@@ -53,7 +53,7 @@ MYSQL_CONFIG = {
 # ----- OPENAI CONFIG  -----
 OPENAI_PROXY_BASEURL = {
     "dev": f"http://{ip}/api/openai", # for intranet Mobile Web testing
-    "prod": "https://wordpipe.huozhong.in/api/openai",
+    "prod": "https://wordpipe.in/api/openai",
 }
 
 def generate_random_avatar(user_name: str) -> bool:
