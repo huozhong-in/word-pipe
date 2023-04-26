@@ -1,11 +1,6 @@
 import 'package:wordpipe/config.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:get/get.dart';
-import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/validator.dart';
-import 'dart:developer';
 
 
 class ResetPassword extends StatelessWidget {

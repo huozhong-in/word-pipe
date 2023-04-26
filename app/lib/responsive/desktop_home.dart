@@ -10,7 +10,6 @@ import 'package:wordpipe/user_profile.dart';
 import 'package:wordpipe/MessageController.dart';
 import 'package:wordpipe/settings.dart';
 import 'package:wordpipe/about_us.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:developer';
 
@@ -434,7 +433,7 @@ class DesktopHome extends StatelessWidget {
                           style: Theme.of(context).textTheme.displaySmall?.copyWith(
                             color: Colors.black54,
                             fontSize: 18,
-                            fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
+                            fontFamily: 'Comfortaa',
                             fontWeight: FontWeight.w600),
                           children: <TextSpan>[
                             TextSpan(
@@ -556,7 +555,7 @@ class DesktopHome extends StatelessWidget {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
-                                        Text('Jasmine', style: TextStyle(fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,fontSize: 18, fontWeight: FontWeight.w600, color: Colors.green[900])),
+                                        Text('Jasmine', style: TextStyle(fontFamily: 'Comfortaa', fontSize: 18, fontWeight: FontWeight.w600, color: Colors.green[900])),
                                         IconButton(onPressed: ()=>{
                                           customSnackBar(title: "Info", content: "not open yet")
                                         }, icon: Icon(Icons.more_vert))
@@ -605,7 +604,7 @@ class DesktopHome extends StatelessWidget {
                                               style: TextStyle(
                                                 fontSize: 16, 
                                                 fontWeight: FontWeight.w600,
-                                                fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
+                                                fontFamily: 'Comfortaa',
                                                 fontFamilyFallback: ['Arial']
                                                 ),
                                             ),

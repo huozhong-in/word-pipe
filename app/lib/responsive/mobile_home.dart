@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/responsive/mobile_sign_in.dart';
 import 'package:wordpipe/controller.dart';
@@ -29,7 +28,7 @@ class MobileHome extends StatelessWidget {
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
               color: Colors.black54,
               fontSize: 20,
-              fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
+              fontFamily: 'Comfortaa',
               fontWeight: FontWeight.w600),
             children: <TextSpan>[
               TextSpan(

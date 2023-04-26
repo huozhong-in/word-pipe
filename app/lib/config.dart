@@ -51,7 +51,7 @@ final ThemeData appTheme = ThemeData(
   primarySwatch: Colors.green,
   primaryColor: Colors.green,
   scaffoldBackgroundColor: const Color(0xFFF5F7FD),
-  // fontFamily: GoogleFonts.getFont('Source Sans Pro').fontFamily, // 'Georgia'
+  // fontFamily: 'SourceSansPro', // 'Georgia'
   // fontFamilyFallback: ["PingFang SC" , "Heiti SC" , 'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans CJK KR', 'Noto Sans CJK HK'],
   // Define the default `TextTheme`. Use this to specify the default
   // text styling for headlines, titles, bodies of text, and more.
@@ -80,6 +80,8 @@ final ThemeData appTheme2 = ThemeData(
   primarySwatch: Colors.green,
   primaryColor: Color(0xFF98F5F8), //青色辅助色
   scaffoldBackgroundColor: const Color(0xFFF5F7FD),
+  fontFamily: "Roboto",
+  fontFamilyFallback: ["NotoSansSC" , "PingFang SC", "Heiti SC",],
   
   textTheme: TextTheme( //文本主题
     displayLarge: TextStyle(color: Color(0xFF98F5F8)),

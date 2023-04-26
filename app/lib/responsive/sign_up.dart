@@ -1,6 +1,5 @@
 import 'package:wordpipe/responsive/responsive_layout.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
@@ -57,7 +56,7 @@ class SignUp extends StatelessWidget {
                             style: Theme.of(context).textTheme.displaySmall?.copyWith(
                               color: Colors.black54,
                               fontSize: 16,
-                              fontFamily: GoogleFonts.getFont('Comfortaa').fontFamily,
+                              fontFamily: 'Comfortaa',
                               fontWeight: FontWeight.w600),
                             children: <TextSpan>[
                               TextSpan(
