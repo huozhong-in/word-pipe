@@ -296,6 +296,20 @@ class MessageController extends GetxController{
       ttsJobs[key] = mp3_url;
     }
   }
+
+  // Future<String> convertspeechToText (String filepath) async {
+  // const apiKey = apisecretkey:
+  // var url = Uri.https("'api.openai.com”, “v1/audio/transcriptions"):
+  // var request = http.MultipartRequest(’PoST', url):
+  // request.headers.addAl1(( ("Authorizat ion": "Bearer $apikey"}));
+  // request. fields ["model"] = 'whisper-1';
+  // request. fields ["language"] ="en";
+  // request . fites.add(await http.MultipartFile. fromPath("file' , filepath));
+  // var response = await request. send();
+  // var newresponse = await http.Response. fromstream (response);
+  // final responseData = json.decode (newresponse.body)：
+  // print ( responseData);
+  // return responseData['text'];}
 }
 
 class TTSAudio extends GetConnect {

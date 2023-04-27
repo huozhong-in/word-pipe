@@ -78,7 +78,8 @@ final ThemeData appTheme2 = ThemeData(
   useMaterial3: true,
   brightness: Brightness.light,
   primarySwatch: Colors.green,
-  primaryColor: Color(0xFF98F5F8), //青色辅助色
+  // primaryColor: Color(0xFF98F5F8), //青色辅助色
+  primaryColor: Colors.greenAccent[100],
   scaffoldBackgroundColor: const Color(0xFFF5F7FD),
   fontFamily: "Roboto",
   fontFamilyFallback: ["NotoSansSC" , "PingFang SC", "Heiti SC",],

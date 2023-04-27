@@ -46,4 +46,5 @@ D. 营养;成分
 
   print(isEnglishAndSymbols(pureEnglishText));  
   print(isEnglishAndSymbols(text));
+  print(pureEnglishText.split('[W0RDP1PE]')[0]);
 }

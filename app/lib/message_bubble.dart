@@ -30,11 +30,7 @@ class MessageBubble extends StatelessWidget {
   final SettingsController settingsController = Get.find<SettingsController>();
   bool isMe = false;
 
-  // 
-  RxString toolTip = "".obs;
-
   
-
   @override
   Widget build(BuildContext context) {
     Future<void> setIsMe() async {
@@ -125,12 +121,12 @@ class MessageBubble extends StatelessWidget {
                                             messageController.ttsPlayer.pause().then((value) {
                                               messageController.whichIsPlaying.value = keyString;
                                               messageController.buttonNotifier.value = ButtonState.loading;
-                                              messageController.addToTTSJobs(keyString, dataList.join(' '));
+                                              messageController.addToTTSJobs(keyString, dataList.join(' ').split('[W0RDP1PE]')[0]);
                                             });
                                           }else{
                                             messageController.whichIsPlaying.value = keyString;
                                             messageController.buttonNotifier.value = ButtonState.loading;
-                                            messageController.addToTTSJobs(keyString, dataList.join(' '));
+                                            messageController.addToTTSJobs(keyString, dataList.join(' ').split('[W0RDP1PE]')[0]);
                                           }
                                         }
                                       },
@@ -555,7 +551,7 @@ class MessageBubble extends StatelessWidget {
                 style: TextStyle(
                   fontSize: settingsController.fontSizeConfig.value,
                   color: Color.fromARGB(255, 11, 66, 93),
-                  textBaseline: TextBaseline.alphabetic,
+                  // textBaseline: TextBaseline.alphabetic,
                 )
               )
             )
