@@ -29,7 +29,7 @@ from flask_cors import CORS
 import requests
 # import openai
 import logging
-import streamtologger
+# import streamtologger
 from Crypto.Cipher import AES
 import base64
 from queue import Queue
@@ -48,7 +48,7 @@ logging.basicConfig(
     format='%(levelname)s:%(asctime)s:%(message)s'
 )
 stderr_logger = logging.getLogger('STDERR')
-streamtologger.redirect(target="logs/print.log", append=False, header_format="[{timestamp:%Y-%m-%d %H:%M:%S} - {level:5}] ")
+# streamtologger.redirect(target="logs/print.log", append=False, header_format="[{timestamp:%Y-%m-%d %H:%M:%S} - {level:5}] ")
 
 # for SSE nginx configuration https://serverfault.com/questions/801628/for-server-sent-events-sse-what-nginx-proxy-configuration-is-appropriate
 app.config["REDIS_URL"] = REDIS_URL
@@ -66,9 +66,9 @@ vocab_file = Path(Path(__file__).parent.absolute() / 'db/vocab.json')
 vocab = set()
 with vocab_file.open() as f:
     data: dict = json.load(f)
-print(data.keys())
+logging.info(data.keys())
 vocab = set(data['JUNIOR']).union(set(data['SENIOR'])).union(set(data['IELTS'])).union(set(data['TOEFL'])).union(set(data['GRE'])).union(set(data['TOEIC']))
-print(f'total: {len(vocab)} words.')
+logging.info(f'total: {len(vocab)} words.')
 
 # marisa-trie for prefix search
 trie = marisa_trie.Trie(vocab, order=marisa_trie.LABEL_ORDER)
@@ -77,7 +77,7 @@ trie = marisa_trie.Trie(vocab, order=marisa_trie.LABEL_ORDER)
 wordroot_file = Path(Path(__file__).parent.absolute() / 'db/wordroot.txt')
 with wordroot_file.open() as f:
     wordroot= json.load(f)
-print(f"wordroot.txt including {len(wordroot.keys())} roots.")
+logging.info(f"wordroot.txt including {len(wordroot.keys())} roots.")
 word2root: dict = {}
 for key, value in wordroot.items():
     if 'example' in value:
@@ -194,8 +194,8 @@ def match_words():
     r: list = sd.match2(prefix=k)
     sd.close()
     toc = time.perf_counter()
-    print(f"match_words() word: {k}")
-    print(f"[Processed in {toc - tic:0.4f} seconds]")
+    logging.info(f"match_words() word: {k}")
+    logging.info(f"[Processed in {toc - tic:0.4f} seconds]")
     return make_response(jsonify(r), 200)
 
 @app.route('/api/qb', methods = ['POST'])
@@ -214,8 +214,8 @@ def query_batch():
     r: list = sd.query_batch(json_list)
     sd.close()
     toc = time.perf_counter()
-    print(f"query_batch() word: {r}")
-    print(f"[Processed in {toc - tic:0.4f} seconds]")
+    logging.info(f"query_batch() word: {r}")
+    logging.info(f"[Processed in {toc - tic:0.4f} seconds]")
     return make_response(jsonify(r), 200)
     
 @app.route('/favicon.ico')
@@ -273,7 +273,7 @@ def chat():
     
     # tic = time.perf_counter()
 
-    print(f'[{username}]: {message}')
+    logging.info(f'[{username}]: {message}')
     # 每个登录用户都分配到一个channel，用于SSE推送，取得这个channel字符串
     channel: str = ''
     if request.headers.get('X-access-token'):
@@ -428,7 +428,7 @@ def chat_root():
     
     tic = time.perf_counter()
 
-    print(f'[{username}]: {message}')
+    logging.info(f'[{username}]: {message}')
     # 给每一个登录用户分配一个channel，用于SSE推送
     channel: str = SSE_MSG_DEFAULT_CHANNEL
     if request.headers.get('X-access-token'):
@@ -446,7 +446,7 @@ def chat_root():
         back_data: json = {}
         back_data = get_root_by_word(message)
         id = generate_time_based_client_id(prefix=username)
-        print("chat() /root publish id:", id)
+        logging.info("chat() /root publish id:", id)
         # 须publish两次，一次替用户说话，一次返回结果
         sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
 
@@ -454,7 +454,7 @@ def chat_root():
         pass
 
     toc = time.perf_counter()
-    print(f"[Processed in {toc - tic:0.4f} seconds]")
+    logging.info(f"[Processed in {toc - tic:0.4f} seconds]")
 
     return make_response('', 200)
 
@@ -498,7 +498,7 @@ def get_root_by_word(message: str) -> json:
     back_data['type'] = 101
     back_data['dataList'] = dataList
     back_data['createTime'] = int(time.time())
-    print(back_data)
+    logging.info(f'back_data: {back_data}')
     return back_data
 
 @app.route('/api/avatar/<user_name>')
@@ -673,7 +673,7 @@ def openai_proxy(path):
                         completion_text_queue.put(delta.get('content'))
                         # print(delta.get('content'))
                     elif delta is not None and delta.get('finish_reason') is not None and delta.get('finish_reason') == 'stop':
-                        print('finish_reason: stop')
+                        logging.debug('finish_reason: stop')
                         completion_text_queue.put("[DONE]")
             yield chunk
 
@@ -752,6 +752,8 @@ def chat_history():
             return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
     try:
         last_id: int = data.get('last_id', 0)
+        if last_id < 0:
+            return make_response('last_id error', 500)
     except Exception as e:
         return make_response('last_id missing', 500)
     

@@ -44,6 +44,13 @@ class WordPipeMessageType{
   static const int chathistory = 10003;
 }
 
+class PremiumType {
+  static const int none = 0;
+  static const int pro = 1;
+  static const int vip = 2;
+  static const int premium = 3;
+}
+
 
 final ThemeData appTheme = ThemeData(
   useMaterial3: true,
@@ -85,16 +92,16 @@ final ThemeData appTheme2 = ThemeData(
   fontFamilyFallback: ["NotoSansSC" , "PingFang SC", "Heiti SC",],
   
   textTheme: TextTheme( //文本主题
-    displayLarge: TextStyle(color: Color(0xFF98F5F8)),
-    displayMedium: TextStyle(color: Color(0xFF06b6d4)),
+    displayLarge: TextStyle(color: Color.fromARGB(255, 31, 165, 69)),
+    displayMedium: TextStyle(color: Color.fromARGB(255, 24, 198, 56)),
     displaySmall: TextStyle(color: Colors.white),
     headlineMedium: TextStyle(color: Colors.black),
-    headlineSmall: TextStyle(color: Color(0xFF98F5F8)),
+    headlineSmall: TextStyle(color: Color.fromARGB(255, 3, 103, 16)),
     titleLarge: TextStyle(color: Color(0xFF06b6d4)),
   ), 
   colorScheme: ColorScheme(
-    primary: Color(0xFF98F5F8), 
-    secondary: Color(0xFF06b6d4),
+    primary: Color.fromARGB(255, 31, 165, 69), 
+    secondary: Color.fromARGB(255, 3, 103, 16),
     surface: Colors.white,
     background: Colors.white, 
     error: Colors.red,
@@ -104,7 +111,7 @@ final ThemeData appTheme2 = ThemeData(
     onBackground: Colors.black,
     onError: Colors.white,
     brightness: Brightness.light,
-  ).copyWith(secondary: Color(0xFF06b6d4)),
+  ).copyWith(secondary: Color.fromARGB(255, 59, 214, 157)),
   visualDensity: VisualDensity.adaptivePlatformDensity,
   textSelectionTheme: const TextSelectionThemeData(
     cursorColor: Colors.red,

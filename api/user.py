@@ -33,6 +33,7 @@ class User(Base):
     ctime = Column(Integer)
     utime = Column(Integer)
     is_ban = Column(Integer, nullable=False, default=0)
+    premium = Column(Integer, nullable=False, default=0)
 
     def __repr__(self):
         return f'<User(pk_user={self.pk_user}, uuid={self.uuid}, unionid={self.unionid}, mobile={self.mobile}, user_name={self.user_name}, avatar={self.avatar}, last_ip={self.last_ip}, sex={self.sex}, ctime={self.ctime}, utime={self.utime}, is_ban={self.is_ban})>'
@@ -112,7 +113,7 @@ class UserDB:
             if user.password == pass_word:
                 # update access_token
                 access_token, expire_at = self.refresh_access_token(user_name)
-                r: dict = {"access_token": access_token,"expires_at": expire_at, "uuid": user.uuid}
+                r: dict = {"access_token": access_token,"expires_at": expire_at, "uuid": user.uuid, "premium": user.premium}
                 return r
             else:
                 return {}

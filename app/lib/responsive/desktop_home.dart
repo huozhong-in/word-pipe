@@ -34,24 +34,26 @@ class DesktopHome extends StatelessWidget {
     }
     // 向服务端发送消息，
     c.getUserName().then((_username){
-      Future<bool> r = c.chat(_username, text.trim());
-      r.then((ret){
-        if(ret == true){
-          _textController.clear();
-          _matchWords.clear();
-          _indexHighlight = 0;
-          // c.getUUID().then((_uuid){
-            // TODO 'free chat mode'，从云端读取用户权限
-            // messageController.getChatCompletion('gpt-3.5-turbo', text.trim(), WordPipeMessageType.reply_for_query_sentence);
-          // });
-        }else{
-          customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
-          // 三秒后跳转到登录页面
-          Future.delayed(Duration(seconds: 3), () {
-            Get.offAll(ResponsiveLayout());
-          });
-        }
-      });    
+      if (settingsController.freeChatMode.value == true){
+        // 如果是free-chat模式，从本地读取OpenAI API key，直接调用OpenAI API
+        messageController.freeChat(settingsController.openAiApiKey.value, text.trim());
+      }else{
+        // 如果是普通模式，向服务端发送消息
+        Future<bool> r = c.chat(_username, text.trim());
+        r.then((ret){
+          if(ret == true){
+            _textController.clear();
+            _matchWords.clear();
+            _indexHighlight = 0;
+          }else{
+            customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
+            // 三秒后跳转到登录页面
+            Future.delayed(Duration(seconds: 3), () {
+              Get.offAll(ResponsiveLayout());
+            });
+          }
+        });
+      }
     });    
   }
   
@@ -515,19 +517,32 @@ class DesktopHome extends StatelessWidget {
                       )
                     );
                   }),
-                  SwitchListTile(
-                    activeColor: Colors.green[600],
+                  Obx(() {
+                    return SwitchListTile(
+                      activeColor: Colors.green[600],
                       activeTrackColor: Colors.green[100],
                       inactiveThumbColor: Colors.green[200],
                       inactiveTrackColor: Colors.green[100],
-                    title: Text('Free-Chat Mode', style: TextStyle(fontSize: 12)), 
-                    subtitle: Text('PRO only', style: TextStyle(fontSize: 10, color: Colors.blue)),
-                    value: false, 
-                    onChanged: ((bool value) {
-                      customSnackBar(title: "Info", content: "Not available in free version");
-                    }
-                    ),
-                  ),
+                      title: Text('Free-Chat Mode', style: TextStyle(fontSize: 12)), 
+                      // subtitle: Text('PRO only', style: TextStyle(fontSize: 10, color: Colors.blue)),
+                      value: settingsController.freeChatMode.value,
+                      onChanged: ((bool value) {
+                        c.getPremium().then((premiumType) {
+                          if (premiumType != 0) {
+                            settingsController.toggleFreeChatMode(value);
+                          } else {
+                            if (settingsController.openAiApiKey.value != '') {
+                              settingsController.toggleFreeChatMode(value);
+                            } else {
+                              settingsController.freeChatMode.value = false;
+                              customSnackBar(title: "Error", content: "Please config OpenAI key in config page or upgrade to PRO version.");
+                            }
+                          }
+                        });
+                      }
+                      ),
+                    );                    
+                  },)
                 ],
               ),
             ),

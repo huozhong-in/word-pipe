@@ -11,7 +11,7 @@ python_avatars
 PyJWT
 requests
 openai
-streamtologger
+# streamtologger
 pycryptodome
 tiktoken
 edge-tts

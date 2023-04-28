@@ -48,6 +48,12 @@ class Controller extends GetxController{
         return sessionData['baseUrl'] as String;
     return "";
   }
+  Future<int> getPremium() async{
+    Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
+    if (sessionData.containsKey('error') == false)
+        return sessionData['premium'] as int;
+    return 0;
+  }
   Future<List<dynamic>> searchWords(String word) async{
     return await _wordsProvider.searchWords(word);
   }
@@ -245,6 +251,7 @@ class UserProvider extends GetConnect {
     sessionData['uuid'] = rsp['uuid'] as String;
     sessionData['apiKey'] = decrypt(rsp['apiKey']);
     sessionData['baseUrl'] = rsp['baseUrl'] as String;
+    sessionData['premium'] = rsp['premium'] as int;
     await CacheHelper.setData('sessionData', sessionData);
   }
 
@@ -282,7 +289,10 @@ class SettingsController extends GetxController {
   RxString aiAssistantTtsVoiceZhEn = 'zh-CN-XiaoxiaoNeural'.obs;
   // AI助手TTS语音语速
   RxDouble aiAssistantTtsRate = 0.0.obs;
-  
+  // User's OpenAI API Key
+  RxString openAiApiKey = ''.obs;
+
+  RxBool freeChatMode = false.obs;
   
   @override
   void onInit() async {
@@ -295,6 +305,8 @@ class SettingsController extends GetxController {
     aiAssistantTtsVoice.value = await prefs.getString('aiAssistantTtsVoice') ?? aiAssistantTtsVoice.value;
     aiAssistantTtsVoiceZhEn.value = await prefs.getString('aiAssistantTtsVoiceZhEn') ?? aiAssistantTtsVoiceZhEn.value;
     aiAssistantTtsRate.value = await prefs.getDouble('aiAssistantTtsRate') ?? aiAssistantTtsRate.value;
+    openAiApiKey.value = await prefs.getString('openAiApiKey') ?? openAiApiKey.value;
+    freeChatMode.value = await prefs.getBool('freeChatMode') ?? freeChatMode.value;
   }
  
   void toggleEnglishInputHelper(bool value) async {
@@ -324,5 +336,13 @@ class SettingsController extends GetxController {
   void setAiAssistantTtsRate(double value) async {
     aiAssistantTtsRate.value = value;
     await prefs.setDouble('aiAssistantTtsRate', value);
+  }
+  void setOpenAiApiKey(String value) async {
+    openAiApiKey.value = value;
+    await prefs.setString('openAiApiKey', value);
+  }
+  void toggleFreeChatMode(bool value) async {
+    freeChatMode.value = value;
+    await prefs.setBool('freeChatMode', value);
   }
 }

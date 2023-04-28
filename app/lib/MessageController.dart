@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dart_openai/openai.dart';
 import 'package:wordpipe/MessageModel.dart';
+import 'package:wordpipe/responsive/responsive_layout.dart';
 import 'package:wordpipe/sse_client.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
@@ -94,7 +95,11 @@ class MessageController extends GetxController{
   @override
   void onClose() {
     scrollController.removeListener(_scrollListener);
-    sseClient.close();
+    try{      
+      sseClient.close();
+    } catch (e) {
+      print("onClose():" + e.toString());
+    }
     ttsPlayer.dispose();
     super.onClose();
   }
@@ -110,7 +115,7 @@ class MessageController extends GetxController{
           curr_user = sessionData['username'] as String;
         
         if (curr_user != ""){
-          chatHistory(curr_user, lastSegmentBeginId);
+          await chatHistory(curr_user, lastSegmentBeginId);
         }
     }
   }
@@ -118,12 +123,18 @@ class MessageController extends GetxController{
 
   Future<int> chatHistory(String username, int last_id) async {
     ChatRecord chatRecord = ChatRecord();
+    // 通过这个标志位实现只有第一次打开页面时才有欢迎词
     messsage_view_first_build = false;
     // 如果已经是数据库最旧的消息了，就不再请求数据库
-    if (lastSegmentBeginId == -1)
+    if (lastSegmentBeginId == -1){
       return -1;
+    }
     lastSegmentBeginId = await chatRecord.chatHistory(username, last_id);
-    // print(lastSegmentBeginId);
+    if(lastSegmentBeginId == -2){
+      await c.signout();
+      Get.offAll(ResponsiveLayout());
+    }
+    // update();
     return lastSegmentBeginId;
   }
 
@@ -207,7 +218,7 @@ class MessageController extends GetxController{
       OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];
       final content = choice.delta.content;
       if(content != null){
-        print(content);
+        // print(content);
         final message = findMessageByKey(needUpdate);
         if (message.dataList[0] == '...'){
           message.dataList.removeAt(0);
@@ -241,6 +252,14 @@ class MessageController extends GetxController{
           }
         }
     });
+  }
+
+  void freeChat(String openAiApiKey, String text){
+    // 使用用户自己的OpenAI API key，如果返回错误说明用户提供的key无效，则要关掉free chat模式
+    // 携带上文在对话中，并在后续优化token用量
+    // 记录用户使用的token数量到数据库
+    // 要提供prompt template，在界面右侧提供一些常用的模板（最佳实践），用户可以选择，点击将文本框变成表单
+    // getChatCompletion('gpt-3.5-turbo', text, WordPipeMessageType.stream);
   }
 
   void handleSSE(String channel) async {
@@ -416,6 +435,8 @@ class ChatRecord extends GetConnect {
           );
       });
 
+    }else{
+      ret = -2; // 表示http code 500，access_token无效
     }
     return ret;
   }

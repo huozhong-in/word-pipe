@@ -11,6 +11,7 @@ class Settings extends StatelessWidget {
   final Controller c = Get.find();
   final SettingsController settingsController = Get.find<SettingsController>();
   late String username = "";
+  TextEditingController openAiApiKeyController = TextEditingController();
 
   Future<bool> checkUserLogin() async {
     // 异步方法检查用户登录状态，返回true表示已登录，false表示未登录
@@ -151,6 +152,70 @@ class Settings extends StatelessWidget {
                                           ),
                                         ),
                                       ],
+                                    ),
+                                    SizedBox(height: 20,),
+                                    Divider(height: 1, thickness: 1, color: Colors.black12, indent: 20, endIndent: 20,),
+                                    SizedBox(height: 20,),
+                                    Text('Your OpenAI API key', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                                    SizedBox(height: 20),
+                                    Container(
+                                      margin: const EdgeInsets.all(20),
+                                      child: Obx(() {
+                                        return Column(
+                                          children: [
+                                            TextField(
+                                              controller: openAiApiKeyController,
+                                              decoration: InputDecoration(
+                                                border: OutlineInputBorder(),
+                                                labelText: 'OpenAI API key',
+                                                labelStyle: TextStyle(
+                                                  color: Colors.black54,
+                                                ),
+                                                prefixIcon: Icon(Icons.key),
+                                                enabledBorder: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.all(Radius.circular(10),),
+                                                  borderSide: BorderSide(
+                                                    color: Colors.grey,
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                                focusedBorder: OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: CustomColors.appBarColor2,
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                                errorBorder: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.all(Radius.circular(10),),
+                                                  borderSide: BorderSide(
+                                                    color: CustomColors.firebaseOrange,
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                                focusedErrorBorder: OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: CustomColors.firebaseAmber,
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                              ),
+                                              onChanged: (value) {
+                                                settingsController.setOpenAiApiKey(value.trim());
+                                                if (value.trim() == ''){
+                                                  settingsController.freeChatMode.value = false;
+                                                  openAiApiKeyController.text = '';
+                                                };
+                                              },
+                                              // onChanged: () {
+                                              //   settingsController.setOpenAiApiKey(openAiApiKeyController.text);
+                                              // },
+                                            ),
+                                            SizedBox(height: 20,),
+                                            Text('Current OpenAI API key: '),
+                                            SelectableText(settingsController.openAiApiKey.value),
+                                          ],
+                                        );
+                                      },)
                                     ),
                                     SizedBox(height: 20,),
                                     Divider(height: 1, thickness: 1, color: Colors.black12, indent: 20, endIndent: 20,),

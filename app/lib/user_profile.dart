@@ -80,6 +80,7 @@ class UserProfile extends StatelessWidget {
                               // 登出后清空消息列表
                               messageController.messages.clear();
                               messageController.closeSSE();
+                              messageController.messsage_view_first_build = true;
                               Get.offAll(ResponsiveLayout());
                             },
                             child: Text('Sign Out'),

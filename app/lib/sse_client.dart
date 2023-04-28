@@ -5,8 +5,8 @@ import 'package:universal_html/html.dart' as html;
 
 class SSEClient {
   Uri baseUri;
-  final String eventType;
-  final String channel;
+  String eventType;
+  String channel;
   html.EventSource? _eventSource;
   int _retryInterval;
   bool _isReconnecting;
@@ -14,27 +14,33 @@ class SSEClient {
   // 创建一个StreamController，用于广播特定事件类型的消息
   final StreamController<String> _messageController = StreamController<String>.broadcast();
 
-  SSEClient._(this.baseUri, this.eventType, this.channel, {int retryInterval = 1000})
-      : _retryInterval = retryInterval,
-        _isReconnecting = false {
-    // 添加channel参数到URL
-    Uri url = baseUri.replace(
-      queryParameters: <String, String>{
-        'channel': channel,
-      },
-    );
-    _connect(url);
+  static final SSEClient _instance = SSEClient._internal();
+
+  factory SSEClient.getInstance(Uri baseUri, String eventType, String channel, {int retryInterval = 1000}) {
+    return _instance.._init(baseUri, eventType, channel, retryInterval: retryInterval);
   }
-  // getter
-  static SSEClient? _instance;
-  
-  static SSEClient getInstance(Uri baseUri, String eventType, String channel, {int retryInterval = 1000}) {
-    _instance ??= SSEClient._(baseUri, eventType, channel, retryInterval: retryInterval);
-    return _instance!;
+
+  SSEClient._internal() : baseUri = Uri(), eventType = '', channel = '', _retryInterval = 0, _isReconnecting = false;
+
+  void _init(Uri baseUri, String eventType, String channel, {int retryInterval = 1000}) {
+    if (_eventSource == null) {
+      this.baseUri = baseUri;
+      this.eventType = eventType;
+      this.channel = channel;
+      _retryInterval = retryInterval;
+      _isReconnecting = false;
+
+      // 添加channel参数到URL
+      Uri url = baseUri.replace(
+        queryParameters: <String, String>{
+          'channel': channel,
+        },
+      );
+      _connect(url);
+    }
   }
-  
+
   void _connect(Uri url) {
-    
     _eventSource = html.EventSource(url.toString());
 
     _eventSource!.onOpen.listen((event) {
@@ -83,6 +89,7 @@ class SSEClient {
     _messageController.close(); // 关闭StreamController
   }
 }
+
 
 void main() {
   Uri url = Uri.parse('http://127.0.0.1/stream');
