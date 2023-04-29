@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
-import 'package:wordpipe/MessageView.dart';
+import 'package:wordpipe/conversation_view.dart';
 import 'package:wordpipe/responsive/responsive_layout.dart';
 import 'package:wordpipe/user_profile.dart';
 import 'package:wordpipe/MessageController.dart';
@@ -21,7 +21,7 @@ class DesktopHome extends StatelessWidget {
   final SettingsController settingsController = Get.find<SettingsController>();
   final List<MatchWords> _matchWords = <MatchWords>[].obs;
   final TextEditingController _textController = TextEditingController();
-  final FocusNode _commentFocus = FocusNode();
+  late FocusNode _commentFocus;
   late int _indexHighlight = 0; // 此变量用于记录当前选中的匹配单词的索引
   late String _currentWord = ""; // 文本框中输入光标所在的单词
   late int _leftOrRight = 0; // 此变量用于记录当按下键盘左右键时，光标应向左移动还是向右移动，-1表示向左，1表示向右，0表示未移动
@@ -35,8 +35,8 @@ class DesktopHome extends StatelessWidget {
     // 向服务端发送消息，
     c.getUserName().then((_username){
       if (settingsController.freeChatMode.value == true){
-        // 如果是free-chat模式，从本地读取OpenAI API key，直接调用OpenAI API
-        messageController.freeChat(settingsController.openAiApiKey.value, text.trim());
+        // 如果是free-chat模式，则要开启新会话窗口
+        messageController.freeChat('gpt-3.5-turbo', settingsController.openAiApiKey.value, messageController.conversation_id.value, text);
       }else{
         // 如果是普通模式，向服务端发送消息
         Future<bool> r = c.chat(_username, text.trim());
@@ -396,6 +396,8 @@ class DesktopHome extends StatelessWidget {
 
   @override
   Widget build(context){
+
+    _commentFocus = messageController.commentFocus;
     
     return Scaffold(
       appBar: null,
@@ -481,14 +483,14 @@ class DesktopHome extends StatelessWidget {
                   ),
                   ListTile(
                     leading: Icon(Icons.account_circle),
-                    title: Text('Profile', style: TextStyle(fontSize: 14)),
+                    title: Text('Profile', style: TextStyle(fontSize: 16)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
                     onTap: () => Get.offAll(UserProfile()),
                   ),
                   ListTile(
                     leading: Icon(Icons.settings),
-                    title: Text('Settings', style: TextStyle(fontSize: 14)),
+                    title: Text('Settings', style: TextStyle(fontSize: 16)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
                     onTap: () => Get.offAll(Settings()),
@@ -496,7 +498,7 @@ class DesktopHome extends StatelessWidget {
                   
                   ListTile(
                     leading: Icon(Icons.info),
-                    title: Text('About WordPipe', style: TextStyle(fontSize: 14)),
+                    title: Text('About', style: TextStyle(fontSize: 16)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
                     onTap: () => Get.offAll(AboutUs()),
@@ -527,20 +529,37 @@ class DesktopHome extends StatelessWidget {
                       // subtitle: Text('PRO only', style: TextStyle(fontSize: 10, color: Colors.blue)),
                       value: settingsController.freeChatMode.value,
                       onChanged: ((bool value) {
-                        c.getPremium().then((premiumType) {
-                          if (premiumType != 0) {
-                            settingsController.toggleFreeChatMode(value);
-                          } else {
-                            if (settingsController.openAiApiKey.value != '') {
+                        if (value==true){
+                          c.getPremium().then((premiumType) {
+                            if (premiumType != 0) {
                               settingsController.toggleFreeChatMode(value);
+                              messageController.messages.clear();
+                              messageController.messsage_view_first_build = true;
+                              messageController.conversation_id.value = -1;
+                              _commentFocus.requestFocus();
                             } else {
-                              settingsController.freeChatMode.value = false;
-                              customSnackBar(title: "Error", content: "Please config OpenAI key in config page or upgrade to PRO version.");
+                              if (settingsController.openAiApiKey.value != '') {
+                                settingsController.toggleFreeChatMode(value);
+                                messageController.messages.clear();
+                                messageController.messsage_view_first_build = true;
+                                messageController.conversation_id.value = -1;
+                                _commentFocus.requestFocus();
+                              } else {
+                                settingsController.freeChatMode.value = false;
+                                customSnackBar(title: "Error", content: "Please config OpenAI key in config page or upgrade to PRO version.");
+                              }
                             }
-                          }
-                        });
-                      }
-                      ),
+                          });
+                        }else{
+                          // 重新加载非free-chat聊天记录
+                          settingsController.toggleFreeChatMode(value);
+                          messageController.messages.clear();
+                          messageController.lastSegmentBeginId = 0;
+                          messageController.messsage_view_first_build = true;
+                          messageController.conversation_id.value = 0;
+                          _commentFocus.requestFocus();
+                        }
+                      }),
                     );                    
                   },)
                 ],
@@ -577,7 +596,9 @@ class DesktopHome extends StatelessWidget {
                                       ],
                                     ),
                                   ),
-                                  Expanded(child: MessageView(key: ValueKey(DateTime.now()))),
+                                  Expanded(
+                                    child: ConversationView(),
+                                  ),
                                 ],
                               )
                             ),
@@ -591,7 +612,6 @@ class DesktopHome extends StatelessWidget {
                                   child: Container(
                                     height: 410,
                                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                                    // constraints: const BoxConstraints(maxHeight: 400, minHeight: 400),
                                     decoration: BoxDecoration(
                                       color: Colors.white70,
                                       borderRadius: const BorderRadius.only(
@@ -609,7 +629,6 @@ class DesktopHome extends StatelessWidget {
                                     child: Column(
                                       mainAxisAlignment: MainAxisAlignment.start,
                                       crossAxisAlignment: CrossAxisAlignment.start,
-                                      // mainAxisSize: MainAxisSize.max,
                                       children: [
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -634,7 +653,6 @@ class DesktopHome extends StatelessWidget {
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.start,
-                                          // mainAxisSize: MainAxisSize.max,
                                           children: [
                                             Flexible( 
                                               flex: 1,

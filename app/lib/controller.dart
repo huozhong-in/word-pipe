@@ -288,7 +288,7 @@ class SettingsController extends GetxController {
   // AI助手TTS语音发声人选择-中英混合
   RxString aiAssistantTtsVoiceZhEn = 'zh-CN-XiaoxiaoNeural'.obs;
   // AI助手TTS语音语速
-  RxDouble aiAssistantTtsRate = 0.0.obs;
+  RxDouble aiAssistantTtsRate = RxDouble(-10);
   // User's OpenAI API Key
   RxString openAiApiKey = ''.obs;
 

@@ -8,22 +8,34 @@ import 'package:wordpipe/message_bubble.dart';
 
 // ignore: must_be_immutable
 class MessageView extends StatelessWidget {
-  MessageView({required Key key }) : super(key: key);
+  final RxInt conversation_id;
+  MessageView({
+      required Key key,
+      required int conversation_id
+    }) : 
+    conversation_id = conversation_id.obs,
+    super(key: key);
+    
   
   final Controller c = Get.find();
   final MessageController messageController = Get.find();
-  RxBool newMessageArrived = false.obs;
+  // RxBool newMessageArrived = false.obs;
 
   @override
   Widget build(BuildContext context) {
     
     Future<void> getChatHistory() async {
+      print("getChatHistory()" + messageController.conversation_id.value.toString());
       String user_name = await c.getUserName();
       if (user_name != "") {
+        print("1");
         // 检查是不是第一次打开MessageView
         if (messageController.messsage_view_first_build == true){
+          print("2");
           // 从数据库里拿最新的一些消息
           int _lastSegmentBeginId = await messageController.chatHistory(user_name, messageController.lastSegmentBeginId);
+          print("3");
+          print("_lastSegmentBeginId:" + _lastSegmentBeginId.toString());
           // Welcome message
           if (_lastSegmentBeginId == -1){
             // -1意味着没有任何历史消息，是新用户，发送欢迎信息
@@ -101,46 +113,46 @@ class MessageView extends StatelessWidget {
             shrinkWrap: true,
             reverse: true,
             ),
-            Visibility(
-              visible: newMessageArrived.value,
-              child: Positioned(
-                left: Get.width / 3,
-                bottom: 0,
-                child: Container(
-                  height: 30,
-                  width: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.white70,
-                    borderRadius: const BorderRadius.all(Radius.circular(5)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey,
-                        blurRadius: 2,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  margin: const EdgeInsets.only(bottom: 5),
-                  // button with text and icon
-                  child: TextButton.icon(
-                    label: Text('New Message Arrived!', style: TextStyle(color: Colors.black)),
-                    icon: const Padding(
-                      padding: EdgeInsets.only(right: 5),
-                      child: Icon(Icons.keyboard_double_arrow_down_rounded, color: Colors.black),
-                    ),
-                    onPressed: () {
-                      messageController.scrollController.animateTo(
-                        messageController.scrollController.position.minScrollExtent,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOut,
-                      );
-                      // hide self
-                      newMessageArrived.value = false;
-                    },
-                  )
-                ),
-              ),
-            ),
+            // Visibility(
+            //   visible: newMessageArrived.value,
+            //   child: Positioned(
+            //     left: Get.width / 3,
+            //     bottom: 0,
+            //     child: Container(
+            //       height: 30,
+            //       width: 200,
+            //       decoration: BoxDecoration(
+            //         color: Colors.white70,
+            //         borderRadius: const BorderRadius.all(Radius.circular(5)),
+            //         boxShadow: [
+            //           BoxShadow(
+            //             color: Colors.grey,
+            //             blurRadius: 2,
+            //             offset: const Offset(0, 2),
+            //           ),
+            //         ],
+            //       ),
+            //       margin: const EdgeInsets.only(bottom: 5),
+            //       // button with text and icon
+            //       child: TextButton.icon(
+            //         label: Text('New Message Arrived!', style: TextStyle(color: Colors.black)),
+            //         icon: const Padding(
+            //           padding: EdgeInsets.only(right: 5),
+            //           child: Icon(Icons.keyboard_double_arrow_down_rounded, color: Colors.black),
+            //         ),
+            //         onPressed: () {
+            //           messageController.scrollController.animateTo(
+            //             messageController.scrollController.position.minScrollExtent,
+            //             duration: const Duration(milliseconds: 300),
+            //             curve: Curves.easeOut,
+            //           );
+            //           // hide self
+            //           newMessageArrived.value = false;
+            //         },
+            //       )
+            //     ),
+            //   ),
+            // ),
           ],
         );
       }); 

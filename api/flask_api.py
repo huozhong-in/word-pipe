@@ -24,7 +24,7 @@ from config import *
 from io import BytesIO
 from PIL import Image
 from user import User,UserDB
-from chat_record import ChatRecord,ChatRecordDB
+from chat_record import *
 from flask_cors import CORS
 import requests
 # import openai
@@ -633,18 +633,40 @@ def openai_proxy(path):
     '''
     api_url = f'https://api.openai.com/{path}'
     headers = {key: value for (key, value) in request.headers if key != 'Host'}
-    data = request.get_data()
+    data_json = request.get_json()
     params = request.args
-    username = request.json['user']
-    messages = request.json['messages']
+    username = data_json['user']
+    messages = data_json['messages']
     # print("use tokens: " + str(num_tokens_from_messages(messages)))
+    # data_json = json.dumps(data.decode('utf-8'))
     
     # 检查消息是否为空
     last_message: dict  = messages[-1]
     if last_message['content'] == '':
         return make_response(jsonify({"errcode":50007,"errmsg":"Message is empty"}), 500)
     
-    # TODO 检查消息的类型是否是查询单词，是的话记录到数据库，进入用户生词本
+    # TODO 检查消息的类型是否是查询单词，是的话记录到数据库，进入用户生词本。一种方法是检查message，另一种方法是在按钮上再发起一次请求，走另外接口。
+
+    #  携带上文在对话中
+    if "[FREECHAT]" in username:
+        username = username.split('[FREECHAT]')[1]
+        conversation_id = username.split('[FREECHAT]')[0]
+
+        # 从数据库中取出此用户最近的20条记录，按顺序拼接到messages前面
+        myuuid: str = userDB.get_user_by_username(username).uuid
+        for cr in crdb.get_chat_record(user_id=myuuid, last_chat_record_id=0, limit=20, conversation_id=int(conversation_id)):
+            last_message['content']  = cr.msgContent + '\n' + last_message['content']
+        # print(messages[-1])
+        # data_json['messages'][-1] = last_message
+        print(data_json)
+        return make_response('ok', 200)
+        
+        # 记录用户使用的token数量到数据库
+        # 优化token用量
+        # summary可能不需要存库和在客户端展示
+    else:
+        conversation_id = 0
+
 
     # 开发环境需要走本地代理服务器才能访问到openai API
     if os.environ.get('DEBUG_MODE') != None:
@@ -688,7 +710,7 @@ def openai_proxy(path):
             else:
                 completion_text += c
         myuuid: str = userDB.get_user_by_username(username).uuid
-        cr = ChatRecord(msgFrom=userDB.get_user_by_username('Jasmine').uuid, msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=completion_text, msgType=1)
+        cr = ChatRecord(msgFrom=userDB.get_user_by_username('Jasmine').uuid, msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=completion_text, msgType=1, conversation_id=conversation_id)
         crdb.insert_chat_record(cr)
 
     
@@ -740,25 +762,32 @@ def encrypt(text):
 
 @app.route('/api/user/chat-history', methods = ['POST'])
 def chat_history():
-    data: dict = request.get_json()
-    username: str = data.get('username')
-    if request.headers.get('X-access-token'):
-        u: User = userDB.get_user_by_username(username)
-        if u is None:
-            return make_response('user not exist', 500)
-        if u.access_token != request.headers['X-access-token']:
-            return make_response('access-token missing', 500)
-        if u.access_token_expire_at < int(time.time()):
-            return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
+    if not request.headers.get('X-access-token'):
+        return make_response('access-token missing', 500)
+    data_json: dict = request.get_json()
+    username: str = data_json.get('username')
+    if username is None or username == '':
+        return make_response('username missing', 500)
+    u: User = userDB.get_user_by_username(username)
+    if u is None:
+        return make_response('user not exist', 500)
+    if u.access_token != request.headers['X-access-token']:
+        return make_response('access-token wrong', 500)
+    if u.access_token_expire_at < int(time.time()):
+        return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
     try:
-        last_id: int = data.get('last_id', 0)
+        last_id: int = data_json.get('last_id', 0)
         if last_id < 0:
             return make_response('last_id error', 500)
     except Exception as e:
         return make_response('last_id missing', 500)
     
+    conversation_id = data_json.get('conversation_id')
+    if conversation_id is None or conversation_id == '':
+        conversation_id = 0
+
     r: list = []
-    for cr in crdb.get_chat_record(u.uuid, last_id, limit=30):
+    for cr in crdb.get_chat_record(u.uuid, last_id, limit=20, conversation_id=int(conversation_id)):
         r.append({
             'pk_chat_record': cr.pk_chat_record,
             'msgFrom': userDB.get_user_by_uuid(cr.msgFrom).user_name,
@@ -770,8 +799,62 @@ def chat_history():
             # 'msgType': cr.msgType,
             # 'msgSource': cr.msgSource,
             # 'msgDest': cr.msgDest
+            'conversation_id': cr.conversation_id
         })
     return make_response(jsonify(r), 200)
+
+@app.route('/api/user/conversation', methods = ['GET','POST','PUT','DELETE'])
+def conversation_crud():
+    if not request.headers.get('X-access-token'):
+        return make_response('access-token missing', 500)
+    if request.method == 'GET':
+        username: str = request.args.get('username')
+    else:
+        data: dict = request.get_json()
+        username: str = data.get('username')
+    
+    if username is None or username == '':
+        return make_response('username missing', 500)
+    u: User = userDB.get_user_by_username(username)
+    if u is None:
+        return make_response('user not exist', 500)
+    if u.access_token != request.headers['X-access-token']:
+        return make_response('access-token wrong', 500)
+    if u.access_token_expire_at < int(time.time()):
+        return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
+    
+    conversationDB = ConversationDB()
+    if request.method == 'GET':
+        r: list = []
+        r = conversationDB.get_conversation_list(u.uuid)
+        rsp = make_response(jsonify(r), 200)
+    elif request.method == 'POST':
+        c = Conversation(uuid=u.uuid, conversation_create_time=int(time.time()))
+        conversation_id = conversationDB.create_conversation(c)
+        rsp = make_response(jsonify({"conversation_id": conversation_id}), 200)
+    elif request.method == 'PUT':
+        conversation_id = data.get('conversation_id')
+        conversation_name = data.get('conversation_name')
+        if conversation_id is None or conversation_id == '':
+            conversationDB.close()
+            return make_response('conversation_id missing', 500)
+        if conversation_name is None or conversation_name == '':
+            conversationDB.close()
+            return make_response('conversation_name missing', 500)
+        conversationDB.update_conversation_name(conversation_id, conversation_name)
+        rsp = make_response(jsonify({"conversation_id": conversation_id}), 200)
+    elif request.method == 'DELETE':
+        conversation_id = request.args.get('conversation_id')
+        if conversation_id is None or conversation_id == '':
+            conversationDB.close()
+            return make_response('conversation_id missing', 500)
+        conversationDB.delete_conversation(conversation_id)
+        rsp = make_response(jsonify({"conversation_id": conversation_id}), 200)
+    else:
+        rsp = make_response('method not allowed', 500)
+
+    conversationDB.close()
+    return rsp
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=9000)

@@ -9,6 +9,7 @@ import 'package:wordpipe/sse_client.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/prompts/template_vocab.dart';
+import 'package:wordpipe/prompts/template_freechat.dart';
 import 'package:just_audio/just_audio.dart';
 import 'dart:developer';
 
@@ -19,7 +20,9 @@ class MessageController extends GetxController{
 
   final messages = <MessageModel>[].obs;
   bool messsage_view_first_build = true;
+  FocusNode commentFocus = FocusNode();
   int lastSegmentBeginId = 0;
+  RxInt conversation_id = 0.obs;
 
   final ttsJobs = Map<String, String>().obs;
   late AudioPlayer ttsPlayer;
@@ -129,13 +132,35 @@ class MessageController extends GetxController{
     if (lastSegmentBeginId == -1){
       return -1;
     }
-    lastSegmentBeginId = await chatRecord.chatHistory(username, last_id);
+    // 如果是点击了free-chat按钮或者新话题按钮，则创建新会话，不需要加载历史记录
+    final SettingsController settingsController = Get.find();
+    if (settingsController.freeChatMode.value == true && conversation_id.value == 0)
+      conversation_id.value = -1;
+    if (conversation_id.value <= -1) // 当是-2时也会返回（+新话题按钮处设置的）
+      return -1;
+    lastSegmentBeginId = await chatRecord.chatHistory(username, last_id, conversation_id.value);
     if(lastSegmentBeginId == -2){
       await c.signout();
       Get.offAll(ResponsiveLayout());
     }
     // update();
     return lastSegmentBeginId;
+  }
+
+  Future<int> conversation_CUD(String username, String actionType) async {
+    ChatRecord chatRecord = ChatRecord();
+    int result = await chatRecord.conversation_CUD(username, actionType, conversation_id.value);
+    if(result == 0){
+      await c.signout();
+      Get.offAll(ResponsiveLayout());
+    }
+    return result;
+  }
+
+  Future<List<dynamic>> conversation_R(String username) async {
+    ChatRecord chatRecord = ChatRecord();
+    List<dynamic> result = await chatRecord.conversation_R(username);
+    return result;
   }
 
   Key addMessage(MessageModel message) {
@@ -234,30 +259,96 @@ class MessageController extends GetxController{
         }
       }
       if (choice.finishReason != null && choice.finishReason == 'stop'){
-          // 通过以下方法重整流式消息为按行分割的字符串列表
-          String joined_messages = collected_messages.join('');
-          List<String> split_messages = joined_messages.split('\n');
-          split_messages = split_messages.map((e) => e + '\n').toList();
-          
-          // 重新画ListView的指定item，解决屏幕会闪一下的问题
-          final message = findMessageByKey(needUpdate);
-          message.dataList.insert(0, "...");
-          message.dataList.removeRange(1, message.dataList.length);
-          message.dataList.addAll(split_messages);
-          message.dataList.removeAt(0);
-          
-          // 对于流式消息，通过往消息的最后位置插入一个关键字'[W0RDP1PE]$answer'的方式，把正确答案往后传递
-          if (requestType == WordPipeMessageType.reply_for_query_word_example_sentence){
-            message.dataList.add('[W0RDP1PE]$answer');
-          }
+        // 通过以下方法重整流式消息为按行分割的字符串列表
+        String joined_messages = collected_messages.join('');
+        List<String> split_messages = joined_messages.split('\n');
+        split_messages = split_messages.map((e) => e + '\n').toList();
+        
+        // 重新画ListView的指定item，解决屏幕会闪一下的问题
+        final message = findMessageByKey(needUpdate);
+        message.dataList.insert(0, "...");
+        message.dataList.removeRange(1, message.dataList.length);
+        message.dataList.addAll(split_messages);
+        message.dataList.removeAt(0);
+        
+        // 对于流式消息，通过往消息的最后位置插入一个关键字'[W0RDP1PE]$answer'的方式，把正确答案往后传递
+        if (requestType == WordPipeMessageType.reply_for_query_word_example_sentence){
+          message.dataList.add('[W0RDP1PE]$answer');
         }
+      }
     });
   }
 
-  void freeChat(String openAiApiKey, String text){
-    // 使用用户自己的OpenAI API key，如果返回错误说明用户提供的key无效，则要关掉free chat模式
-    // 携带上文在对话中，并在后续优化token用量
-    // 记录用户使用的token数量到数据库
+  void freeChat(String model, String openAiApiKey, int conversation_id, String prompt) async {
+    
+    String curr_user = "";
+    String access_token = "";
+    String apiKey = "";
+    String baseUrl = "";
+    int premium = 0;
+    Map<String, dynamic> sessionData = await c.getSessionData();
+    if (sessionData.containsKey('error') == false){
+      curr_user = sessionData['username'] as String;
+      access_token = sessionData['access_token'] as String;
+      apiKey = sessionData['apiKey'] as String;
+      baseUrl = sessionData['baseUrl'] as String;
+      premium = sessionData['premium'] as int;
+    }else{
+      return;
+    }
+    if (curr_user == ""){
+      return;
+    }
+    if (access_token == ""){
+      return;
+    }
+    if (apiKey == ""){
+      return;
+    }
+    if (baseUrl == ""){
+      return;
+    }
+
+    Key needUpdate = addMessage(MessageModel(
+      dataList: RxList(['...']),
+      type: WordPipeMessageType.stream,
+      username: "Jasmine",
+      uuid: "b811abd7-c0bb-4301-9664-574d0d8b11f8",
+      createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      key: UniqueKey(),
+    ));
+    
+    // 使用用户自己的OpenAI API key //如果返回错误说明用户提供的key无效，则要关掉free chat模式
+    final SettingsController settingsController = Get.find();
+    if (premium == 0 && settingsController.openAiApiKey.value != ""){
+        apiKey = settingsController.openAiApiKey.value;
+    }
+    OpenAI.apiKey = apiKey;
+    OpenAI.baseUrl = baseUrl;
+    List<OpenAIChatCompletionChoiceMessageModel> msg;
+    double temperature = 0;
+    msg = prompt_template_freechat(prompt.trim());
+    temperature = 0.2;
+    // 如果conversation_id == -1，说明是新会话，需要先创建会话。会话ID是服务端生成，并随着聊天内容返回客户端
+    Stream<OpenAIStreamChatCompletionModel> chatStream = OpenAI.instance.chat.createStream(
+      model: model,
+      messages: msg,
+      user: conversation_id.toString() + "[FREECHAT]" + curr_user,
+      temperature: temperature,
+    );
+    chatStream.listen((chatStreamEvent) {
+      // print(chatStreamEvent);
+      OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];
+      final content = choice.delta.content;
+      if(content != null){
+        print(content);
+        final message = findMessageByKey(needUpdate);
+        if (message.dataList[0] == '...'){
+          message.dataList.removeAt(0);
+        }
+        message.dataList.add(content);
+      }
+    });
     // 要提供prompt template，在界面右侧提供一些常用的模板（最佳实践），用户可以选择，点击将文本框变成表单
     // getChatCompletion('gpt-3.5-turbo', text, WordPipeMessageType.stream);
   }
@@ -390,12 +481,18 @@ class ChatRecord extends GetConnect {
     
   }
 
-  Future<int> chatHistory(String username, int last_id) async {
+  @override
+  void onClose() {
+    
+  }
+
+  Future<int> chatHistory(String username, int last_id, int conversation_id) async {
     int ret = -1;
     Uri url = Uri.parse('$HTTP_SERVER_HOST/user/chat-history');
     Map data = {};
     data['username'] = username;
     data['last_id'] = last_id;
+    data['conversation_id'] = conversation_id;
     String  access_token = "";
     Map<String, dynamic> sessionData = await c.getSessionData();
     if (sessionData.containsKey('error') == false)
@@ -419,10 +516,12 @@ class ChatRecord extends GetConnect {
         int msgCreateTime = e['msgCreateTime'] as int;
         String msgContent = e['msgContent'].toString();
         // int msgType = e['msgType'].toInt();
+        int conversation_id = e['conversation_id'] as int;
         // print("msgFrom:" + msgFrom);
         // print("msgCreatTime:" + msgCreateTime.toString());
         // print("msgContent:" + msgContent);
         // print("msgType:" + msgType.toString());
+        print("db conversation_id:" + conversation_id.toString());
         messageController.messages.add(
           MessageModel(
             username: msgFrom, 
@@ -440,6 +539,68 @@ class ChatRecord extends GetConnect {
     }
     return ret;
   }
+
+  Future<int> conversation_CUD(String username, String actionType, int conversation_id) async {
+    int ret = 0;
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/conversation');
+    Map data = {};
+    data['username'] = username;
+    String  access_token = "";
+    Map<String, dynamic> sessionData = await c.getSessionData();
+    if (sessionData.containsKey('error') == false)
+        access_token = sessionData['access_token'] as String;
+    
+    Map<String,String> hs = {};
+    hs['X-access-token'] = access_token;
+    if (actionType == 'create'){
+      final response = await post(url.toString(), data, headers: hs, contentType: 'application/json');
+      if (response.statusCode == 200) {
+        Map<String, dynamic>json = jsonDecode(response.body);
+        ret = json['conversation_id'] as int;
+      }
+    }else if (actionType == 'delete'){
+      if (conversation_id > 0){
+        url = url.replace(queryParameters: {'conversation_id': conversation_id.toString()});
+        final response = await delete(url.toString() , headers: hs, contentType: 'application/json');
+        if (response.statusCode == 200) {
+          Map<String, dynamic>json = jsonDecode(response.body);
+          ret = json['conversation_id'] as int;
+        }
+      }
+    }else if (actionType == 'update'){
+      final response = await put(url.toString(), data, headers: hs, contentType: 'application/json');
+      if (response.statusCode == 200) {
+        Map<String, dynamic>json = jsonDecode(response.body);
+        ret = json['conversation_id'] as int;
+      }
+    }
+    return ret;
+  }
+
+  Future<List<dynamic>> conversation_R(String username) async {
+    List<dynamic> ret = [];
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/conversation');
+
+    String  access_token = "";
+    Map<String, dynamic> sessionData = await c.getSessionData();
+    if (sessionData.containsKey('error') == false)
+        access_token = sessionData['access_token'] as String;
+    
+    Map<String,String> hs = {};
+    hs['X-access-token'] = access_token;
+
+    final newUrl = url.replace(
+      queryParameters: <String, String>{
+        'username': username,
+      },
+    );
+    final response = await get(newUrl.toString(), headers: hs, contentType: 'application/json');
+    if (response.statusCode == 200) {
+      ret = List<dynamic>.from(response.body);
+    }
+    return ret;
+  }
+
 }
 
 

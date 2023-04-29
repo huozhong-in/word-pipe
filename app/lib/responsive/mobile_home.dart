@@ -92,7 +92,7 @@ class MobileHome extends StatelessWidget {
                     height: double.infinity,
                     alignment: Alignment.topCenter,
                     color: Colors.white24,
-                    child: MessageView(key: ValueKey(DateTime.now()))
+                    child: MessageView(key: ValueKey(DateTime.now()), conversation_id: messageController.conversation_id.value)
                   )
               ),
             ),

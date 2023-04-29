@@ -89,7 +89,7 @@ final ThemeData appTheme2 = ThemeData(
   primaryColor: Colors.greenAccent[100],
   scaffoldBackgroundColor: const Color(0xFFF5F7FD),
   fontFamily: "Roboto",
-  fontFamilyFallback: ["NotoSansSC" , "PingFang SC", "Heiti SC",],
+  fontFamilyFallback: ["PingFang SC", "Heiti SC",],
   
   textTheme: TextTheme( //文本主题
     displayLarge: TextStyle(color: Color.fromARGB(255, 31, 165, 69)),
@@ -108,7 +108,7 @@ final ThemeData appTheme2 = ThemeData(
     onPrimary: Colors.black,
     onSecondary: Colors.white,
     onSurface: Colors.black,
-    onBackground: Colors.black,
+    onBackground: Color.fromARGB(255, 31, 165, 69),
     onError: Colors.white,
     brightness: Brightness.light,
   ).copyWith(secondary: Color.fromARGB(255, 59, 214, 157)),
