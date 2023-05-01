@@ -5,7 +5,7 @@ import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/responsive/responsive_layout.dart';
 import 'package:wordpipe/validator.dart';
 import 'package:wordpipe/responsive/sign_up.dart';
-
+import 'package:wordpipe/custom_widgets.dart';
 
 // ignore: must_be_immutable
 class MobileSignIn extends StatelessWidget {

@@ -1,6 +1,6 @@
-import 'package:get/get.dart';
+
 import 'package:dart_openai/openai.dart';
-import 'package:wordpipe/controller.dart';
+
 
 List<OpenAIChatCompletionChoiceMessageModel> prompt_template_freechat(String prompt){
   List<OpenAIChatCompletionChoiceMessageModel> modelList = [];

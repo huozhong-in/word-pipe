@@ -63,8 +63,8 @@ class Controller extends GetxController{
   Future<List<dynamic>> getWords(List<dynamic> word_json_list) async {
     return await _wordsProvider.getWords(word_json_list);
   }
-  Future<bool> chat(String username, String message) async{
-    return await _userProvider.chat(username, message);
+  Future<bool> chat(String username, String message, int conversation_id) async{
+    return await _userProvider.chat(username, message, conversation_id);
   }
   Future<Map<String, dynamic>> signin(String username, String password) async{
     return await _userProvider.signin(username, password);
@@ -166,7 +166,7 @@ class WordsProvider extends GetConnect {
 
 class UserProvider extends GetConnect {
 
-  Future<bool> chat(String username, String message) async{
+  Future<bool> chat(String username, String message, int conversation_id) async{
     // String baseUrl='$HTTP_SERVER_HOST/chat';
     // Uri url = Uri.parse(baseUrl).replace(
     //   queryParameters: <String, String>{
@@ -178,6 +178,7 @@ class UserProvider extends GetConnect {
     Map data = {};
     data['username'] = username;
     data['message'] = message;
+    data['conversation_id'] = conversation_id;
     String  access_token = "";
     if (await CacheHelper.hasData('sessionData')){
       if(await CacheHelper.getData('sessionData') != null){
@@ -185,10 +186,14 @@ class UserProvider extends GetConnect {
         access_token = sessionData['access_token'] as String;
       }
     }
+    print("access_token" + access_token);
     Map<String,String> hs = {};
     if (access_token != ""){
       hs['X-access-token'] = access_token;
     }
+    print("5");
+    print(hs['X-access-token']);
+    print("6");
     final response = await post(url.toString(), data, headers: hs, contentType: 'application/json');
     if (response.statusCode == 200) {
       return true;

@@ -33,7 +33,7 @@ class ChatRecordDB:
     def __init__(self):
         connect_args = MYSQL_CONFIG
         self.cnx = mysql.connector.connect(**connect_args)
-        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}/{MYSQL_CONFIG["database"]}')
+        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}:{MYSQL_CONFIG["port"]}/{MYSQL_CONFIG["database"]}')
 
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
@@ -60,17 +60,17 @@ class Conversation(Base):
     __tablename__ = 't_conversation'
     '''
     CREATE TABLE `t_conversation` (
-    `pk_conversation` int(11) NOT NULL,
-    `uuid` varchar(36) NOT NULL,
-    `conversation_name` varchar(255) DEFAULT NULL,
-    `is_deleted` int(1) NOT NULL DEFAULT 0,
-    `conversation_create_time` int(11) NOT NULL,
-    PRIMARY KEY (`pk_conversation`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+        `pk_conversation` int(11) unsigned NOT NULL AUTO_INCREMENT,
+        `uuid` varchar(36) NOT NULL,
+        `conversation_name` varchar(50) DEFAULT '',
+        `is_deleted` int(1) NOT NULL DEFAULT 0,
+        `conversation_create_time` int(11) NOT NULL,
+        PRIMARY KEY (`pk_conversation`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
     '''
     pk_conversation = Column(Integer, primary_key=True)
     uuid = Column(String(36), nullable=False)
-    conversation_name = Column(String(255), nullable=True)
+    conversation_name = Column(String(50), default="")
     is_deleted = Column(Integer, nullable=False, default=0)
     conversation_create_time = Column(Integer, nullable=False, default=0)
 
@@ -78,7 +78,7 @@ class ConversationDB:
     def __init__(self) -> None:
         connect_args = MYSQL_CONFIG
         self.cnx = mysql.connector.connect(**connect_args)
-        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}/{MYSQL_CONFIG["database"]}')
+        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}:{MYSQL_CONFIG["port"]}/{MYSQL_CONFIG["database"]}')
 
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
@@ -89,13 +89,23 @@ class ConversationDB:
         result = self.session.query(Conversation).filter(Conversation.uuid == user_id, Conversation.is_deleted == 0).order_by(Conversation.pk_conversation.desc()).all()
         return result
     
-    def delete_conversation(self, conversation_id: int):
-        self.session.query(Conversation).filter(Conversation.pk_conversation == conversation_id).update({'is_deleted': 1})
-        self.session.commit()
+    def get_a_conversation(self, conversation_id: int) -> Conversation:
+        result: Conversation = self.session.query(Conversation).filter(Conversation.pk_conversation == conversation_id).first()
+        return result
+    
+    def delete_conversation(self, conversation_id: int) -> bool:
+        try:
+            self.session.query(Conversation).filter(Conversation.pk_conversation == conversation_id).update({'is_deleted': 1})
+            self.session.commit()
+            return True
+        except Exception as e:
+            print(e)
+            self.session.rollback()
+            return False
     
     def create_conversation(self, conversation: Conversation) -> int:
         self.session.add(conversation)
-        # self.session.commit()
+        self.session.commit()
         self.session.flush()
         return conversation.pk_conversation
 
@@ -112,9 +122,16 @@ if __name__ == '__main__':
     # create_time = int(time.time())
     # cr = ChatRecord( msgFrom='Dio', msgTo='Jasmine', msgCreateTime=create_time, msgContent='北冰洋冰层厚度？', msgStatus=1, msgType=1, msgSource=1, msgDest=1)
     # crdb.insert_chat_record(cr)
-    r = crdb.get_chat_record(user_id="b811abd7-c0bb-4301-9664-574d0d8b11f8", last_chat_record_id=0)
-    # print(r)
+    l: list = crdb.get_chat_record(user_id="b811abd7-c0bb-4301-9664-574d0d8b11f8", last_chat_record_id=0, limit=20, conversation_id=6)
+    print(len(l))
+    for cr in l:
+        print(cr.msgContent)
     crdb.close()
     # 反转打印
-    for i in r[::-1]:
-        print(i.msgContent)
+    # for i in r[::-1]:
+    #     print(i.msgContent)
+    # cvDB = ConversationDB()
+    # cv = Conversation(uuid='b811abd7-c0bb-4301-9664-574d0d8b11f8', conversation_name='test conversation', conversation_create_time=int(time.time()))
+    # r:int = cvDB.create_conversation(cv)
+    # cvDB.close()
+    # print(r)

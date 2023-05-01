@@ -1,7 +1,7 @@
 import 'package:wordpipe/config.dart';
 import 'package:flutter/material.dart';
 import 'package:wordpipe/validator.dart';
-
+import 'package:wordpipe/custom_widgets.dart';
 
 class ResetPassword extends StatelessWidget {
   ResetPassword({Key? key}) : super(key: key);

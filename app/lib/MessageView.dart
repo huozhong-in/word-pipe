@@ -25,17 +25,17 @@ class MessageView extends StatelessWidget {
   Widget build(BuildContext context) {
     
     Future<void> getChatHistory() async {
-      print("getChatHistory()" + messageController.conversation_id.value.toString());
+      print("getChatHistory(): " + messageController.conversation_id.value.toString());
       String user_name = await c.getUserName();
       if (user_name != "") {
-        print("1");
+        // print("1");
         // 检查是不是第一次打开MessageView
         if (messageController.messsage_view_first_build == true){
-          print("2");
+          // print("2");
           // 从数据库里拿最新的一些消息
           int _lastSegmentBeginId = await messageController.chatHistory(user_name, messageController.lastSegmentBeginId);
-          print("3");
-          print("_lastSegmentBeginId:" + _lastSegmentBeginId.toString());
+          // print("3");
+          // print("_lastSegmentBeginId:" + _lastSegmentBeginId.toString());
           // Welcome message
           if (_lastSegmentBeginId == -1){
             // -1意味着没有任何历史消息，是新用户，发送欢迎信息

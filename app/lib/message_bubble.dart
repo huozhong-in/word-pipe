@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:wordpipe/custom_widgets.dart';
 
 
 // ignore: must_be_immutable
@@ -121,12 +122,12 @@ class MessageBubble extends StatelessWidget {
                                             messageController.ttsPlayer.pause().then((value) {
                                               messageController.whichIsPlaying.value = keyString;
                                               messageController.buttonNotifier.value = ButtonState.loading;
-                                              messageController.addToTTSJobs(keyString, dataList.join(' ').split('[W0RDP1PE]')[0]);
+                                              messageController.addToTTSJobs(keyString, dataList.join('').split('[W0RDP1PE]')[0]);
                                             });
                                           }else{
                                             messageController.whichIsPlaying.value = keyString;
                                             messageController.buttonNotifier.value = ButtonState.loading;
-                                            messageController.addToTTSJobs(keyString, dataList.join(' ').split('[W0RDP1PE]')[0]);
+                                            messageController.addToTTSJobs(keyString, dataList.join('').split('[W0RDP1PE]')[0]);
                                           }
                                         }
                                       },
@@ -544,7 +545,7 @@ class MessageBubble extends StatelessWidget {
                 )
               ),
               onPressed: () async {
-                c.chat(await c.getUserName(), match.group(0)!);
+                c.chat(await c.getUserName(), match.group(0)!, messageController.conversation_id.value);
               }, 
               child: Text(
                 match.group(0)!,

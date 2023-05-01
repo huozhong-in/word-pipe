@@ -9,12 +9,12 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 // final bool kDebugMode = true;
 // final bool isDebug = bool.fromEnvironment('DEBUG', defaultValue: false);
 
-final String SSE_SERVER_HOST = kDebugMode ? "http://192.168.0.166" : "https://wordpipe.in";
+final String SSE_SERVER_HOST = kDebugMode ? "http://192.168.2.117" : "https://wordpipe.in";
 final String SSE_SERVER_PATH = "/api/stream";
 final String SSE_MSG_TYPE = "prod"; // prod, dev, test
 final String SSE_MSG_DEFAULT_CHANNEL = "users.social";
 
-final String HTTP_SERVER_HOST = kDebugMode ? "http://192.168.0.166/api" : "https://wordpipe.in/api";
+final String HTTP_SERVER_HOST = kDebugMode ? "http://192.168.2.117/api" : "https://wordpipe.in/api";
 
 final AVATAR_FILE_DIR = "avatar";
 
@@ -186,18 +186,7 @@ const double DESKTOP_LAYOUT_WIDTH = 1000;
 // })
 
 
-SnackbarController customSnackBar({required String title, required String content}) {
-  return Get.snackbar(title, content,
-    snackPosition: SnackPosition.TOP,
-    backgroundColor: Colors.black54,
-    colorText: Colors.white,
-    margin: const EdgeInsets.all(1),
-    borderRadius: 8,
-    duration: const Duration(seconds: 2),
-    icon: const Icon(Icons.error, color: Colors.white),
-    maxWidth: 375,
-  );
-}
+
 
 String decrypt(String encryptedString) {
   int offset = 0;

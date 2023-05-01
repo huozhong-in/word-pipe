@@ -47,6 +47,7 @@ MYSQL_CONFIG = {
   'user': 'wordpipe',
   'password': 'dswybs-yoqoo',
   'host': '127.0.0.1',
+  'port': 3306,
   'database': 'wordpipe',
   'raise_on_warnings': True,
 }

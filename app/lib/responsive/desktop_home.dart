@@ -27,34 +27,33 @@ class DesktopHome extends StatelessWidget {
   late int _leftOrRight = 0; // 此变量用于记录当按下键盘左右键时，光标应向左移动还是向右移动，-1表示向左，1表示向右，0表示未移动
   late final Map<String, String> _wordDetail = <String, String>{}.obs;
   ScrollController _scrollController = ScrollController();
+  final TextEditingController conversationNameController = TextEditingController();
 
-  void _handleSubmitted(String text) {
+  void _handleSubmitted(String text) async {
     if(text.trim() == ""){
       return;
     }
-    // 向服务端发送消息，
-    c.getUserName().then((_username){
+    // 向服务端发送消息
+    String _username = await c.getUserName();
+    // 如果conversation_id == -1，说明是新话题，需要先创建话题，话题ID是服务端生成返回
+    if (messageController.conversation_id.value == -1){
+      messageController.conversation_id.value = await messageController.conversation_CUD(_username, "create", messageController.conversation_id.value);
+    }
+    bool ret = await c.chat(_username, text.trim(), messageController.conversation_id.value);
+    if(ret == true){
+      _textController.clear();
+      _matchWords.clear();
+      _indexHighlight = 0;
       if (settingsController.freeChatMode.value == true){
-        // 如果是free-chat模式，则要开启新会话窗口
-        messageController.freeChat('gpt-3.5-turbo', settingsController.openAiApiKey.value, messageController.conversation_id.value, text);
-      }else{
-        // 如果是普通模式，向服务端发送消息
-        Future<bool> r = c.chat(_username, text.trim());
-        r.then((ret){
-          if(ret == true){
-            _textController.clear();
-            _matchWords.clear();
-            _indexHighlight = 0;
-          }else{
-            customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
-            // 三秒后跳转到登录页面
-            Future.delayed(Duration(seconds: 3), () {
-              Get.offAll(ResponsiveLayout());
-            });
-          }
-        });
+        messageController.freeChat('gpt-3.5-turbo', messageController.conversation_id.value, text);
       }
-    });    
+    }else{
+      customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
+      // 三秒后跳转到登录页面
+      Future.delayed(Duration(seconds: 3), () {
+        Get.offAll(ResponsiveLayout());
+      });
+    }   
   }
   
   void _handleMatchWords(String text) {
@@ -590,9 +589,91 @@ class DesktopHome extends StatelessWidget {
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
                                         Text('Jasmine', style: TextStyle(fontFamily: 'Comfortaa', fontSize: 18, fontWeight: FontWeight.w600, color: Colors.green[900])),
-                                        IconButton(onPressed: ()=>{
-                                          customSnackBar(title: "Info", content: "not open yet")
-                                        }, icon: Icon(Icons.more_vert))
+                                        Obx(() {
+                                          return Text(
+                                            messageController.selectedConversationName.value, 
+                                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green[900]),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          );                                          
+                                        }),
+                                        Obx(() {
+                                          return DropdownButton(
+                                            icon: Icon(Icons.more_vert),
+                                            iconDisabledColor: Colors.grey[100],
+                                            items: [
+                                              DropdownMenuItem(
+                                                enabled: messageController.conversation_id.value > 0,
+                                                value: 'edit',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.edit, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey,),
+                                                    SizedBox(width: 10),
+                                                    Text('Edit', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
+                                                  ],
+                                                ),
+                                              ),
+                                              DropdownMenuItem(
+                                                enabled: messageController.conversation_id.value > 0,
+                                                value: 'delete',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.delete, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey,),
+                                                    SizedBox(width: 10),
+                                                    Text('Delete', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                            onChanged: (value) {
+                                              if (value == 'edit') {
+                                                // show a dialog for modify messageControll.seletedConversationName
+                                                conversationNameController.text = messageController.selectedConversationName.value;
+                                                Get.defaultDialog(
+                                                  title: 'Edit',
+                                                  content: TextField(
+                                                    controller: conversationNameController,
+                                                    decoration: InputDecoration(
+                                                      border: OutlineInputBorder(),
+                                                      labelText: 'Conversation Name',
+                                                    ),
+                                                    maxLength: 50,
+                                                  ),
+                                                  textConfirm: 'Save',
+                                                  textCancel: 'Cancel',
+                                                  confirmTextColor: Colors.white,
+                                                  buttonColor: Colors.green,
+                                                  onConfirm: () async {
+                                                    // update conversation name
+                                                    if (await messageController.updateConversationName(messageController.conversation_id.value, conversationNameController.text)){
+                                                      Get.back();
+                                                    }else{
+                                                      print('update error');
+                                                    }
+                                                  },
+                                                );
+                                              } else if (value == 'delete') {
+                                                // show a dialog for delete messageControll.radioListTile current item
+                                                Get.defaultDialog(
+                                                  title: 'Delete',
+                                                  content: Text('Are you sure to delete this conversation?'),
+                                                  textConfirm: 'Delete',
+                                                  textCancel: 'Cancel',
+                                                  confirmTextColor: Colors.white,
+                                                  buttonColor: Colors.red,
+                                                  onConfirm: () async {
+                                                    // delete conversation
+                                                    if (await messageController.deleteConversation(messageController.conversation_id.value)){
+                                                      Get.back();
+                                                    }else{
+                                                      print('delete error');
+                                                    }
+                                                  },
+                                                );
+                                              }
+                                            },
+                                          );
+                                        },)
                                       ],
                                     ),
                                   ),

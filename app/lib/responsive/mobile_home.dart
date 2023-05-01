@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:wordpipe/config.dart';
+import 'package:wordpipe/custom_widgets.dart';
 import 'package:wordpipe/responsive/mobile_sign_in.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageView.dart';
@@ -207,7 +207,7 @@ class MobileHome extends StatelessWidget {
     }
     // 向服务端发送消息
     c.getUserName().then((_username){
-      Future<bool> r = c.chat(_username, text.trim());
+      Future<bool> r = c.chat(_username, text.trim(), 0);
       r.then((ret){
         if(ret == true){
           _textController.clear();

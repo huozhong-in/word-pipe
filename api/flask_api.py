@@ -266,6 +266,8 @@ def chat():
         data: dict = request.get_json()
         username: str = data.get('username')
         message: str = data.get('message')
+        conversation_id: int = data.get('conversation_id')
+        print('chat():' + str(conversation_id))
     except:
         return make_response('JSON data required', 500)
     if message == '':
@@ -274,8 +276,6 @@ def chat():
     # tic = time.perf_counter()
 
     logging.info(f'[{username}]: {message}')
-    # 每个登录用户都分配到一个channel，用于SSE推送，取得这个channel字符串
-    channel: str = ''
     if request.headers.get('X-access-token'):
         # print('X-access-token: ', request.headers['X-access-token'])
         u: User = userDB.get_user_by_username(username)
@@ -285,14 +285,13 @@ def chat():
             return make_response('', 500)
         if u.access_token_expire_at < int(time.time()):
             return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
-        channel = username
     else:
         return make_response('access_token required', 500)
 
     # 将用户消息记录到数据库
     myuuid: str = userDB.get_user_by_username(username).uuid
     s: str = json.loads(json.dumps(message, ensure_ascii=False)) # 防止被SQLAlchemy转义双引号、回车符、制表符和斜杠
-    cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jasmine').uuid, msgCreateTime=int(time.time()), msgContent=s, msgType=1)
+    cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jasmine').uuid, msgCreateTime=int(time.time()), msgContent=s, msgType=1, conversation_id=conversation_id)
     crdb.insert_chat_record(cr)
 
     # 替用户发消息
@@ -305,7 +304,10 @@ def chat():
     back_data['type'] = 1 # WordPipeMessageType.text format. See: config.dart
     back_data['createTime'] = int(time.time())
     id = generate_time_based_client_id(prefix=username)
-    sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
+    sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
+
+    if conversation_id != 0:
+        return make_response('', 200)
 
     # 检查message中是否包含英文单词
     import re
@@ -334,7 +336,7 @@ def chat():
     back_data['dataList'] = dataList
     back_data['createTime'] = int(time.time())
     id = generate_time_based_client_id(prefix=username)
-    sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
+    sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
 
 
     # toc = time.perf_counter()
@@ -633,10 +635,10 @@ def openai_proxy(path):
     '''
     api_url = f'https://api.openai.com/{path}'
     headers = {key: value for (key, value) in request.headers if key != 'Host'}
-    data_json = request.get_json()
+    data = request.get_data()
     params = request.args
-    username = data_json['user']
-    messages = data_json['messages']
+    username = request.json['user']
+    messages = request.json['messages']
     # print("use tokens: " + str(num_tokens_from_messages(messages)))
     # data_json = json.dumps(data.decode('utf-8'))
     
@@ -646,27 +648,29 @@ def openai_proxy(path):
         return make_response(jsonify({"errcode":50007,"errmsg":"Message is empty"}), 500)
     
     # TODO 检查消息的类型是否是查询单词，是的话记录到数据库，进入用户生词本。一种方法是检查message，另一种方法是在按钮上再发起一次请求，走另外接口。
-
     #  携带上文在对话中
     if "[FREECHAT]" in username:
-        username = username.split('[FREECHAT]')[1]
-        conversation_id = username.split('[FREECHAT]')[0]
-
+        orig_username = username
+        username = orig_username.split('[FREECHAT]')[1]
+        conversation_id = orig_username.split('[FREECHAT]')[0]
         # 从数据库中取出此用户最近的20条记录，按顺序拼接到messages前面
         myuuid: str = userDB.get_user_by_username(username).uuid
-        for cr in crdb.get_chat_record(user_id=myuuid, last_chat_record_id=0, limit=20, conversation_id=int(conversation_id)):
-            last_message['content']  = cr.msgContent + '\n' + last_message['content']
-        # print(messages[-1])
-        # data_json['messages'][-1] = last_message
-        print(data_json)
-        return make_response('ok', 200)
+        data_json = json.loads(data.decode('utf-8'))
+        try:
+            l: list = crdb.get_chat_record(user_id=myuuid, last_chat_record_id=0, limit=20, conversation_id=int(conversation_id))
+        except Exception as e:
+            l: list = []
+            print(e)
+        for cr in l:
+            data_json['messages'][-1]['content'] = cr.msgContent + '\n' + data_json['messages'][-1]['content']
+        data = json.dumps(data_json).encode('utf-8')
+
         
         # 记录用户使用的token数量到数据库
         # 优化token用量
         # summary可能不需要存库和在客户端展示
     else:
         conversation_id = 0
-
 
     # 开发环境需要走本地代理服务器才能访问到openai API
     if os.environ.get('DEBUG_MODE') != None:
@@ -807,12 +811,11 @@ def chat_history():
 def conversation_crud():
     if not request.headers.get('X-access-token'):
         return make_response('access-token missing', 500)
-    if request.method == 'GET':
-        username: str = request.args.get('username')
-    else:
+    if request.method == 'POST' or request.method == 'PUT':
         data: dict = request.get_json()
         username: str = data.get('username')
-    
+    else:
+        username: str = request.args.get('username')
     if username is None or username == '':
         return make_response('username missing', 500)
     u: User = userDB.get_user_by_username(username)
@@ -822,19 +825,33 @@ def conversation_crud():
         return make_response('access-token wrong', 500)
     if u.access_token_expire_at < int(time.time()):
         return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
-    
+
     conversationDB = ConversationDB()
     if request.method == 'GET':
-        r: list = []
-        r = conversationDB.get_conversation_list(u.uuid)
-        rsp = make_response(jsonify(r), 200)
+        back_data: list = []
+        try:
+            r: list = conversationDB.get_conversation_list(u.uuid)
+            for i in r:
+                j: Conversation = i
+                back_data.append({
+                    'pk_conversation': j.pk_conversation,
+                    'conversation_name': j.conversation_name,
+                    'conversation_create_time': j.conversation_create_time
+                })
+        except Exception as e:
+            print(e)
+            conversationDB.close()
+            return make_response('get conversation list failed', 500)
+        
+        rsp = make_response(jsonify(back_data), 200)
     elif request.method == 'POST':
         c = Conversation(uuid=u.uuid, conversation_create_time=int(time.time()))
         conversation_id = conversationDB.create_conversation(c)
-        rsp = make_response(jsonify({"conversation_id": conversation_id}), 200)
+        conversationDB.close()
+        rsp = make_response(jsonify({"pk_conversation": conversation_id}), 200)
     elif request.method == 'PUT':
-        conversation_id = data.get('conversation_id')
-        conversation_name = data.get('conversation_name')
+        conversation_id: int = data.get('conversation_id')
+        conversation_name: str = data.get('conversation_name')
         if conversation_id is None or conversation_id == '':
             conversationDB.close()
             return make_response('conversation_id missing', 500)
@@ -842,14 +859,21 @@ def conversation_crud():
             conversationDB.close()
             return make_response('conversation_name missing', 500)
         conversationDB.update_conversation_name(conversation_id, conversation_name)
-        rsp = make_response(jsonify({"conversation_id": conversation_id}), 200)
+        rsp = make_response(jsonify({"pk_conversation": conversation_id}), 200)
     elif request.method == 'DELETE':
-        conversation_id = request.args.get('conversation_id')
+        conversation_id: int = request.args.get('conversation_id')
         if conversation_id is None or conversation_id == '':
             conversationDB.close()
             return make_response('conversation_id missing', 500)
-        conversationDB.delete_conversation(conversation_id)
-        rsp = make_response(jsonify({"conversation_id": conversation_id}), 200)
+        r: Conversation = conversationDB.get_a_conversation(conversation_id)
+        if r is None or r.uuid != u.uuid:
+            conversationDB.close()
+            return make_response('conversation not exist', 500)
+        if conversationDB.delete_conversation(conversation_id):
+            rsp = make_response(jsonify({"pk_conversation": conversation_id}), 200)
+            conversationDB.close()
+        else:
+            rsp = make_response('delete conversation failed', 500)
     else:
         rsp = make_response('method not allowed', 500)
 

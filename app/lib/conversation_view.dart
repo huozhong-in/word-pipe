@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageController.dart';
 import 'package:wordpipe/MessageView.dart';
+import 'package:wordpipe/custom_widgets.dart';
 
 
 class ConversationView extends StatelessWidget {
@@ -15,39 +16,17 @@ class ConversationView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    Future<List<ListTile>> getListTiles(BuildContext context) async {
-      print("getListTiles");
-      List<ListTile> _listTiles = [];
-      if (settingsController.freeChatMode.value){
-        // 如果没有开启Free chat mode，则不需要请求数据库
-        String curr_user = await c.getUserName();
-        List<dynamic> _conversationList = await messageController.conversation_R(curr_user);
-        for (var i = 0; i < _conversationList.length; i++) {
-          Map<String,dynamic> item = _conversationList[i];
-          _listTiles.add(
-            ListTile(
-              leading: Icon(Icons.message_rounded,size: 20),
-              title: Text(item['conversation_name'].toString(), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14)),
-              minLeadingWidth: 0,
-              minVerticalPadding: 0,
-              contentPadding: EdgeInsets.fromLTRB(2, 0, 0, 0),
-              horizontalTitleGap: 4,
-              onTap: () => {
-                print(item['pk_conversation'].toString()),
-                messageController.conversation_id = item['pk_conversation'],
-              },
-            ),
-          );
-        }
-      }
-      return _listTiles;
+    Future<List<dynamic>> _getListTile() async {
+      return messageController.conversation_R(await c.getUserName());
     }
+
+    
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Obx(() { 
+        Obx(() {
           return Visibility(
             visible: settingsController.freeChatMode.value,
             child: Container(
@@ -71,33 +50,43 @@ class ConversationView extends StatelessWidget {
                     message: '开个新话题',
                     child: ListTile(
                       leading: Icon(Icons.add),
-                      title: Text('新话题', style: TextStyle(fontSize: 14)),
+                      title: Text('新话题', style: TextStyle(fontSize: 15)),
                       minLeadingWidth: 0,
                       minVerticalPadding: 0,
                       onTap: () async {
                         messageController.messages.clear();
+                        messageController.lastSegmentBeginId = 0;
                         messageController.messsage_view_first_build = true;
                         messageController.conversation_id.value = -2; // 强制MessageView刷新
                         messageController.conversation_id.value = -1;
+                        messageController.selectedConversationName.value = '';
                         messageController.commentFocus.requestFocus();
                       },
                     ),
                   ),
-                  Divider(),
-                  FutureBuilder<List<ListTile>>(
-                    future: getListTiles(context),
+                  // Divider(),
+                  FutureBuilder<List<dynamic>>(
+                    future: _getListTile(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
-                        return ListView(
-                          shrinkWrap: true,
-                          children: snapshot.data!,
-                        );
+                        // List<Widget> radioListTiles = [];
+                        messageController.radioListTiles.clear();
+                        for (var i = 0; i < snapshot.data!.length; i++) {
+                          Map<String, dynamic> item = snapshot.data![i];
+                          messageController.radioListTiles.add(customRadioListTile(item));
+                        }
+                        return Obx(() {
+                          return ListView(
+                            shrinkWrap: true,
+                            children: messageController.radioListTiles,
+                          );
+                        },);
                       } else if (snapshot.hasError) {
                         return Text("${snapshot.error}");
                       }
                       return Center(child: CircularProgressIndicator());
                     },
-                  ),
+                  )
                 ],
               ),
             ),
@@ -105,7 +94,7 @@ class ConversationView extends StatelessWidget {
         }),
         Expanded(child: 
           FutureBuilder<void>(
-            future: getListTiles(context).then((value) => print("getListTiles done")),
+            future: _getListTile().then((value) => print("MessageView first build done.")),
             builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator(
@@ -122,4 +111,17 @@ class ConversationView extends StatelessWidget {
       ],
     );
   }
+}
+
+SnackbarController customSnackBar({required String title, required String content}) {
+  return Get.snackbar(title, content,
+    snackPosition: SnackPosition.TOP,
+    backgroundColor: Colors.black54,
+    colorText: Colors.white,
+    margin: const EdgeInsets.all(1),
+    borderRadius: 8,
+    duration: const Duration(seconds: 2),
+    icon: const Icon(Icons.error, color: Colors.white),
+    maxWidth: 375,
+  );
 }
