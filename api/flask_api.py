@@ -267,7 +267,6 @@ def chat():
         username: str = data.get('username')
         message: str = data.get('message')
         conversation_id: int = data.get('conversation_id')
-        print('chat():' + str(conversation_id))
     except:
         return make_response('JSON data required', 500)
     if message == '':
@@ -836,7 +835,7 @@ def conversation_crud():
                 back_data.append({
                     'pk_conversation': j.pk_conversation,
                     'conversation_name': j.conversation_name,
-                    'conversation_create_time': j.conversation_create_time
+                    # 'conversation_create_time': j.conversation_create_time
                 })
         except Exception as e:
             print(e)
@@ -848,7 +847,7 @@ def conversation_crud():
         c = Conversation(uuid=u.uuid, conversation_create_time=int(time.time()))
         conversation_id = conversationDB.create_conversation(c)
         conversationDB.close()
-        rsp = make_response(jsonify({"pk_conversation": conversation_id}), 200)
+        rsp = make_response(jsonify({"pk_conversation": int(conversation_id)}), 200)
     elif request.method == 'PUT':
         conversation_id: int = data.get('conversation_id')
         conversation_name: str = data.get('conversation_name')
@@ -859,7 +858,7 @@ def conversation_crud():
             conversationDB.close()
             return make_response('conversation_name missing', 500)
         conversationDB.update_conversation_name(conversation_id, conversation_name)
-        rsp = make_response(jsonify({"pk_conversation": conversation_id}), 200)
+        rsp = make_response(jsonify({"pk_conversation": int(conversation_id)}), 200)
     elif request.method == 'DELETE':
         conversation_id: int = request.args.get('conversation_id')
         if conversation_id is None or conversation_id == '':
@@ -870,7 +869,7 @@ def conversation_crud():
             conversationDB.close()
             return make_response('conversation not exist', 500)
         if conversationDB.delete_conversation(conversation_id):
-            rsp = make_response(jsonify({"pk_conversation": conversation_id}), 200)
+            rsp = make_response(jsonify({"pk_conversation": int(conversation_id)}), 200)
             conversationDB.close()
         else:
             rsp = make_response('delete conversation failed', 500)

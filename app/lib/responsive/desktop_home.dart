@@ -10,6 +10,7 @@ import 'package:wordpipe/user_profile.dart';
 import 'package:wordpipe/MessageController.dart';
 import 'package:wordpipe/settings.dart';
 import 'package:wordpipe/about_us.dart';
+import 'package:wordpipe/custom_widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:developer';
 

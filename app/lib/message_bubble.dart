@@ -545,7 +545,7 @@ class MessageBubble extends StatelessWidget {
                 )
               ),
               onPressed: () async {
-                c.chat(await c.getUserName(), match.group(0)!, messageController.conversation_id.value);
+                c.chat(await c.getUserName(), match.group(0)!, 0);
               }, 
               child: Text(
                 match.group(0)!,

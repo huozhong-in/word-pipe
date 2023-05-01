@@ -5,13 +5,17 @@ import 'package:wordpipe/MessageController.dart';
 
 Widget customRadioListTile(Map<String, dynamic> item) {
   final MessageController messageController = Get.find<MessageController>();
-  int pkConversation = item['pk_conversation'];
+  final int pkConversation = item['pk_conversation'];
 
 
   return Obx(() {
+
+    messageController.conversationNameMap[pkConversation] = item['conversation_name'].toString();
+    
     return RadioListTile<int>(
       value: pkConversation,
       groupValue: messageController.conversation_id.value,
+      key: Key(pkConversation.toString()),
       onChanged: (value) {
         messageController.messages.clear();
         messageController.lastSegmentBeginId = 0;
@@ -40,6 +44,7 @@ Widget customRadioListTile(Map<String, dynamic> item) {
         ),
       ),
     );
+    
   });
 }
 

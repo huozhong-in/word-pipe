@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:dart_openai/openai.dart';
 import 'package:wordpipe/MessageModel.dart';
@@ -26,6 +25,7 @@ class MessageController extends GetxController{
   int lastSegmentBeginId = 0;
   RxInt conversation_id = 0.obs;
   RxList<Widget> radioListTiles = RxList<Widget>();
+  Map<int, String> conversationNameMap = {};
   RxString selectedConversationName = ''.obs;
 
   final ttsJobs = Map<String, String>().obs;
@@ -153,7 +153,12 @@ class MessageController extends GetxController{
 
   Future<int> conversation_CUD(String username, String actionType, int conversation_id, {String conversation_name=''}) async {
     ChatRecord chatRecord = ChatRecord();
-    int result = await chatRecord.conversation_CUD(username, actionType, conversation_id, conversation_name: conversation_name);
+    int result = 0;
+    if (conversation_name == ''){
+      result = await chatRecord.conversation_CUD(username, actionType, conversation_id);
+    }else{
+      result = await chatRecord.conversation_CUD(username, actionType, conversation_id, conversation_name: conversation_name);
+    }
     if(result == 0){
       await c.signout();
       Get.offAll(ResponsiveLayout());
@@ -333,7 +338,7 @@ class MessageController extends GetxController{
     double temperature = 0;
     msg = prompt_template_freechat(prompt.trim());
     temperature = 0.2;
-    // 拼接发回给服务端，以便保存对应的聊天记录
+    // 拼接发回给服务端，以便保存AI的回复到聊天记录表
     Stream<OpenAIStreamChatCompletionModel> chatStream = OpenAI.instance.chat.createStream(
       model: model,
       messages: msg,
@@ -353,19 +358,14 @@ class MessageController extends GetxController{
         message.dataList.add(content);
       }
       if (choice.finishReason != null && choice.finishReason == 'stop'){
-          final MessageController messageController = Get.find<MessageController>();
-          messageController.conversation_R(curr_user).then((items) {
-            messageController.radioListTiles.clear();
-            for (var i = 0; i < items.length; i++) {
-              Map<String, dynamic> item = items[i];
-              messageController.radioListTiles.add(customRadioListTile(item));
-            }
-            messageController.selectedConversationName.value =items[0]['conversation_name'].toString().trim() == '' ? '未命名话题' : items[0]['conversation_name'].toString();
-          });
+          // “新话题”则记录到同步的列表变量中，以便将来重建radioListTiles使用
+          conversationNameMap[c_id] = "未命名话题";
+          // 新增成功后，重新生成整个 radioListTiles 列表
+          _rebuildRadioListTiles();
+          selectedConversationName.value = "未命名话题";
       }
     });
-    // 要提供prompt template，在界面右侧提供一些常用的模板（最佳实践），用户可以选择，点击将文本框变成表单
-    // getChatCompletion('gpt-3.5-turbo', text, WordPipeMessageType.stream);
+    // TODO 要提供prompt template，在界面右侧提供一些常用的模板（最佳实践），用户可以选择，点击将文本框变成表单
   }
 
   void handleSSE(String channel) async {
@@ -422,19 +422,16 @@ class MessageController extends GetxController{
     }
   }
 
-  Future<bool> deleteConversation(int conversation_id ) async {
+  Future<bool> deleteConversation(int c_id ) async {
     String _username = await c.getUserName();
-    int c_id = await conversation_CUD(_username, 'delete', conversation_id);
-    if (c_id == conversation_id){
-      final MessageController messageController = Get.find<MessageController>();
-      messageController.conversation_R(_username).then((items) {
-        messageController.radioListTiles.clear();
-        for (var i = 0; i < items.length; i++) {
-          Map<String, dynamic> item = items[i];
-          messageController.radioListTiles.add(customRadioListTile(item));
-        }
-        messageController.selectedConversationName.value = '';
-      });
+    int new_id = await conversation_CUD(_username, 'delete', c_id);
+    if (new_id == c_id){
+      conversationNameMap.remove(c_id);
+      // 删除成功后，重新生成整个 radioListTiles 列表
+      _rebuildRadioListTiles();
+      selectedConversationName.value = '';
+      messages.clear();
+      conversation_id.value = -1;
       return true;
     }
     return false;
@@ -444,18 +441,30 @@ class MessageController extends GetxController{
     String _username = await c.getUserName();
     int c_id = await conversation_CUD(_username, 'update', conversation_id, conversation_name: new_name);
     if (c_id == conversation_id){
-      final MessageController messageController = Get.find<MessageController>();
-      messageController.conversation_R(_username).then((items) {
-        messageController.radioListTiles.clear();
-        for (var i = 0; i < items.length; i++) {
-          Map<String, dynamic> item = items[i];
-          messageController.radioListTiles.add(customRadioListTile(item));
-        }
-        messageController.selectedConversationName.value = new_name;
-      });
+      conversationNameMap[conversation_id] = new_name;
+      // 更新成功后，重新生成整个 radioListTiles 列表
+      _rebuildRadioListTiles();
+      selectedConversationName.value = new_name;
       return true;
     }
     return false;
+  }
+
+  void _rebuildRadioListTiles() {
+    // 将 conversationNameMap 按照 pk_conversation 排序
+    var sortedEntries = conversationNameMap.entries.toList()
+      ..sort((a, b) => b.key.compareTo(a.key));
+    // 使用 map 函数生成控件
+    var rlt = sortedEntries.map((entry) {
+      int pkConversation = entry.key;
+      String conversationName = entry.value;
+      return customRadioListTile({
+        'pk_conversation': pkConversation,
+        'conversation_name': conversationName,
+      });
+    }).toList();
+    // 调用 assignAll 方法将生成的控件赋值给 radioListTiles
+    radioListTiles.assignAll(rlt);
   }
 
   // Future<String> convertspeechToText (String filepath) async {
@@ -562,18 +571,19 @@ class ChatRecord extends GetConnect {
         Map<String, dynamic> e = element as Map<String, dynamic>;
         ret = e['pk_chat_record'] as int;
         String msgFrom = e['msgFrom'].toString();
+        // print("msgFrom:" + msgFrom);
         // String msgTo = e['msgTo'].toString();
+        // print("msgTo:" + msgTo);
         String msgFromUUID = e['msgFromUUID'].toString();
         // String msgToUUID = e['msgToUUID'].toString();
         int msgCreateTime = e['msgCreateTime'] as int;
-        String msgContent = e['msgContent'].toString();
-        // int msgType = e['msgType'].toInt();
-        int conversation_id = e['conversation_id'] as int;
-        // print("msgFrom:" + msgFrom);
         // print("msgCreatTime:" + msgCreateTime.toString());
+        String msgContent = e['msgContent'].toString();
         // print("msgContent:" + msgContent);
+        // int msgType = e['msgType'].toInt();
         // print("msgType:" + msgType.toString());
-        print("db conversation_id:" + conversation_id.toString());
+        // int conversation_id = e['conversation_id'] as int;
+        // print("db conversation_id:" + conversation_id.toString());
         messageController.messages.add(
           MessageModel(
             username: msgFrom, 

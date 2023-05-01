@@ -186,14 +186,10 @@ class UserProvider extends GetConnect {
         access_token = sessionData['access_token'] as String;
       }
     }
-    print("access_token" + access_token);
     Map<String,String> hs = {};
     if (access_token != ""){
       hs['X-access-token'] = access_token;
     }
-    print("5");
-    print(hs['X-access-token']);
-    print("6");
     final response = await post(url.toString(), data, headers: hs, contentType: 'application/json');
     if (response.statusCode == 200) {
       return true;

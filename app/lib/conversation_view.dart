@@ -20,8 +20,6 @@ class ConversationView extends StatelessWidget {
       return messageController.conversation_R(await c.getUserName());
     }
 
-    
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,7 +67,6 @@ class ConversationView extends StatelessWidget {
                     future: _getListTile(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
-                        // List<Widget> radioListTiles = [];
                         messageController.radioListTiles.clear();
                         for (var i = 0; i < snapshot.data!.length; i++) {
                           Map<String, dynamic> item = snapshot.data![i];
@@ -113,15 +110,3 @@ class ConversationView extends StatelessWidget {
   }
 }
 
-SnackbarController customSnackBar({required String title, required String content}) {
-  return Get.snackbar(title, content,
-    snackPosition: SnackPosition.TOP,
-    backgroundColor: Colors.black54,
-    colorText: Colors.white,
-    margin: const EdgeInsets.all(1),
-    borderRadius: 8,
-    duration: const Duration(seconds: 2),
-    icon: const Icon(Icons.error, color: Colors.white),
-    maxWidth: 375,
-  );
-}
