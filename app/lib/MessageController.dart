@@ -380,11 +380,11 @@ class MessageController extends GetxController{
             if (type == WordPipeMessageType.tts_audio){
               // print(HTTP_SERVER_HOST + json['mp3_url']);
               ttsJobs[json['key']] = HTTP_SERVER_HOST + json['mp3_url'];
-            }else if (type == WordPipeMessageType.name_a_conversation){
-              // “新话题”的最早一个“QA对”交给AI生成10字以内摘要，以便作为话题的名字
-              conversationNameMap[json['conversation_id']] = json['conversation_name'];
-              _rebuildRadioListTiles();
-              selectedConversationName.value = json['name'];
+            // }else if (type == WordPipeMessageType.name_a_conversation){
+            //   // “新话题”的最早一个“QA对”交给AI生成10字以内摘要，以便作为话题的名字
+            //   conversationNameMap[json['conversation_id']] = json['conversation_name'];
+            //   _rebuildRadioListTiles();
+            //   selectedConversationName.value = json['name'];
             }else{
               messages.insert(0, MessageModel.fromJson(json));
             }

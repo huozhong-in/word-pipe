@@ -660,7 +660,7 @@ def openai_proxy(path):
             print(e)
         for cr in l:
             # 优化token用量，给question保留三分之二的token，给answer保留三分之一
-            if num_tokens_from_messages(data_json['messages']) > 4096/2*3:
+            if num_tokens_from_messages(data_json['messages']) > 4096/3*2:
                 break
             data_json['messages'][-1]['content'] = cr.msgContent + '\n' + data_json['messages'][-1]['content']
         data_json['max_tokens'] = 4096 - num_tokens_from_messages(data_json['messages'])
