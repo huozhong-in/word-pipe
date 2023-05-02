@@ -41,6 +41,7 @@ class WordPipeMessageType{
   static const int autoreply = 10001;
   static const int stream = 10002;
   static const int chathistory = 10003;
+  static const int name_a_conversation = 10004;
 }
 
 class PremiumType {

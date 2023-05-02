@@ -27,7 +27,7 @@ from user import User,UserDB
 from chat_record import *
 from flask_cors import CORS
 import requests
-# import openai
+import openai
 import logging
 # import streamtologger
 from Crypto.Cipher import AES
@@ -638,8 +638,6 @@ def openai_proxy(path):
     params = request.args
     username = request.json['user']
     messages = request.json['messages']
-    # print("use tokens: " + str(num_tokens_from_messages(messages)))
-    # data_json = json.dumps(data.decode('utf-8'))
     
     # 检查消息是否为空
     last_message: dict  = messages[-1]
@@ -661,12 +659,14 @@ def openai_proxy(path):
             l: list = []
             print(e)
         for cr in l:
+            # 优化token用量，给question保留三分之二的token，给answer保留三分之一
+            if num_tokens_from_messages(data_json['messages']) > 4096/2*3:
+                break
             data_json['messages'][-1]['content'] = cr.msgContent + '\n' + data_json['messages'][-1]['content']
+        data_json['max_tokens'] = 4096 - num_tokens_from_messages(data_json['messages'])
         data = json.dumps(data_json).encode('utf-8')
 
-        
         # 记录用户使用的token数量到数据库
-        # 优化token用量
         # summary可能不需要存库和在客户端展示
     else:
         conversation_id = 0
@@ -721,25 +721,37 @@ def openai_proxy(path):
     thread.start()
     return rsp
 
-def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
-  """Returns the number of tokens used by a list of messages."""
-  try:
-      encoding = tiktoken.encoding_for_model(model)
-  except KeyError:
-      encoding = tiktoken.get_encoding("cl100k_base")
-  if model == "gpt-3.5-turbo-0301":  # note: future models may deviate from this
-      num_tokens = 0
-      for message in messages:
-          num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
-          for key, value in message.items():
-              num_tokens += len(encoding.encode(value))
-              if key == "name":  # if there's a name, the role is omitted
-                  num_tokens += -1  # role is always required and always 1 token
-      num_tokens += 2  # every reply is primed with <im_start>assistant
-      return num_tokens
-  else:
-      raise NotImplementedError(f"""num_tokens_from_messages() is not presently implemented for model {model}.
-  See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
+def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301") -> int:
+    """Returns the number of tokens used by a list of messages."""
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        print("Warning: model not found. Using cl100k_base encoding.")
+        encoding = tiktoken.get_encoding("cl100k_base")
+    if model == "gpt-3.5-turbo":
+        print("Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.")
+        return num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301")
+    elif model == "gpt-4":
+        print("Warning: gpt-4 may change over time. Returning num tokens assuming gpt-4-0314.")
+        return num_tokens_from_messages(messages, model="gpt-4-0314")
+    elif model == "gpt-3.5-turbo-0301":
+        tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
+        tokens_per_name = -1  # if there's a name, the role is omitted
+    elif model == "gpt-4-0314":
+        tokens_per_message = 3
+        tokens_per_name = 1
+    else:
+        raise NotImplementedError(f"""num_tokens_from_messages() is not implemented for model {model}. See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
+    num_tokens = 0
+    for message in messages:
+        num_tokens += tokens_per_message
+        for key, value in message.items():
+            num_tokens += len(encoding.encode(value))
+            if key == "name":
+                num_tokens += tokens_per_name
+    num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
+    return num_tokens
+
 
 def get_openai_apikey() -> dict:
     '''
@@ -878,6 +890,57 @@ def conversation_crud():
 
     conversationDB.close()
     return rsp
+
+@app.route('/api/nc', methods = ['POST'])
+def name_a_conversation():
+    # name a conversation
+    if not request.headers.get('X-access-token'):
+        return make_response('access-token missing', 500)
+    data: dict = request.get_json()
+    username: str = data.get('username')
+    if username is None or username == '':
+        return make_response('username missing', 500)
+    u: User = userDB.get_user_by_username(username)
+    if u is None:
+        return make_response('user not exist', 500)
+    if u.access_token != request.headers['X-access-token']:
+        return make_response('access-token wrong', 500)
+    if u.access_token_expire_at < int(time.time()):
+        return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
+    
+    conversation_id: int = data.get('conversation_id')
+    if conversation_id is None or conversation_id == '':
+        return make_response('conversation_id missing', 500)
+    q: str = data.get('q')
+    a: str = data.get('a')
+    if q is None or q == '':
+        return make_response('q missing', 500)
+    if a is None or a == '':
+        return make_response('a missing', 500)
+    
+
+    api_key: str = data.get('api_key')
+    if api_key is None or api_key == '':
+        return jsonify({'message': 'OpenAI API key not found'}), 500
+    openai.api_key = api_key
+    
+    if os.environ.get('DEBUG_MODE') != None:
+        openai.proxy = PROXIES['https']
+    
+    response = openai.ChatCompletion.create(
+        model='gpt-3.5-turbo',
+        messages=[
+            {
+                'role': 'user', 
+                'content': 'Q: ' + q + '\nA: ' + a + '\n请给以上对话起一个名字，25汉字或50英文字符以内，以便作为聊天窗口的标题'
+            }
+        ],
+        temperature=0.8,
+        max_tokens=64,
+    )
+    conversationDB = ConversationDB()
+    conversationDB.update_conversation_name(conversation_id, response['choices'][0]['message']['content']) 
+    return make_response(jsonify({"conversation_id": int(conversation_id), "conversation_name": str(response['choices'][0]['message']['content'])}), 200)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=9000)

@@ -327,7 +327,7 @@ class MessageController extends GetxController{
       key: UniqueKey(),
     ));
     
-    // 使用用户自己的OpenAI API key // TODO 如果返回错误说明用户提供的key无效，则要关掉free chat模式
+    // 使用用户自己的OpenAI API key
     final SettingsController settingsController = Get.find();
     if (premium == 0 && settingsController.openAiApiKey.value != ""){
         apiKey = settingsController.openAiApiKey.value;
@@ -345,6 +345,7 @@ class MessageController extends GetxController{
       user: c_id.toString() + "[FREECHAT]" + curr_user,
       temperature: temperature,
     );
+    // TODO 如果返回错误说明用户提供的key无效，则要关掉free chat模式
     chatStream.listen((chatStreamEvent) {
       // print(chatStreamEvent);
       OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];
@@ -358,11 +359,10 @@ class MessageController extends GetxController{
         message.dataList.add(content);
       }
       if (choice.finishReason != null && choice.finishReason == 'stop'){
-          // “新话题”则记录到同步的列表变量中，以便将来重建radioListTiles使用
-          conversationNameMap[c_id] = "未命名话题";
-          // 新增成功后，重新生成整个 radioListTiles 列表
-          _rebuildRadioListTiles();
-          selectedConversationName.value = "未命名话题";
+          // 自动给新话题命名
+          if (messages.length == 3 || messages.length == 2){
+            name_a_conversation(curr_user, c_id, messages[1].dataList.join(''), messages[0].dataList.join(''), apiKey);
+          }
       }
     });
     // TODO 要提供prompt template，在界面右侧提供一些常用的模板（最佳实践），用户可以选择，点击将文本框变成表单
@@ -380,6 +380,11 @@ class MessageController extends GetxController{
             if (type == WordPipeMessageType.tts_audio){
               // print(HTTP_SERVER_HOST + json['mp3_url']);
               ttsJobs[json['key']] = HTTP_SERVER_HOST + json['mp3_url'];
+            }else if (type == WordPipeMessageType.name_a_conversation){
+              // “新话题”的最早一个“QA对”交给AI生成10字以内摘要，以便作为话题的名字
+              conversationNameMap[json['conversation_id']] = json['conversation_name'];
+              _rebuildRadioListTiles();
+              selectedConversationName.value = json['name'];
             }else{
               messages.insert(0, MessageModel.fromJson(json));
             }
@@ -465,6 +470,21 @@ class MessageController extends GetxController{
     }).toList();
     // 调用 assignAll 方法将生成的控件赋值给 radioListTiles
     radioListTiles.assignAll(rlt);
+  }
+
+  Future<void> name_a_conversation(String username, int conversation_id, String Q, String A, String apiKey) async {
+    ChatRecord chatRecord = ChatRecord();
+    Map<String, dynamic> named = await chatRecord.name_a_conversation(username, conversation_id, Q, A, apiKey);
+    if (named.isNotEmpty && named['conversation_name'] != null){
+      String c_name = named['conversation_name'] as String;
+      if (c_name != ""){
+        MessageController messageController = Get.find();
+        // “新话题”同步的列表变量中，以便将来重建radioListTiles使用
+        messageController.conversationNameMap[conversation_id] = c_name;
+        messageController.selectedConversationName.value = c_name;
+        _rebuildRadioListTiles();
+      }
+    }
   }
 
   // Future<String> convertspeechToText (String filepath) async {
@@ -673,6 +693,30 @@ class ChatRecord extends GetConnect {
     return ret;
   }
 
+  Future<Map<String, dynamic>> name_a_conversation(String username, int conversation_id, String Q, String A, String apiKey) async {
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/nc');
+    
+    Map data = {};
+    data['username'] = username;
+    data['conversation_id'] = conversation_id;
+    data['q'] = Q;
+    data['a'] = A;
+    data['api_key'] = apiKey;
+    String  access_token = "";
+    Map<String, dynamic> sessionData = await c.getSessionData();
+    if (sessionData.containsKey('error') == false)
+        access_token = sessionData['access_token'] as String;
+    Map<String,String> hs = {};
+    hs['X-access-token'] = access_token;
+
+    final response = await post(url.toString(), data, headers: hs, contentType: 'application/json');
+    if (response.statusCode == 200) {
+      Map<String, dynamic> json = Map<String, dynamic>.from(response.body);
+      return json;
+    }else{
+      return {};
+    }
+  }
 }
 
 

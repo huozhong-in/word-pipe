@@ -81,6 +81,10 @@ class UserProfile extends StatelessWidget {
                               messageController.messages.clear();
                               messageController.closeSSE();
                               messageController.messsage_view_first_build = true;
+                              messageController.conversationNameMap.clear();
+                              messageController.lastSegmentBeginId = 0;
+                              messageController.selectedConversationName.value = "";
+                              messageController.conversation_id.value = 0;
                               Get.offAll(ResponsiveLayout());
                             },
                             child: Text('Sign Out'),

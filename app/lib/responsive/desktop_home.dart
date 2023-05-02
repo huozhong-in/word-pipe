@@ -403,7 +403,6 @@ class DesktopHome extends StatelessWidget {
   @override
   Widget build(context){
     
-    messageController.handleSSE(_username);
     _commentFocus = messageController.commentFocus;
     
     return Scaffold(
