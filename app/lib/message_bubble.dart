@@ -267,8 +267,12 @@ class MessageBubble extends StatelessWidget {
   // }
 
   Widget showAvatar2() {
+    String imgUrl = "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}";
+    if (settingsController.freeChatMode.value && sender == 'Jasmine')
+      imgUrl = "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/Jasmine-freechat";
+    
     return SvgPicture.network(
-      "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}",
+      imgUrl,
       height: 40,
       width: 40,
       semanticsLabel: 'avatar',

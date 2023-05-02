@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageController.dart';
 
 
@@ -23,7 +24,7 @@ Widget customRadioListTile(Map<String, dynamic> item) {
         messageController.conversation_id.value = value!;
         messageController.selectedConversationName.value = item['conversation_name'].toString().trim() == '' ? '未命名话题' : item['conversation_name'].toString();
         messageController.commentFocus.requestFocus();
-        print(messageController.conversation_id.value);
+        // print(messageController.conversation_id.value);
       },
       title: Text(
         item['conversation_name'].toString().trim() == '' ? '未命名话题' : item['conversation_name'].toString(),
@@ -46,6 +47,105 @@ Widget customRadioListTile(Map<String, dynamic> item) {
     );
     
   });
+}
+
+
+// ignore: must_be_immutable
+class QuestionButtons extends StatelessWidget {
+  final settingsController = Get.find<SettingsController>();
+  
+  final String answer;
+  RxString iconA = 'help_outline'.obs;
+  RxString iconB = 'help_outline'.obs;
+  RxString iconC = 'help_outline'.obs;
+  RxString iconD = 'help_outline'.obs;
+  
+  QuestionButtons({required this.answer});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+
+      children: [
+        Container(
+          margin: EdgeInsetsDirectional.symmetric(horizontal: 8),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              if(answer == 'A') {
+                iconA.value = 'check'; 
+              } else {
+                iconA.value = 'close';
+              }
+            },
+            icon: Obx(() => Icon(
+              iconA.value == 'help_outline' ? Icons.help_outline :
+              iconA.value == 'check' ? Icons.check : 
+              Icons.close,
+              color: Colors.blue[900],
+            )),
+            label: Text('A', style: TextStyle(fontSize: settingsController.fontSizeConfig.value, color: Colors.blue[900]),)   
+          ),
+        ),
+        Container(
+          margin: EdgeInsetsDirectional.symmetric(horizontal: 8),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              if(answer == 'B') {
+                iconB.value = 'check'; 
+              } else {
+                iconB.value = 'close';
+              }
+            },
+            icon: Obx(() => Icon(
+              iconB.value == 'help_outline' ? Icons.help_outline :
+              iconB.value == 'check' ? Icons.check : 
+              Icons.close,
+              color: Colors.blue[900],
+            )),
+            label: Text('B', style: TextStyle(fontSize: settingsController.fontSizeConfig.value, color: Colors.blue[900]),)   
+          ),
+        ),
+        Container(
+          margin: EdgeInsetsDirectional.symmetric(horizontal: 8),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              if(answer == 'C') {
+                iconC.value = 'check'; 
+              } else {
+                iconC.value = 'close';
+              }
+            },
+            icon: Obx(() => Icon(
+              iconC.value == 'help_outline' ? Icons.help_outline :
+              iconC.value == 'check' ? Icons.check : 
+              Icons.close,
+              color: Colors.blue[900],
+            )),
+            label: Text('C', style: TextStyle(fontSize: settingsController.fontSizeConfig.value, color: Colors.blue[900]),)   
+          ),
+        ),
+        Container(
+          margin: EdgeInsetsDirectional.symmetric(horizontal: 8),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              if(answer == 'D') {
+                iconD.value = 'check'; 
+              } else {
+                iconD.value = 'close';
+              }
+            },
+            icon: Obx(() => Icon(
+              iconD.value == 'help_outline' ? Icons.help_outline :
+              iconD.value == 'check' ? Icons.check : 
+              Icons.close,
+              color: Colors.blue[900],
+            )),
+            label: Text('D', style: TextStyle(fontSize: settingsController.fontSizeConfig.value, color: Colors.blue[900]),)   
+          ),
+        )
+      ],
+    );
+  }
 }
 
 SnackbarController customSnackBar({required String title, required String content}) {

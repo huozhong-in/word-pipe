@@ -25,7 +25,7 @@ class MessageView extends StatelessWidget {
   Widget build(BuildContext context) {
     
     Future<void> getChatHistory() async {
-      print("getChatHistory(): " + messageController.conversation_id.value.toString());
+      // print("getChatHistory(): " + messageController.conversation_id.value.toString());
       String user_name = await c.getUserName();
       if (user_name != "") {
         // print("1");
@@ -39,41 +39,77 @@ class MessageView extends StatelessWidget {
           // Welcome message
           if (_lastSegmentBeginId == -1){
             // -1意味着没有任何历史消息，是新用户，发送欢迎信息
-            messageController.addMessage(
-              MessageModel(
-                dataList: RxList(
-                  [
-                    'Hi, I am Jasmine. I am here to help you. Try to input a word!',
-                    '你好，我是Jasmine。希望我能在外语学习方面帮到你。试着输入一个单词吧！'
-                  ]
-                ), 
-                type: WordPipeMessageType.autoreply, 
-                username: 'Jasmine', 
-                uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
-                createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-                key: UniqueKey(), 
-              )
-            );
+            if (messageController.conversation_id != 0) {
+              messageController.addMessage(
+                MessageModel(
+                  dataList: RxList(
+                    [
+                      'Hi, I am Jasmine. It\'s free-chat mode now. You can talk to me continuously!',
+                      '你好，我是Jasmine。现在是自由聊天模式，可以连续对话哦！'
+                    ]
+                  ), 
+                  type: WordPipeMessageType.autoreply, 
+                  username: 'Jasmine', 
+                  uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
+                  createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+                  key: UniqueKey(), 
+                )
+              );
+
+            }else{
+              messageController.addMessage(
+                MessageModel(
+                  dataList: RxList(
+                    [
+                      'Hi, I am Jasmine. I am here to help you. Try to input a word!',
+                      '你好，我是Jasmine。希望我能在外语学习方面帮到你。试着输入一个单词吧！'
+                    ]
+                  ), 
+                  type: WordPipeMessageType.autoreply, 
+                  username: 'Jasmine', 
+                  uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
+                  createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+                  key: UniqueKey(), 
+                )
+              );
+            }
           }else{
             // 欢迎老用户回来
-            messageController.addMessage(
-              MessageModel(
-                dataList: RxList(
-                  [
-                    'Welcome back! Ask me some words or sentences :)',
-                    '欢迎回来！问我一些单词或句子吧 :)'
-                  ]
-                ), 
-                type: WordPipeMessageType.autoreply, 
-                username: 'Jasmine', 
-                uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
-                createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-                key: UniqueKey(), 
-              )
-            );
+            if (messageController.conversation_id != 0){
+              messageController.addMessage(
+                MessageModel(
+                  dataList: RxList(
+                    [
+                      'Welcome back! It\'s free-chat time :)',
+                      '欢迎回来！又到自由聊天模式啦 :)'
+                    ]
+                  ), 
+                  type: WordPipeMessageType.autoreply, 
+                  username: 'Jasmine', 
+                  uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
+                  createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+                  key: UniqueKey(), 
+                )
+              );
+            }else{
+              messageController.addMessage(
+                MessageModel(
+                  dataList: RxList(
+                    [
+                      'Welcome back! Ask me some words or sentences :)',
+                      '欢迎回来！问我一些单词或句子吧 :)'
+                    ]
+                  ), 
+                  type: WordPipeMessageType.autoreply, 
+                  username: 'Jasmine', 
+                  uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
+                  createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+                  key: UniqueKey(), 
+                )
+              );
+            }
           }
         }
-        messageController.handleSSE(user_name);
       }      
     }
     

@@ -20,6 +20,7 @@ class DesktopHome extends StatelessWidget {
   final Controller c = Get.find<Controller>();
   final MessageController messageController = Get.find<MessageController>();
   final SettingsController settingsController = Get.find<SettingsController>();
+  late String _username = "";
   final List<MatchWords> _matchWords = <MatchWords>[].obs;
   final TextEditingController _textController = TextEditingController();
   late FocusNode _commentFocus;
@@ -30,12 +31,17 @@ class DesktopHome extends StatelessWidget {
   ScrollController _scrollController = ScrollController();
   final TextEditingController conversationNameController = TextEditingController();
 
+  Future<String> _getUserName() async {
+    _username = await c.getUserName();
+    return _username;
+  }
+
   void _handleSubmitted(String text) async {
-    if(text.trim() == ""){
+    if(text.trim() == "")
       return;
-    }
+    if( _username == "")
+      return;
     // 向服务端发送消息
-    String _username = await c.getUserName();
     // 如果conversation_id == -1，说明是新话题，需要先创建话题，话题ID是服务端生成返回
     if (messageController.conversation_id.value == -1){
       messageController.conversation_id.value = await messageController.conversation_CUD(_username, "create", messageController.conversation_id.value);
@@ -396,7 +402,8 @@ class DesktopHome extends StatelessWidget {
 
   @override
   Widget build(context){
-
+    
+    messageController.handleSSE(_username);
     _commentFocus = messageController.commentFocus;
     
     return Scaffold(
@@ -453,7 +460,7 @@ class DesktopHome extends StatelessWidget {
                   ),
                   Divider(),
                   FutureBuilder<String>(
-                    future: c.getUserName(),
+                    future: _getUserName(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         return SvgPicture.network(
@@ -557,6 +564,7 @@ class DesktopHome extends StatelessWidget {
                           messageController.lastSegmentBeginId = 0;
                           messageController.messsage_view_first_build = true;
                           messageController.conversation_id.value = 0;
+                          messageController.selectedConversationName.value = '';
                           _commentFocus.requestFocus();
                         }
                       }),

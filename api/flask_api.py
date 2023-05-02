@@ -763,7 +763,7 @@ def encrypt(text):
     # 转为 base64 编码
     return base64.b64encode(ciphertext).decode()
 
-@app.route('/api/user/chat-history', methods = ['POST'])
+@app.route('/api/user/ch', methods = ['POST'])
 def chat_history():
     if not request.headers.get('X-access-token'):
         return make_response('access-token missing', 500)
@@ -806,7 +806,7 @@ def chat_history():
         })
     return make_response(jsonify(r), 200)
 
-@app.route('/api/user/conversation', methods = ['GET','POST','PUT','DELETE'])
+@app.route('/api/user/cs', methods = ['GET','POST','PUT','DELETE'])
 def conversation_crud():
     if not request.headers.get('X-access-token'):
         return make_response('access-token missing', 500)

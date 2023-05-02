@@ -16,19 +16,26 @@ class ResponsiveLayout extends StatelessWidget {
   Controller c = Get.put(Controller());
   final MessageController messageController = Get.put(MessageController());
   final SettingsController settingsController = Get.put(SettingsController());
-  String user_name = "";
+  String _username = "";
+
+  Future<String> _getUserName() async {
+    _username = await c.getUserName();
+    if (_username != "")
+      messageController.handleSSE(_username);
+    return _username;
+  }
 
   Widget builder(BuildContext context, AsyncSnapshot snapshot) {
     if (snapshot.connectionState == ConnectionState.done) {
       return LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth >= MOBILE_LAYOUT_WIDTH) {
-            if (user_name == ""){
+            if (_username == ""){
               return DesktopSignIn();
             }
             return DesktopHome();
           } else {
-            if (user_name == ""){
+            if (_username == ""){
               return MobileSignIn();
             }
             return MobileHome();
@@ -50,6 +57,6 @@ class ResponsiveLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(builder: builder, future: c.getUserName().then((value) => user_name=value));
+    return FutureBuilder(builder: builder, future: _getUserName());
   }
 }

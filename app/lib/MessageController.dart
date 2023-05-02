@@ -549,7 +549,7 @@ class ChatRecord extends GetConnect {
 
   Future<int> chatHistory(String username, int last_id, int conversation_id) async {
     int ret = -1;
-    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/chat-history');
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/ch');
     Map data = {};
     data['username'] = username;
     data['last_id'] = last_id;
@@ -604,7 +604,7 @@ class ChatRecord extends GetConnect {
 
   Future<int> conversation_CUD(String username, String actionType, int conversation_id, {String conversation_name=''}) async {
     int ret = 0;
-    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/conversation');
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/cs');
     
     Map data = {};
     data['username'] = username;
@@ -651,7 +651,7 @@ class ChatRecord extends GetConnect {
 
   Future<List<dynamic>> conversation_R(String username) async {
     List<dynamic> ret = [];
-    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/conversation');
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/cs');
 
     String  access_token = "";
     Map<String, dynamic> sessionData = await c.getSessionData();
@@ -676,101 +676,3 @@ class ChatRecord extends GetConnect {
 }
 
 
-
-// ignore: must_be_immutable
-class QuestionButtons extends StatelessWidget {
-  final settingsController = Get.find<SettingsController>();
-  
-  final String answer;
-  RxString iconA = 'help_outline'.obs;
-  RxString iconB = 'help_outline'.obs;
-  RxString iconC = 'help_outline'.obs;
-  RxString iconD = 'help_outline'.obs;
-  
-  QuestionButtons({required this.answer});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-
-      children: [
-        Container(
-          margin: EdgeInsetsDirectional.symmetric(horizontal: 8),
-          child: ElevatedButton.icon(
-            onPressed: () {
-              if(answer == 'A') {
-                iconA.value = 'check'; 
-              } else {
-                iconA.value = 'close';
-              }
-            },
-            icon: Obx(() => Icon(
-              iconA.value == 'help_outline' ? Icons.help_outline :
-              iconA.value == 'check' ? Icons.check : 
-              Icons.close,
-              color: Colors.blue[900],
-            )),
-            label: Text('A', style: TextStyle(fontSize: settingsController.fontSizeConfig.value, color: Colors.blue[900]),)   
-          ),
-        ),
-        Container(
-          margin: EdgeInsetsDirectional.symmetric(horizontal: 8),
-          child: ElevatedButton.icon(
-            onPressed: () {
-              if(answer == 'B') {
-                iconB.value = 'check'; 
-              } else {
-                iconB.value = 'close';
-              }
-            },
-            icon: Obx(() => Icon(
-              iconB.value == 'help_outline' ? Icons.help_outline :
-              iconB.value == 'check' ? Icons.check : 
-              Icons.close,
-              color: Colors.blue[900],
-            )),
-            label: Text('B', style: TextStyle(fontSize: settingsController.fontSizeConfig.value, color: Colors.blue[900]),)   
-          ),
-        ),
-        Container(
-          margin: EdgeInsetsDirectional.symmetric(horizontal: 8),
-          child: ElevatedButton.icon(
-            onPressed: () {
-              if(answer == 'C') {
-                iconC.value = 'check'; 
-              } else {
-                iconC.value = 'close';
-              }
-            },
-            icon: Obx(() => Icon(
-              iconC.value == 'help_outline' ? Icons.help_outline :
-              iconC.value == 'check' ? Icons.check : 
-              Icons.close,
-              color: Colors.blue[900],
-            )),
-            label: Text('C', style: TextStyle(fontSize: settingsController.fontSizeConfig.value, color: Colors.blue[900]),)   
-          ),
-        ),
-        Container(
-          margin: EdgeInsetsDirectional.symmetric(horizontal: 8),
-          child: ElevatedButton.icon(
-            onPressed: () {
-              if(answer == 'D') {
-                iconD.value = 'check'; 
-              } else {
-                iconD.value = 'close';
-              }
-            },
-            icon: Obx(() => Icon(
-              iconD.value == 'help_outline' ? Icons.help_outline :
-              iconD.value == 'check' ? Icons.check : 
-              Icons.close,
-              color: Colors.blue[900],
-            )),
-            label: Text('D', style: TextStyle(fontSize: settingsController.fontSizeConfig.value, color: Colors.blue[900]),)   
-          ),
-        )
-      ],
-    );
-  }
-}
