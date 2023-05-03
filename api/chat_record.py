@@ -33,7 +33,7 @@ class ChatRecordDB:
     def __init__(self):
         connect_args = MYSQL_CONFIG
         self.cnx = mysql.connector.connect(**connect_args)
-        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}:{MYSQL_CONFIG["port"]}/{MYSQL_CONFIG["database"]}')
+        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}:{MYSQL_CONFIG["port"]}/{MYSQL_CONFIG["database"]}', pool_size=10, max_overflow=20)
 
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
@@ -78,7 +78,7 @@ class ConversationDB:
     def __init__(self) -> None:
         connect_args = MYSQL_CONFIG
         self.cnx = mysql.connector.connect(**connect_args)
-        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}:{MYSQL_CONFIG["port"]}/{MYSQL_CONFIG["database"]}')
+        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}:{MYSQL_CONFIG["port"]}/{MYSQL_CONFIG["database"]}', pool_size=10, max_overflow=20)
 
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
