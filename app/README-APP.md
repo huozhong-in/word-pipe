@@ -12,6 +12,15 @@
 
 `flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0`
 
+## macOS build memo
+build with macos 12.0
+```
+rm -rf ~/Library/Developer/Xcode/DerivedData/
+rm -rf ~/Library/Caches/CocoaPods/
+pod deintegrate
+pod update
+```
+
 ## TODO
 
 

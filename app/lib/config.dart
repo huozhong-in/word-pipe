@@ -52,7 +52,7 @@ class PremiumType {
 }
 
 
-final ThemeData appTheme = ThemeData(
+final ThemeData appThemeDark = ThemeData(
   useMaterial3: true,
   brightness: Brightness.light,
   primarySwatch: Colors.green,
@@ -66,22 +66,30 @@ final ThemeData appTheme = ThemeData(
   textTheme: const TextTheme(
     displayLarge: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold),
     displayMedium: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
-    titleLarge: TextStyle(fontSize: 36.0, fontStyle: FontStyle.italic),
-    bodyMedium: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
     displaySmall: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+    titleLarge: TextStyle(fontSize: 36.0, fontStyle: FontStyle.italic),
     titleMedium: TextStyle(fontSize: 18.0, fontStyle: FontStyle.italic),
     titleSmall: TextStyle(fontSize: 16.0, fontStyle: FontStyle.italic),
+    bodyLarge: TextStyle(fontSize: 14.0, fontFamily: "Roboto", fontFamilyFallback: ["PingFang SC", "Heiti SC",]),
+    bodyMedium: TextStyle(fontSize: 12.0, fontFamily: "Roboto", fontFamilyFallback: ["PingFang SC", "Heiti SC",]),
+    bodySmall: TextStyle(fontSize: 10.0, fontFamily: "Roboto", fontFamilyFallback: ["PingFang SC", "Heiti SC",]),
+    labelLarge: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
+    labelMedium: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold),
+    labelSmall: TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold),
+    headlineLarge: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
+    headlineMedium: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold),
+    headlineSmall: TextStyle(fontSize: 10.0, fontWeight: FontWeight.bold),
   ),
   colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.orange),
   visualDensity: VisualDensity.adaptivePlatformDensity,
   textSelectionTheme: const TextSelectionThemeData(
     cursorColor: Colors.red,
-    selectionColor: Colors.yellow,
+    selectionColor: Colors.lime,
     selectionHandleColor: Colors.black,
   )
 );
 
-final ThemeData appTheme2 = ThemeData(
+final ThemeData appThemeBright = ThemeData(
   useMaterial3: true,
   brightness: Brightness.light,
   primarySwatch: Colors.green,
@@ -92,12 +100,21 @@ final ThemeData appTheme2 = ThemeData(
   fontFamilyFallback: ["PingFang SC", "Heiti SC",],
   
   textTheme: TextTheme( //文本主题
-    displayLarge: TextStyle(color: Color.fromARGB(255, 31, 165, 69)),
-    displayMedium: TextStyle(color: Color.fromARGB(255, 24, 198, 56)),
-    displaySmall: TextStyle(color: Colors.white),
-    headlineMedium: TextStyle(color: Colors.black),
-    headlineSmall: TextStyle(color: Color.fromARGB(255, 3, 103, 16)),
-    titleLarge: TextStyle(color: Color(0xFF06b6d4)),
+    displayLarge: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 31, 165, 69)),
+    displayMedium: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 24, 198, 56)),
+    displaySmall: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white),
+    titleLarge: TextStyle(fontSize: 36.0, fontStyle: FontStyle.italic, color: Color(0xFF06b6d4)),
+    titleMedium: TextStyle(fontSize: 18.0, fontStyle: FontStyle.italic),
+    titleSmall: TextStyle(fontSize: 16.0, fontStyle: FontStyle.italic),
+    bodyLarge: TextStyle(fontSize: 16.0),
+    bodyMedium: TextStyle(fontSize: 14.0, fontStyle: FontStyle.normal),
+    bodySmall: TextStyle(fontSize: 12.0),
+    labelLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+    labelMedium: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
+    labelSmall: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold),
+    headlineLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+    headlineMedium: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold, color: Colors.black),
+    headlineSmall: TextStyle(fontSize: 12.0, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 3, 103, 16)),
   ), 
   colorScheme: ColorScheme(
     primary: Color.fromARGB(255, 31, 165, 69), 
@@ -151,12 +168,8 @@ const double DESKTOP_LAYOUT_WIDTH = 1000;
 //
 // 用到的地方用 .copyWith 这个方法, 如：
 // Text(
-// "显示我想要的字体",
-// style: textFontStyle.copyWith(
-// fontSize: 18.0,
-// color: Colors.red,
-// fontWeight: FontWeight.bold,
-// ),
+//   "显示我想要的字体",
+//   style: textFontStyle.copyWith(fontSize: 18.0, color: Colors.red, fontWeight: FontWeight.bold,),
 // )
 
 // TextStyle的copyWith如下：

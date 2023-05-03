@@ -2,23 +2,43 @@
     // 使用 IntelliSense 了解相关属性。 
     // 悬停以查看现有属性的描述。
     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    // 配置文件参数详解: https://dartcode.org/docs/launch-configuration/
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "app",
-            "cwd": "app",
+            "name": "WordPipeMobileWeb",
+            "type": "dart",
             "request": "launch",
-            "type": "dart"
+            "cwd": "app",
+            "program": "lib/main.dart",
+            "deviceId": "web-server",
+            "toolArgs": [
+                "--web-port 8080",
+                "--web-hostname 0.0.0.0",
+                "--web-renderer html"
+            ]
         },
         {
-            "name": "app (profile mode)",
+            "name": "WordPipePCWebHtml",
+            "cwd": "app",
+            "request": "launch",
+            "program": "lib/main.dart",
+            "type": "dart",
+            // "flutterMode": "debug",
+            "deviceId": "chrome",
+            "toolArgs": [
+                "--web-renderer=html"
+            ]
+        },
+        {
+            "name": "WordPipe-profile",
             "cwd": "app",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
-            "name": "app (release mode)",
+            "name": "WordPipe-release",
             "cwd": "app",
             "request": "launch",
             "type": "dart",

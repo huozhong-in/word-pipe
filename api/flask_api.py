@@ -926,7 +926,7 @@ def name_a_conversation():
     
     if os.environ.get('DEBUG_MODE') != None:
         openai.proxy = PROXIES['https']
-    
+
     response = openai.ChatCompletion.create(
         model='gpt-3.5-turbo',
         messages=[
@@ -938,6 +938,7 @@ def name_a_conversation():
         temperature=0.8,
         max_tokens=64,
     )
+
     conversationDB = ConversationDB()
     conversationDB.update_conversation_name(conversation_id, response['choices'][0]['message']['content']) 
     return make_response(jsonify({"conversation_id": int(conversation_id), "conversation_name": str(response['choices'][0]['message']['content'])}), 200)

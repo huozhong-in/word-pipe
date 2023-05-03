@@ -312,12 +312,16 @@ class MessageBubble extends StatelessWidget {
       // 处理从OpenAI API返回的单词例句生成结果
       return templateReply4WordExampleSentence(context);
     }else if(type == WordPipeMessageType.reply_for_translate_sentence){
+      // 句子翻译
       return templateReply4TranslateSentence(context);
     }else if(type == WordPipeMessageType.reply_for_answer_question){
+      // 回答问题
       return templateReply4AnswerQuestion(context);
     }else if(type == WordPipeMessageType.flask_reply_for_sentence_zh_en){
+      // 处理从flask server返回中文翻译英文
       return templateFlaskReply4SentenceZhEn(context);
     }else if(type == WordPipeMessageType.reply_for_translate_sentence_zh_en){
+      // 中文翻译英文
       return templateReply4TranslateSentenceZhEn(context);
     }else{
       // 普通多行文本，每行是一个字符串
@@ -428,7 +432,7 @@ class MessageBubble extends StatelessWidget {
   }
 
   TextSpan templateRawText(BuildContext context){
-    // 直接拼接结果，不需要换行，也不需要单词高亮
+    // 直接拼接结果，不需要换行，也不需要单词高亮。支持流式效果
     List<TextSpan> spans = [];
     dataList.forEach((element) {
       spans.add(TextSpan(text: element as String));

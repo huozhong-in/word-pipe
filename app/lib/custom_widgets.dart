@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageController.dart';
 
@@ -30,7 +31,7 @@ Widget customRadioListTile(Map<String, dynamic> item) {
         item['conversation_name'].toString().trim() == '' ? '未命名话题' : item['conversation_name'].toString(),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(fontSize: 14),
+        style: appThemeBright.textTheme.bodyMedium,
       ),
       activeColor: Colors.green[900],
       contentPadding: EdgeInsets.fromLTRB(0, 0, 0, 0),
@@ -160,3 +161,21 @@ SnackbarController customSnackBar({required String title, required String conten
     maxWidth: 375,
   );
 }
+
+// enum ActivityType {
+//   running(1, 'Running'),
+//   climbing(2, 'Climbing'),
+//   hiking(5, 'Hiking'),
+//   cycling(7, 'Cycling'),
+//   ski(10, 'Skiing');
+
+//   const ActivityType(this.number, this.value);
+  
+//   final int number;
+//   final String value;
+//   static ActivityType getTypeByTitle(String title) =>
+//     ActivityType.values.firstWhere((activity) => activity.name == title);
+//   static ActivityType getType(int number) => ActivityType.values.firstWhere((activity) => activity.number == number);
+
+//   static String getValue(int number) => ActivityType.values.firstWhere((activity) => activity.number == number).value;
+// }

@@ -320,7 +320,7 @@ class MessageController extends GetxController{
 
     Key needUpdate = addMessage(MessageModel(
       dataList: RxList(['...']),
-      type: WordPipeMessageType.stream,
+      type: WordPipeMessageType.chathistory,
       username: "Jasmine",
       uuid: "b811abd7-c0bb-4301-9664-574d0d8b11f8",
       createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,

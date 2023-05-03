@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageController.dart';
 import 'package:wordpipe/MessageView.dart';
@@ -48,7 +49,7 @@ class ConversationView extends StatelessWidget {
                     message: '开个新话题',
                     child: ListTile(
                       leading: Icon(Icons.add),
-                      title: Text('新话题', style: TextStyle(fontSize: 15)),
+                      title: Text('新话题', style: appThemeBright.textTheme.bodyMedium),
                       minLeadingWidth: 0,
                       minVerticalPadding: 0,
                       onTap: () async {
