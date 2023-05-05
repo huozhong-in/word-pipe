@@ -11,6 +11,7 @@ import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/prompts/template_vocab.dart';
 import 'package:wordpipe/prompts/template_freechat.dart';
 import 'package:wordpipe/custom_widgets.dart';
+import 'package:wordpipe/cache_helper.dart';
 import 'package:just_audio/just_audio.dart';
 import 'dart:developer';
 
@@ -670,6 +671,10 @@ class ChatRecord extends GetConnect {
   }
 
   Future<List<dynamic>> conversation_R(String username) async {
+    if (await CacheHelper.hasData("cs" + username)) {
+      if( await CacheHelper.getData("cs" + username) != null)
+        return await CacheHelper.getData("cs" + username) as List<dynamic>;
+    }
     List<dynamic> ret = [];
     Uri url = Uri.parse('$HTTP_SERVER_HOST/user/cs');
 
@@ -689,6 +694,7 @@ class ChatRecord extends GetConnect {
     final response = await get(newUrl.toString(), headers: hs, contentType: 'application/json');
     if (response.statusCode == 200) {
       ret = List<dynamic>.from(response.body);
+      await CacheHelper.setData("cs" + username, ret);
     }
     return ret;
   }

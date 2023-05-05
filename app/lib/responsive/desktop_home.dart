@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:wordpipe/cache_helper.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/conversation_view.dart';
@@ -534,28 +535,29 @@ class DesktopHome extends StatelessWidget {
                       title: Text('Free-Chat Mode', style: TextStyle(fontSize: 12)), 
                       subtitle: Text('PRO  only', style: appThemeBright.textTheme.labelSmall!.copyWith(color: Colors.blue)),
                       value: settingsController.freeChatMode.value,
-                      onChanged: ((bool value) {
+                      onChanged: ((bool value) async {
                         if (value==true){
-                          c.getPremium().then((premiumType) {
-                            if (premiumType != 0) {
+                          int premiumType = await c.getPremium();
+                          if (premiumType != 0) {
+                            await CacheHelper.setData("cs" + _username, null);
+                            settingsController.toggleFreeChatMode(value);
+                            messageController.messages.clear();
+                            messageController.messsage_view_first_build = true;
+                            messageController.conversation_id.value = -1;
+                            _commentFocus.requestFocus();
+                          } else {
+                            if (settingsController.openAiApiKey.value != '') {
+                              await CacheHelper.setData("cs" + _username, null);
                               settingsController.toggleFreeChatMode(value);
                               messageController.messages.clear();
                               messageController.messsage_view_first_build = true;
                               messageController.conversation_id.value = -1;
                               _commentFocus.requestFocus();
                             } else {
-                              if (settingsController.openAiApiKey.value != '') {
-                                settingsController.toggleFreeChatMode(value);
-                                messageController.messages.clear();
-                                messageController.messsage_view_first_build = true;
-                                messageController.conversation_id.value = -1;
-                                _commentFocus.requestFocus();
-                              } else {
-                                settingsController.freeChatMode.value = false;
-                                customSnackBar(title: "Error", content: "Please config OpenAI key in config page or upgrade to PRO version.");
-                              }
+                              settingsController.freeChatMode.value = false;
+                              customSnackBar(title: "Error", content: "Please config OpenAI key in config page or upgrade to PRO version.");
                             }
-                          });
+                          }
                         }else{
                           // 重新加载非free-chat聊天记录
                           settingsController.toggleFreeChatMode(value);
