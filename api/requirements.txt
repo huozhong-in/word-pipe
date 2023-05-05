@@ -5,6 +5,7 @@ gunicorn
 marisa-trie
 pillow
 gevent
+sqlalchemy
 flask_sqlalchemy
 pymysql
 python_avatars

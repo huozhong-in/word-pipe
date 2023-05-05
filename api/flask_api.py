@@ -740,6 +740,7 @@ def openai_proxy(path):
                 break
             else:
                 completion_text += c
+        userDB = UserDB(db_session)
         myuuid: str = userDB.get_user_by_username(username).uuid
         cr = ChatRecord(msgFrom=userDB.get_user_by_username('Jasmine').uuid, msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=completion_text, msgType=1, conversation_id=conversation_id)
         crdb = ChatRecordDB(db_session)
@@ -963,7 +964,7 @@ def name_a_conversation():
         temperature=0.8,
         max_tokens=64,
     )
-
+    print(response)
     conversationDB = ConversationDB(db_session)
     conversationDB.update_conversation_name(conversation_id, response['choices'][0]['message']['content']) 
     return make_response(jsonify({"conversation_id": int(conversation_id), "conversation_name": str(response['choices'][0]['message']['content'])}), 200)
