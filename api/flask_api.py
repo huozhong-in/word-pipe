@@ -23,13 +23,16 @@ from stardict import *
 from config import *
 from io import BytesIO
 from PIL import Image
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine
+from sqlalchemy.pool import QueuePool
+from sqlalchemy.orm import scoped_session, sessionmaker
 from user import User,UserDB
 from chat_record import *
 from flask_cors import CORS
 import requests
 import openai
 import logging
-# import streamtologger
 from Crypto.Cipher import AES
 import base64
 from queue import Queue
@@ -48,6 +51,7 @@ logging.basicConfig(
     format='%(levelname)s:%(asctime)s:%(message)s'
 )
 stderr_logger = logging.getLogger('STDERR')
+# import streamtologger
 # streamtologger.redirect(target="logs/print.log", append=False, header_format="[{timestamp:%Y-%m-%d %H:%M:%S} - {level:5}] ")
 
 # for SSE nginx configuration https://serverfault.com/questions/801628/for-server-sent-events-sse-what-nginx-proxy-configuration-is-appropriate
@@ -87,31 +91,45 @@ for key, value in wordroot.items():
             else:
                 word2root[word] = [key]
 
-# init user db
-userDB = UserDB()
-crdb = ChatRecordDB()
 
-@app.teardown_appcontext
-def shutdown_session(exception=None):
-    # 请求上下文结束时自动释放 session
-    # g.session.close()
-    userDB.session.close()
-    crdb.session.close()
+
+# MySQL配置
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}/{MYSQL_CONFIG["database"]}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_POOL_SIZE'] = 50  # 连接池大小
+app.config['SQLALCHEMY_POOL_RECYCLE'] = 3600  # 连接池中连接最长使用时间，单位秒
+# 创建数据库引擎
+engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], poolclass=QueuePool, pool_size=app.config['SQLALCHEMY_POOL_SIZE'], pool_recycle=app.config['SQLALCHEMY_POOL_RECYCLE'])
+# 创建数据库连接
+db = SQLAlchemy(app)
+Session = sessionmaker(bind=engine)
+db_session = scoped_session(Session)
 
 @app.before_request
 def before_request():
-    # 请求开始时将连接和 session 绑定到请求上下文
-    g.db = userDB.engine.connect()
-    g.session = userDB.session
-    g.db2= crdb.engine.connect()
-    g.session2 = crdb.session
+    g.session = db_session()
 
 @app.after_request
 def after_request(response):
-    # 请求结束时断开连接
-    g.db.close()
-    g.db2.close()
+    if hasattr(g, 'session') and response.status_code < 500:
+        try:
+            g.session.commit()
+        except Exception:
+            g.session.rollback()
+            raise
+        finally:
+            g.session.close()
     return response
+
+@app.teardown_request
+def shutdown_session(exception=None):
+    db_session.remove()
+
+@app.teardown_appcontext
+def shutdown_session2(exception=None):
+    # 其他线程中的请求上下文结束时自动释放 session
+    db_session.remove()
+
 
 
 def generate_time_based_client_id(prefix='client_'):
@@ -277,6 +295,7 @@ def chat():
     logging.info(f'[{username}]: {message}')
     if request.headers.get('X-access-token'):
         # print('X-access-token: ', request.headers['X-access-token'])
+        userDB = UserDB(db_session)
         u: User = userDB.get_user_by_username(username)
         if u is None:
             return make_response('', 500)
@@ -291,6 +310,7 @@ def chat():
     myuuid: str = userDB.get_user_by_username(username).uuid
     s: str = json.loads(json.dumps(message, ensure_ascii=False)) # 防止被SQLAlchemy转义双引号、回车符、制表符和斜杠
     cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jasmine').uuid, msgCreateTime=int(time.time()), msgContent=s, msgType=1, conversation_id=conversation_id)
+    crdb = ChatRecordDB(db_session)
     crdb.insert_chat_record(cr)
 
     # 替用户发消息
@@ -365,6 +385,7 @@ def tts():
     channel: str = ''
     if request.headers.get('X-access-token'):
         # print('X-access-token: ', request.headers['X-access-token'])
+        userDB = UserDB(db_session)
         u: User = userDB.get_user_by_username(username)
         if u is None:
             return make_response('', 500)
@@ -434,6 +455,7 @@ def chat_root():
     channel: str = SSE_MSG_DEFAULT_CHANNEL
     if request.headers.get('X-access-token'):
         # print('X-access-token: ', request.headers['X-access-token'])
+        userDB = UserDB(db_session)
         u: User = userDB.get_user_by_username(username)
         if u is None:
             return make_response('', 500)
@@ -495,6 +517,7 @@ def get_root_by_word(message: str) -> json:
             
     back_data: json = {}
     back_data['username'] = "Jasmine"
+    userDB = UserDB(db_session)
     back_data['uuid'] = userDB.get_user_by_username("Jasmine").uuid
     back_data['type'] = 101
     back_data['dataList'] = dataList
@@ -557,6 +580,7 @@ def contact_us():
 #         return make_response(jsonify({"errcode":50002,"errmsg":"JSON data required"}), 500)
 #     if username == None or password == None:
 #         return make_response('Please provide username and password', 500)
+# userDB = UserDB(db_session)
 #     user: User = userDB.get_user_by_username(username)
 #     if user != None:
 #         return make_response(jsonify({"errcode":50005,"errmsg":"User already exists"}), 500)
@@ -584,6 +608,7 @@ def signup_with_promo():
         return make_response('Please provide username, password and promo code.', 500)
     if promo == '':
         return make_response('Please provide promo code.', 500)
+    userDB = UserDB(db_session)
     user: User = userDB.get_user_by_username(username)
     if user != None:
         return make_response(jsonify({"errcode":50005,"errmsg":"User already exists"}), 500)
@@ -608,6 +633,7 @@ def signin():
         return make_response(jsonify({"errcode":50002,"errmsg":"JSON data required"}), 500)
     if username == None or password == None:
         return make_response(jsonify({"errcode":50003,"errmsg":"Please provide username and password"}), 500)
+    userDB = UserDB(db_session)
     r: dict = userDB.check_password(username, password)
     if r == {}:
         return make_response(jsonify({"errcode":50004,"errmsg":"Username Or Password is incorrect"}), 500)
@@ -651,9 +677,11 @@ def openai_proxy(path):
         username = orig_username.split('[FREECHAT]')[1]
         conversation_id = orig_username.split('[FREECHAT]')[0]
         # 从数据库中取出此用户最近的20条记录，按顺序拼接到messages前面
+        userDB = UserDB(db_session)
         myuuid: str = userDB.get_user_by_username(username).uuid
         data_json = json.loads(data.decode('utf-8'))
         try:
+            crdb = ChatRecordDB(db_session)
             l: list = crdb.get_chat_record(user_id=myuuid, last_chat_record_id=0, limit=20, conversation_id=int(conversation_id))
         except Exception as e:
             l: list = []
@@ -714,6 +742,7 @@ def openai_proxy(path):
                 completion_text += c
         myuuid: str = userDB.get_user_by_username(username).uuid
         cr = ChatRecord(msgFrom=userDB.get_user_by_username('Jasmine').uuid, msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=completion_text, msgType=1, conversation_id=conversation_id)
+        crdb = ChatRecordDB(db_session)
         crdb.insert_chat_record(cr)
 
     
@@ -783,6 +812,7 @@ def chat_history():
     username: str = data_json.get('username')
     if username is None or username == '':
         return make_response('username missing', 500)
+    userDB = UserDB(db_session)
     u: User = userDB.get_user_by_username(username)
     if u is None:
         return make_response('user not exist', 500)
@@ -802,6 +832,7 @@ def chat_history():
         conversation_id = 0
 
     r: list = []
+    crdb = ChatRecordDB(db_session)
     for cr in crdb.get_chat_record(u.uuid, last_id, limit=20, conversation_id=int(conversation_id)):
         r.append({
             'pk_chat_record': cr.pk_chat_record,
@@ -829,6 +860,7 @@ def conversation_crud():
         username: str = request.args.get('username')
     if username is None or username == '':
         return make_response('username missing', 500)
+    userDB = UserDB(db_session)
     u: User = userDB.get_user_by_username(username)
     if u is None:
         return make_response('user not exist', 500)
@@ -837,7 +869,7 @@ def conversation_crud():
     if u.access_token_expire_at < int(time.time()):
         return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
 
-    conversationDB = ConversationDB()
+    conversationDB = ConversationDB(db_session)
     if request.method == 'GET':
         back_data: list = []
         try:
@@ -851,44 +883,36 @@ def conversation_crud():
                 })
         except Exception as e:
             print(e)
-            conversationDB.close()
             return make_response('get conversation list failed', 500)
         
         rsp = make_response(jsonify(back_data), 200)
     elif request.method == 'POST':
         c = Conversation(uuid=u.uuid, conversation_create_time=int(time.time()))
         conversation_id = conversationDB.create_conversation(c)
-        conversationDB.close()
         rsp = make_response(jsonify({"pk_conversation": int(conversation_id)}), 200)
     elif request.method == 'PUT':
         conversation_id: int = data.get('conversation_id')
         conversation_name: str = data.get('conversation_name')
         if conversation_id is None or conversation_id == '':
-            conversationDB.close()
             return make_response('conversation_id missing', 500)
         if conversation_name is None or conversation_name == '':
-            conversationDB.close()
             return make_response('conversation_name missing', 500)
         conversationDB.update_conversation_name(conversation_id, conversation_name)
         rsp = make_response(jsonify({"pk_conversation": int(conversation_id)}), 200)
     elif request.method == 'DELETE':
         conversation_id: int = request.args.get('conversation_id')
         if conversation_id is None or conversation_id == '':
-            conversationDB.close()
             return make_response('conversation_id missing', 500)
         r: Conversation = conversationDB.get_a_conversation(conversation_id)
         if r is None or r.uuid != u.uuid:
-            conversationDB.close()
             return make_response('conversation not exist', 500)
         if conversationDB.delete_conversation(conversation_id):
             rsp = make_response(jsonify({"pk_conversation": int(conversation_id)}), 200)
-            conversationDB.close()
         else:
             rsp = make_response('delete conversation failed', 500)
     else:
         rsp = make_response('method not allowed', 500)
 
-    conversationDB.close()
     return rsp
 
 @app.route('/api/nc', methods = ['POST'])
@@ -900,6 +924,7 @@ def name_a_conversation():
     username: str = data.get('username')
     if username is None or username == '':
         return make_response('username missing', 500)
+    userDB = UserDB(db_session)
     u: User = userDB.get_user_by_username(username)
     if u is None:
         return make_response('user not exist', 500)
@@ -939,7 +964,7 @@ def name_a_conversation():
         max_tokens=64,
     )
 
-    conversationDB = ConversationDB()
+    conversationDB = ConversationDB(db_session)
     conversationDB.update_conversation_name(conversation_id, response['choices'][0]['message']['content']) 
     return make_response(jsonify({"conversation_id": int(conversation_id), "conversation_name": str(response['choices'][0]['message']['content'])}), 200)
 

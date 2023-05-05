@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import mysql.connector
-# from mysql.connector import errorcode
-from sqlalchemy import create_engine, Column, Integer, String, or_
-from sqlalchemy.orm import sessionmaker, declarative_base
-# from sqlalchemy.pool import StaticPool
-import time
+from sqlalchemy import Column, Integer, String, or_
+from sqlalchemy.orm import declarative_base
 from config import *
 
 Base: declarative_base = declarative_base()
@@ -30,14 +26,8 @@ class ChatRecord(Base):
 
 class ChatRecordDB:
 
-    def __init__(self):
-        connect_args = MYSQL_CONFIG
-        self.cnx = mysql.connector.connect(**connect_args)
-        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}:{MYSQL_CONFIG["port"]}/{MYSQL_CONFIG["database"]}', pool_size=10, max_overflow=20)
-
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
-        Base.metadata.create_all(self.engine)
+    def __init__(self, session):
+        self.session = session
 
     def get_chat_record(self, user_id: str, last_chat_record_id: int, limit: int=30, conversation_id: int=0):
         result: list = []
@@ -52,9 +42,6 @@ class ChatRecordDB:
         self.session.add(chat_record)
         self.session.commit()
     
-    def close(self):
-        self.session.close()
-        self.cnx.close()
 
 class Conversation(Base):
     __tablename__ = 't_conversation'
@@ -75,14 +62,8 @@ class Conversation(Base):
     conversation_create_time = Column(Integer, nullable=False, default=0)
 
 class ConversationDB:
-    def __init__(self) -> None:
-        connect_args = MYSQL_CONFIG
-        self.cnx = mysql.connector.connect(**connect_args)
-        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}:{MYSQL_CONFIG["port"]}/{MYSQL_CONFIG["database"]}', pool_size=10, max_overflow=20)
-
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
-        Base.metadata.create_all(self.engine)
+    def __init__(self, session) -> None:
+        self.session = session
     
     def get_conversation_list(self, user_id: str) -> list:
         result: list = []
@@ -113,20 +94,17 @@ class ConversationDB:
         self.session.query(Conversation).filter(Conversation.pk_conversation == conversation_id).update({'conversation_name': conversation_name})
         self.session.commit()
 
-    def close(self):
-        self.session.close()
-        self.cnx.close()
 
 if __name__ == '__main__':
-    crdb = ChatRecordDB()
-    # create_time = int(time.time())
-    # cr = ChatRecord( msgFrom='Dio', msgTo='Jasmine', msgCreateTime=create_time, msgContent='北冰洋冰层厚度？', msgStatus=1, msgType=1, msgSource=1, msgDest=1)
-    # crdb.insert_chat_record(cr)
-    l: list = crdb.get_chat_record(user_id="b811abd7-c0bb-4301-9664-574d0d8b11f8", last_chat_record_id=0, limit=20, conversation_id=6)
-    print(len(l))
-    for cr in l:
-        print(cr.msgContent)
-    crdb.close()
+    # crdb = ChatRecordDB()
+    # # create_time = int(time.time())
+    # # cr = ChatRecord( msgFrom='Dio', msgTo='Jasmine', msgCreateTime=create_time, msgContent='北冰洋冰层厚度？', msgStatus=1, msgType=1, msgSource=1, msgDest=1)
+    # # crdb.insert_chat_record(cr)
+    # l: list = crdb.get_chat_record(user_id="b811abd7-c0bb-4301-9664-574d0d8b11f8", last_chat_record_id=0, limit=20, conversation_id=6)
+    # print(len(l))
+    # for cr in l:
+    #     print(cr.msgContent)
+    # crdb.close()
     # 反转打印
     # for i in r[::-1]:
     #     print(i.msgContent)
@@ -135,3 +113,4 @@ if __name__ == '__main__':
     # r:int = cvDB.create_conversation(cv)
     # cvDB.close()
     # print(r)
+    pass

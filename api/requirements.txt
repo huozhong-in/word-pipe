@@ -5,13 +5,12 @@ gunicorn
 marisa-trie
 pillow
 gevent
-sqlalchemy
-mysql-connector-python
+flask_sqlalchemy
+pymysql
 python_avatars
 PyJWT
 requests
 openai
-# streamtologger
 pycryptodome
 tiktoken
 edge-tts

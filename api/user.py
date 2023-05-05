@@ -2,11 +2,8 @@ import jwt
 import time
 import uuid
 import hashlib
-import mysql.connector
-# from mysql.connector import errorcode
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.orm import sessionmaker, declarative_base
-# from sqlalchemy.pool import StaticPool
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import declarative_base
 from config import *
 from promo import PromoDB
 
@@ -39,15 +36,8 @@ class User(Base):
         return f'<User(pk_user={self.pk_user}, uuid={self.uuid}, unionid={self.unionid}, mobile={self.mobile}, user_name={self.user_name}, avatar={self.avatar}, last_ip={self.last_ip}, sex={self.sex}, ctime={self.ctime}, utime={self.utime}, is_ban={self.is_ban})>'
 
 class UserDB:
-    def __init__(self):
-        # self.engine = create_engine(DB_URI, echo=False, poolclass=StaticPool, connect_args={'check_same_thread': False})
-        connect_args = MYSQL_CONFIG
-        self.cnx = mysql.connector.connect(**connect_args)
-        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}/{MYSQL_CONFIG["database"]}', pool_size=10, max_overflow=20)
-        
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
-        Base.metadata.create_all(self.engine)
+    def __init__(self, session):
+        self.session = session
 
     # Create
     def create_user_by_username(self, user_name='', password='', last_ip='', promo = '') -> dict:
@@ -60,7 +50,7 @@ class UserDB:
             generate_random_avatar(user_name)
             access_token, expire_at = self.generate_access_token(user_name)
             if promo != '':
-                promoDB = PromoDB()
+                promoDB = PromoDB(self.session)
                 r: bool = promoDB.bind_promo(promo=promo, bind_userid=myuuid)
                 if r:
                     user = User(uuid=myuuid, user_name=user_name, password=pass_word, last_ip=last_ip, ctime=ctime, access_token=access_token, access_token_expire_at=expire_at)
@@ -155,7 +145,7 @@ class UserDB:
         if user is not None:
             for key, value in kwargs.items():
                 setattr(user, key, value)
-            self.ession.commit()
+            self.session.commit()
             return user
         else:
             print("No matching record found")
@@ -218,7 +208,7 @@ class UserDB:
         if user == None:
             return None
         user_id= user.uuid
-        promoDB = PromoDB()
+        promoDB = PromoDB(self.session)
         result = promoDB.get_promos_by_userid(userid=user_id, no_owner_only=False)
         if len(result)> 0:
         # convert promo's bind_userid to user's name    
@@ -240,8 +230,8 @@ class UserDB:
 
 
 if __name__ == '__main__':
-    userDB = UserDB()
-    promoDB = PromoDB()
+    # userDB = UserDB()
+    # promoDB = PromoDB()
 
     # userDB.create_user_by_username('Bonny', '')
     # userDB.refresh_access_token('Dio')
@@ -249,8 +239,9 @@ if __name__ == '__main__':
     # promoDB.bind_promo('eAZftT', user_id)
     # userDB.modify_password('Bonny','', '123qwe789', force=True)
     
-    user_id = userDB.get_user_by_username('Dio').uuid
-    promoDB.create_promo(30, user_id)
-    for promo in promoDB.get_promos_by_userid(user_id, no_owner_only=False):
-        print(promo.promo, promo.bind_userid, promo.gen_by)
+    # user_id = userDB.get_user_by_username('Dio').uuid
+    # promoDB.create_promo(30, user_id)
+    # for promo in promoDB.get_promos_by_userid(user_id, no_owner_only=False):
+    #     print(promo.promo, promo.bind_userid, promo.gen_by)
+    pass
 

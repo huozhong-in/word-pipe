@@ -532,7 +532,7 @@ class DesktopHome extends StatelessWidget {
                       inactiveThumbColor: Colors.green[200],
                       inactiveTrackColor: Colors.green[100],
                       title: Text('Free-Chat Mode', style: TextStyle(fontSize: 12)), 
-                      // subtitle: Text('PRO only', style: TextStyle(fontSize: 10, color: Colors.blue)),
+                      subtitle: Text('PRO  only', style: appThemeBright.textTheme.labelSmall!.copyWith(color: Colors.blue)),
                       value: settingsController.freeChatMode.value,
                       onChanged: ((bool value) {
                         if (value==true){

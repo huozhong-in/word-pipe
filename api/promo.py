@@ -3,11 +3,8 @@
 import random
 import string
 import time
-import mysql.connector
-# from mysql.connector import errorcode
-from sqlalchemy import create_engine, Column, Integer, String, or_
-from sqlalchemy.orm import sessionmaker, declarative_base
-# from sqlalchemy.pool import StaticPool
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import declarative_base
 from config import *
 
 
@@ -25,15 +22,8 @@ class Promo(Base):
 
 
 class PromoDB():
-    def __init__(self):
-        # self.engine = create_engine(DB_URI, echo=False, poolclass=StaticPool, connect_args={'check_same_thread': False})
-        connect_args = MYSQL_CONFIG
-        self.cnx = mysql.connector.connect(**connect_args)
-        self.engine = create_engine(f'mysql+mysqlconnector://{MYSQL_CONFIG["user"]}:{MYSQL_CONFIG["password"]}@{MYSQL_CONFIG["host"]}/{MYSQL_CONFIG["database"]}')
-    
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
-        Base.metadata.create_all(self.engine)
+    def __init__(self, session):
+        self.session = session
 
     def create_promo(self, count, gen_by) -> bool:
         result: bool = False
