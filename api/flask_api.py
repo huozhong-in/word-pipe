@@ -531,16 +531,10 @@ def get_user_avatar(user_name: str):
     jpgImgFile = Path(imgFilePrefix / f'{user_name}.jpg')
     svgImgFile = Path(imgFilePrefix / f'{user_name}.svg')
     if jpgImgFile.exists():
-        img = Image.open(jpgImgFile)
-        img_byte_arr = BytesIO()
-        img.save(img_byte_arr, format='JPEG')
-        img_byte_arr.seek(0)
         # 发送图像数据
-        return send_file(img_byte_arr, mimetype='image/jpeg')
+        return send_file(jpgImgFile, mimetype='image/jpeg')
     elif svgImgFile.exists():
-        with open(svgImgFile, 'r') as f:
-            svg = f.read()
-        return Response(svg, mimetype='image/svg+xml')
+        return send_file(svgImgFile, mimetype='image/svg+xml')
     else:
         return make_response('', 404)
 
