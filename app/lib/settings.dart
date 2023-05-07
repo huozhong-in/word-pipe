@@ -34,7 +34,7 @@ class Settings extends StatelessWidget {
             if (username != "") {
                 return Scaffold(
                     appBar: AppBar(
-                      title: Text('Settings'),
+                      title: const Text('Settings', style: TextStyle(color: Colors.white70, fontSize: 24)),
                       centerTitle: true,
                       backgroundColor: Colors.green.withOpacity(0.6),
                       automaticallyImplyLeading: false,

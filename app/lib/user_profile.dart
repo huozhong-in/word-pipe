@@ -41,7 +41,7 @@ class UserProfile extends StatelessWidget {
                   debugShowCheckedModeBanner: false,
                   home: Scaffold(
                     appBar: AppBar(
-                      title: Text('User Profile'),
+                      title: const Text('User Profile', style: TextStyle(color: Colors.white70, fontSize: 24)),
                       centerTitle: true,
                       backgroundColor: Colors.green.withOpacity(0.6),
                       automaticallyImplyLeading: false,

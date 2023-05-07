@@ -24,6 +24,9 @@ Widget customRadioListTile(Map<String, dynamic> item) {
         messageController.messsage_view_first_build = true;
         messageController.conversation_id.value = value!;
         messageController.selectedConversationName.value = item['conversation_name'].toString().trim() == '' ? '未命名话题' : item['conversation_name'].toString();
+        if (messageController.scaffoldKey.currentState != null && messageController.scaffoldKey.currentState!.hasDrawer && messageController.scaffoldKey.currentState!.isDrawerOpen){
+          messageController.scaffoldKey.currentState!.closeDrawer();
+        }
         messageController.commentFocus.requestFocus();
         // print(messageController.conversation_id.value);
       },

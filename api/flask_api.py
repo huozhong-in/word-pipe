@@ -958,7 +958,7 @@ def name_a_conversation():
         temperature=0.8,
         max_tokens=64,
     )
-    print(response)
+    # print(response)
     conversationDB = ConversationDB(db_session)
     conversationDB.update_conversation_name(conversation_id, response['choices'][0]['message']['content']) 
     return make_response(jsonify({"conversation_id": int(conversation_id), "conversation_name": str(response['choices'][0]['message']['content'])}), 200)
