@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:wordpipe/cache_helper.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/conversation_view.dart';
@@ -539,7 +538,6 @@ class DesktopHome extends StatelessWidget {
                         if (value==true){
                           int premiumType = await c.getPremium();
                           if (premiumType != 0) {
-                            await CacheHelper.setData("cs" + _username, null);
                             settingsController.toggleFreeChatMode(value);
                             messageController.messages.clear();
                             messageController.messsage_view_first_build = true;
@@ -547,7 +545,6 @@ class DesktopHome extends StatelessWidget {
                             _commentFocus.requestFocus();
                           } else {
                             if (settingsController.openAiApiKey.value != '') {
-                              await CacheHelper.setData("cs" + _username, null);
                               settingsController.toggleFreeChatMode(value);
                               messageController.messages.clear();
                               messageController.messsage_view_first_build = true;

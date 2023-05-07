@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:wordpipe/cache_helper.dart';
 import 'package:wordpipe/custom_widgets.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageView.dart';
@@ -190,20 +189,16 @@ class MobileHome extends StatelessWidget {
                   if (value==true){
                     int premiumType = await c.getPremium();
                     if (premiumType != 0) {
-                      await CacheHelper.setData("cs" + _username, null);
                       settingsController.toggleFreeChatMode(value);
                       messageController.messages.clear();
                       messageController.messsage_view_first_build = true;
                       messageController.conversation_id.value = -1;
-                      _commentFocus.requestFocus();
                     } else {
                       if (settingsController.openAiApiKey.value != '') {
-                        await CacheHelper.setData("cs" + _username, null);
                         settingsController.toggleFreeChatMode(value);
                         messageController.messages.clear();
                         messageController.messsage_view_first_build = true;
                         messageController.conversation_id.value = -1;
-                        _commentFocus.requestFocus();
                       } else {
                         settingsController.freeChatMode.value = false;
                         customSnackBar(title: "Error", content: "Please config OpenAI key in config page or upgrade to PRO version.");
@@ -217,7 +212,6 @@ class MobileHome extends StatelessWidget {
                     messageController.messsage_view_first_build = true;
                     messageController.conversation_id.value = 0;
                     messageController.selectedConversationName.value = '';
-                    _commentFocus.requestFocus();
                   }
                 }),
               );                    
