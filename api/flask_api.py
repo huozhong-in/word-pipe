@@ -111,23 +111,26 @@ def before_request():
 
 @app.after_request
 def after_request(response):
-    if hasattr(g, 'session') and response.status_code < 500:
-        try:
-            g.session.commit()
-        except Exception:
-            g.session.rollback()
-            raise
-        finally:
-            g.session.close()
+    # if hasattr(g, 'session') and response.status_code < 500:
+    #     try:
+    #         g.session.commit()
+    #     except Exception:
+    #         g.session.rollback()
+    #         raise
+    #     finally:
+    #         g.session.close()
+    g.session.close()
     return response
 
 @app.teardown_request
 def shutdown_session(exception=None):
+    db_session.close()
     db_session.remove()
 
 @app.teardown_appcontext
 def shutdown_session2(exception=None):
     # 其他线程中的请求上下文结束时自动释放 session
+    db_session.close()
     db_session.remove()
 
 
