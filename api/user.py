@@ -66,7 +66,7 @@ class UserDB:
             print(e)
             return {}
         
-        return {"access_token": access_token,"expires_at": expire_at, "uuid": user.uuid}
+        return {"access_token": access_token,"expires_at": expire_at, "uuid": user.uuid, "premium": user.premium}
 
     def create_user_by_email(self, email='', password='', last_ip=''):
         myuuid: str = str(uuid.uuid4())

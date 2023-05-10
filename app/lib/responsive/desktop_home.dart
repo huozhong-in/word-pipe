@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -11,7 +12,6 @@ import 'package:wordpipe/MessageController.dart';
 import 'package:wordpipe/settings.dart';
 import 'package:wordpipe/about_us.dart';
 import 'package:wordpipe/custom_widgets.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:developer';
 
 // ignore: must_be_immutable
@@ -46,6 +46,8 @@ class DesktopHome extends StatelessWidget {
     if (messageController.conversation_id.value == -1){
       messageController.conversation_id.value = await messageController.conversation_CUD(_username, "create", messageController.conversation_id.value);
     }
+    // TODO 改成用户发言也是先发...占位，并将message.key发给服务端，服务端带着key返回SSE消息，handleSSE()判断是更新现有消息还是新增消息。
+    // 在messageControll里增加一个chat()，将c.chat()和messageController.addMessage()合并到一起
     bool ret = await c.chat(_username, text.trim(), messageController.conversation_id.value);
     if(ret == true){
       _textController.clear();
@@ -458,34 +460,48 @@ class DesktopHome extends StatelessWidget {
                     ),
                   ),
                   Divider(),
-                  FutureBuilder<String>(
-                    future: _getUserName(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        return SvgPicture.network(
-                          "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${snapshot.data}",
-                          height: 80,
-                          width: 80,
-                          semanticsLabel: 'avatar',
-                          placeholderBuilder: (BuildContext context) => Container(
-                            width: 80,
-                            height: 80,
-                            color: Colors.black12,
-                            margin: const EdgeInsets.only(right: 8),
-                            child: Center(child: CircularProgressIndicator()),
-                          ),
+                  Container(
+                    width: 100,
+                    height: 100,
+                    child: FutureBuilder<String>(
+                      future: _getUserName(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return CachedNetworkImage(
+                            imageUrl: "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${snapshot.data}",
+                            imageBuilder: (context, imageProvider) => Container(
+                              width: 100,
+                              height: 100,
+                              // margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(3),
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.scaleDown,
+                                ),
+                              ),
+                            ),
+                            placeholder: (context, url) => Container(
+                              width: 100,
+                              height: 100,
+                              color: Colors.black12,
+                              // margin: const EdgeInsets.only(right: 8),
+                              child: Center(child: CircularProgressIndicator()),
+                            ),
+                            errorWidget: (context, url, error) => Icon(Icons.error),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Text("${snapshot.error}");
+                        }
+                        return Container(
+                          width: 100,
+                          height: 100,
+                          color: Colors.black12,
+                          // margin: const EdgeInsets.only(right: 8),
+                          child: Center(child: CircularProgressIndicator()),
                         );
-                      } else if (snapshot.hasError) {
-                        return Text("${snapshot.error}");
-                      }
-                      return Container(
-                        width: 80,
-                        height: 80,
-                        color: Colors.black12,
-                        margin: const EdgeInsets.only(right: 8),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    },
+                      },
+                    ),
                   ),
                   ListTile(
                     leading: Icon(Icons.account_circle),

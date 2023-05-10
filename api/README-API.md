@@ -9,6 +9,15 @@
 `conda create -n wordpipe python=3.10`
 `conda activate wordpipe`
 
+## on macOS 
+`conda install cairo pango gdk-pixbuf libffi cairosvg` 
+`pip install cairosvg`
+
+## on Ubuntu 
+`sudo apt install python3-pip python3-cffi python3-brotli libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0` 
+`sudo apt-get install libpangocairo-1.0-0` 
+`pip install cairosvg`
+
 - clone codebase
 `git clone `
 

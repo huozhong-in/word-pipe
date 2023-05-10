@@ -1,9 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:wordpipe/config.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageController.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:wordpipe/responsive/responsive_layout.dart';
 
 
@@ -59,33 +59,52 @@ class UserProfile extends StatelessWidget {
                           Text('User ID: $username'),
                           SizedBox(height: 20),                          
                           Container(
-                            width: 200,
-                            height: 200,
+                            width: 100,
+                            height: 100,
                             // color: Colors.black12,
                             margin: const EdgeInsets.only(left: 8),
-                            child: SvgPicture.network(
-                              "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${username}",
-                              height: 200,
-                              width: 200,
-                              semanticsLabel: 'user avatar',
-                              placeholderBuilder: (BuildContext context) => Container(
-                                  padding: const EdgeInsets.all(40.0),
-                                  child: const CircularProgressIndicator()),
-                              )
+                              
+                            child: CachedNetworkImage(
+                              imageUrl: "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${username}",
+                              imageBuilder: (context, imageProvider) => Container(
+                                width: 100,
+                                height: 100,
+                                margin: const EdgeInsets.only(right: 8),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(3),
+                                  image: DecorationImage(
+                                    image: imageProvider,
+                                    fit: BoxFit.scaleDown,
+                                  ),
+                                ),
+                              ),
+                              placeholder: (context, url) => Container(
+                                width: 100,
+                                height: 100,
+                                color: Colors.black12,
+                                margin: const EdgeInsets.only(right: 8),
+                                child: Center(child: CircularProgressIndicator()),
+                              ),
+                              errorWidget: (context, url, error) => Icon(Icons.error),
+                            )
                           ),
                           SizedBox(height: 20),
                           ElevatedButton(
                             onPressed: () async {
-                              await c.signout();
-                              // 登出后清空消息列表
-                              messageController.messages.clear();
-                              messageController.closeSSE();
-                              messageController.messsage_view_first_build = true;
-                              messageController.conversationNameMap.clear();
-                              messageController.lastSegmentBeginId = 0;
-                              messageController.selectedConversationName.value = "";
-                              messageController.conversation_id.value = 0;
-                              Get.offAll(ResponsiveLayout());
+                              bool r = await c.signout();
+                              if (r){
+                                // 登出后清空消息列表
+                                messageController.messages.clear();
+                                messageController.closeSSE();
+                                messageController.messsage_view_first_build = true;
+                                messageController.conversationNameMap.clear();
+                                messageController.lastSegmentBeginId = 0;
+                                messageController.selectedConversationName.value = "";
+                                messageController.conversation_id.value = 0;
+                                Get.offAll(ResponsiveLayout());
+                              }else{
+                                Get.snackbar("Error", "Sign out failed");
+                              }
                             },
                             child: Text('Sign Out'),
                           ),

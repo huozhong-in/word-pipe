@@ -32,7 +32,7 @@ pod update
 - 产品功能
   - [ ] svg to png
   - [ ] 语音消息转文字后，帮助用户润色，然后再读出来。口语润色自带语法纠错。
-  - [ ] 桌面版本，必须能在线更新。Apple developer，Google developer
+  - [ ] 桌面版本，必须能在线更新。Apple developer，Google developer. https://docs.flutter.dev/ui/assets-and-images#updating-the-app-icon
   - [x] free chat mode，用户输入OpenAI apikey后开通
     - [ ] 优化token使用。一个配置项：压缩prompt以便节省token，压缩就是精简掉5轮之前的对话，精简掉的部分先做一个summary，限制max_token为200字。可否合并为一个请求？
     - [ ] 什么时候开CoT?`Let's work this out in a step by step way to be sure we have the right answer.`

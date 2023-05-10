@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageController.dart';
@@ -5,7 +6,6 @@ import 'package:wordpipe/MessageBubblePainter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:wordpipe/custom_widgets.dart';
 
 
@@ -271,18 +271,28 @@ class MessageBubble extends StatelessWidget {
     if (settingsController.freeChatMode.value && sender == 'Jasmine')
       imgUrl = "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/Jasmine-freechat";
     
-    return SvgPicture.network(
-      imgUrl,
-      height: 40,
-      width: 40,
-      semanticsLabel: 'avatar',
-      placeholderBuilder: (BuildContext context) => Container(
+    return CachedNetworkImage(
+      imageUrl: imgUrl,
+      imageBuilder: (context, imageProvider) => Container(
+        width: 50,
+        height: 50,
+        margin: const EdgeInsets.only(right: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(3),
+          image: DecorationImage(
+            image: imageProvider,
+            fit: BoxFit.scaleDown,
+          ),
+        ),
+      ),
+      placeholder: (context, url) => Container(
         width: 50,
         height: 50,
         color: Colors.black12,
         margin: const EdgeInsets.only(right: 8),
         child: Center(child: CircularProgressIndicator()),
       ),
+      errorWidget: (context, url, error) => Icon(Icons.error),
     );
   }
 

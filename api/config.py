@@ -1,5 +1,7 @@
 from pathlib import Path
 import python_avatars as pa
+import cairosvg
+import os
 # import logging
 
 
@@ -61,4 +63,11 @@ def generate_random_avatar(user_name: str) -> bool:
     random_avatar = pa.Avatar.random()
     avatar_save_path = Path(Path(__file__).parent.absolute() / 'assets/avatar/')
     random_avatar.render(avatar_save_path / f'{user_name}.svg')
+    with open(avatar_save_path / f'{user_name}.svg', 'r') as f:
+        svg = f.read()
+        cairosvg.svg2png(bytestring=svg.encode('utf-8'), write_to=Path(avatar_save_path / f'{user_name}.png').as_posix())
+        os.remove(avatar_save_path / f'{user_name}.svg')
     return True
+
+if __name__ == '__main__':
+    generate_random_avatar('test04')
