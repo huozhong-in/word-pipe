@@ -46,9 +46,7 @@ class DesktopHome extends StatelessWidget {
     if (messageController.conversation_id.value == -1){
       messageController.conversation_id.value = await messageController.conversation_CUD(_username, "create", messageController.conversation_id.value);
     }
-    // TODO 改成用户发言也是先发...占位，并将message.key发给服务端，服务端带着key返回SSE消息，handleSSE()判断是更新现有消息还是新增消息。
-    // 在messageControll里增加一个chat()，将c.chat()和messageController.addMessage()合并到一起
-    bool ret = await c.chat(_username, text.trim(), messageController.conversation_id.value);
+    bool ret = await messageController.new_chat(_username, text.trim(), messageController.conversation_id.value);
     if(ret == true){
       _textController.clear();
       _matchWords.clear();
@@ -58,10 +56,10 @@ class DesktopHome extends StatelessWidget {
       }
     }else{
       customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
-      // 三秒后跳转到登录页面
-      Future.delayed(Duration(seconds: 3), () {
-        Get.offAll(ResponsiveLayout());
-      });
+      // // 三秒后跳转到登录页面
+      // Future.delayed(Duration(seconds: 3), () {
+      //   Get.offAll(ResponsiveLayout());
+      // });
     }   
   }
   

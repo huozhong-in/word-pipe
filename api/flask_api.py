@@ -288,6 +288,7 @@ def chat():
         username: str = data.get('username')
         message: str = data.get('message')
         conversation_id: int = data.get('conversation_id')
+        message_key: str = data.get('message_key')
     except:
         return make_response('JSON data required', 500)
     if message == '':
@@ -326,6 +327,7 @@ def chat():
         back_data['dataList'] = dataList
         back_data['type'] = 1 # WordPipeMessageType.text format. See: config.dart
         back_data['createTime'] = int(time.time())
+        back_data['message_key'] = message_key
         id = generate_time_based_client_id(prefix=username)
         sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
 

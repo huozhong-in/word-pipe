@@ -63,8 +63,8 @@ class Controller extends GetxController{
   Future<List<dynamic>> getWords(List<dynamic> word_json_list) async {
     return await _wordsProvider.getWords(word_json_list);
   }
-  Future<bool> chat(String username, String message, int conversation_id) async{
-    return await _userProvider.chat(username, message, conversation_id);
+  Future<bool> chat(String username, String message, int conversation_id, String message_key) async{
+    return await _userProvider.chat(username, message, conversation_id, message_key);
   }
   Future<Map<String, dynamic>> signin(String username, String password) async{
     return await _userProvider.signin(username, password);
@@ -89,25 +89,25 @@ class Controller extends GetxController{
     }
     return true;
   }
-  Future<String> imageTypes(String url) async {
-    var response = await http.head(Uri.parse(url));
-    if (response.statusCode != 200){
-      return "not exists";
-    }
-    // response.headers.forEach((key, value) {
-    //   print(key + " : " + value);
-    // });
-    if(response.headers['content-type'] != null){
-      if(response.headers['content-type']!.contains('jpeg')){
-        return "jpeg";
-      }else if(response.headers['content-type']!.contains('png')){
-        return "png";
-      }else if(response.headers['content-type']!.contains('svg')){
-        return "svg";
-      }   
-    }
-    return "not exists";
-  }
+  // Future<String> imageTypes(String url) async {
+  //   var response = await http.head(Uri.parse(url));
+  //   if (response.statusCode != 200){
+  //     return "not exists";
+  //   }
+  //   // response.headers.forEach((key, value) {
+  //   //   print(key + " : " + value);
+  //   // });
+  //   if(response.headers['content-type'] != null){
+  //     if(response.headers['content-type']!.contains('jpeg')){
+  //       return "jpeg";
+  //     }else if(response.headers['content-type']!.contains('png')){
+  //       return "png";
+  //     }else if(response.headers['content-type']!.contains('svg')){
+  //       return "svg";
+  //     }   
+  //   }
+  //   return "not exists";
+  // }
 }
 
 
@@ -166,7 +166,7 @@ class WordsProvider extends GetConnect {
 
 class UserProvider extends GetConnect {
 
-  Future<bool> chat(String username, String message, int conversation_id) async{
+  Future<bool> chat(String username, String message, int conversation_id, String message_key) async{
     // String baseUrl='$HTTP_SERVER_HOST/chat';
     // Uri url = Uri.parse(baseUrl).replace(
     //   queryParameters: <String, String>{
@@ -179,6 +179,7 @@ class UserProvider extends GetConnect {
     data['username'] = username;
     data['message'] = message;
     data['conversation_id'] = conversation_id;
+    data['message_key'] = message_key;
     String  access_token = "";
     if (await CacheHelper.hasData('sessionData')){
       if(await CacheHelper.getData('sessionData') != null){

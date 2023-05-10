@@ -422,7 +422,7 @@ class MobileHome extends StatelessWidget {
     if (messageController.conversation_id.value == -1){
       messageController.conversation_id.value = await messageController.conversation_CUD(_username, "create", messageController.conversation_id.value);
     }
-    bool ret = await c.chat(_username, text.trim(), messageController.conversation_id.value);
+    bool ret = await messageController.new_chat(_username, text.trim(), messageController.conversation_id.value);
     if(ret == true){
       _textController.clear();
       if (settingsController.freeChatMode.value == true){

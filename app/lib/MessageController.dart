@@ -45,8 +45,17 @@ class MessageController extends GetxController{
 
   // find  MessageModel by key
   MessageModel findMessageByKey(Key key) {
-    return messages.firstWhere((message) => message.key == key);
+    // type为 WordPipeMessageType.reserved 表示没有找到
+    return messages.firstWhere((message) => message.key == key, orElse: () => MessageModel(
+      username: '',
+      uuid: '',
+      dataList: RxList([]),
+      type: WordPipeMessageType.reserved,
+      createTime: 0,
+      key: UniqueKey(),
+    ));
   }
+
 
   // update MessageModel by key
   void updateMessageByKey(Key key, MessageModel message) {
@@ -322,7 +331,7 @@ class MessageController extends GetxController{
 
     Key needUpdate = addMessage(MessageModel(
       dataList: RxList(['...']),
-      type: WordPipeMessageType.chathistory,
+      type: WordPipeMessageType.raw_text,
       username: "Jasmine",
       uuid: "b811abd7-c0bb-4301-9664-574d0d8b11f8",
       createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -368,7 +377,19 @@ class MessageController extends GetxController{
       }
     });
   }
-
+  Future<bool> new_chat(String username, String message, int conversation_id) async{
+    String myuuid = await c.getUUID();
+    Key needUpdate = addMessage(MessageModel(
+      dataList: RxList(['...']),
+      type: WordPipeMessageType.raw_text,
+      username: username,
+      uuid: myuuid,
+      createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      key: UniqueKey(),
+    ));
+    bool result = await c.chat(username, message, conversation_id, needUpdate.toString());
+    return result;
+  }
   void handleSSE(String channel) async {
     try {
       sseClient = SSEClient.getInstance(Uri.parse(SSE_SERVER_HOST + SSE_SERVER_PATH), SSE_MSG_TYPE, channel);
@@ -381,13 +402,24 @@ class MessageController extends GetxController{
             if (type == WordPipeMessageType.tts_audio){
               // print(HTTP_SERVER_HOST + json['mp3_url']);
               ttsJobs[json['key']] = HTTP_SERVER_HOST + json['mp3_url'];
-            // }else if (type == WordPipeMessageType.name_a_conversation){
-            //   // “新话题”的最早一个“QA对”交给AI生成10字以内摘要，以便作为话题的名字
-            //   conversationNameMap[json['conversation_id']] = json['conversation_name'];
-            //   _rebuildRadioListTiles();
-            //   selectedConversationName.value = json['name'];
             }else{
-              messages.insert(0, MessageModel.fromJson(json));
+              String message_key = json['message_key'];
+              if (message_key != ""){
+                final message = findMessageByKey(Key(message_key));
+                if (message.type == WordPipeMessageType.reserved){
+                  // 如果在消息列表中没有找到，则新增
+                  messages.insert(0, MessageModel.fromJson(json));
+                }else{
+                  // 如果在消息列表中找到了，则更新
+                  if (message.dataList[0] == '...'){
+                    message.dataList.removeAt(0);
+                  }
+                  String content = List<String>.from(json['dataList']).join('');
+                  message.dataList.add(content);
+                }
+              }else{
+                messages.insert(0, MessageModel.fromJson(json));
+              }
             }
             sse_connected = true;
           } catch (e) {
@@ -611,7 +643,7 @@ class ChatRecord extends GetConnect {
             uuid: msgFromUUID,
             createTime: msgCreateTime, 
             dataList: RxList([msgContent]), 
-            type: WordPipeMessageType.chathistory, 
+            type: WordPipeMessageType.raw_text, 
             key: UniqueKey()
             )
           );

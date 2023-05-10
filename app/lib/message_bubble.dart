@@ -306,7 +306,7 @@ class MessageBubble extends StatelessWidget {
     }else if(type == WordPipeMessageType.stream){
       // 因为AI的回复是异步且流式，当消息陆续到达，逐一显示。可以认为每item是一个字符，包括\n，不需要额外处理
       return templateStreamWithHighlight(context);
-    }else if(type == WordPipeMessageType.chathistory){
+    }else if(type == WordPipeMessageType.raw_text){
       // 加载聊天历史。文本里会有\n，所以依次append即可
       return templateRawText(context);
     }else if(type == WordPipeMessageType.flask_reply_for_word){
@@ -563,7 +563,7 @@ class MessageBubble extends StatelessWidget {
                 )
               ),
               onPressed: () async {
-                c.chat(await c.getUserName(), match.group(0)!, 0);
+                c.chat(await c.getUserName(), match.group(0)!, 0, '');
               }, 
               child: Text(
                 match.group(0)!,
