@@ -44,9 +44,9 @@ class MessageController extends GetxController{
   // bool get isLoading => _isLoading.value;
 
   // find  MessageModel by key
-  MessageModel findMessageByKey(Key key) {
+  MessageModel findMessageByKey(String key) {
     // type为 WordPipeMessageType.reserved 表示没有找到
-    return messages.firstWhere((message) => message.key == key, orElse: () => MessageModel(
+    return messages.firstWhere((message) => message.key.toString() == key, orElse: () => MessageModel(
       username: '',
       uuid: '',
       dataList: RxList([]),
@@ -54,19 +54,6 @@ class MessageController extends GetxController{
       createTime: 0,
       key: UniqueKey(),
     ));
-  }
-
-
-  // update MessageModel by key
-  void updateMessageByKey(Key key, MessageModel message) {
-    final index = messages.indexWhere((message) => message.key == key);
-    messages[index] = message;
-  }
-
-  //update MessageModel' dataList item by key
-  void updateMessageDataListByKey(Key key, int index, String value) {
-    final message = messages.firstWhere((message) => message.key == key);
-    message.dataList[index] = value;
   }
   
   final scrollController = ScrollController();
@@ -183,10 +170,10 @@ class MessageController extends GetxController{
     return result;
   }
 
-  Key addMessage(MessageModel message) {
+  String addMessage(MessageModel message) {
     // 插消息到ListView最底部
     messages.insert(0, message);
-    return message.key;
+    return message.key.toString();
   }
 
   Future<void> getChatCompletion(String model, String prompt, int requestType) async {
@@ -216,7 +203,7 @@ class MessageController extends GetxController{
       return;
     }
 
-    Key needUpdate = addMessage(MessageModel(
+    String needUpdate = addMessage(MessageModel(
       dataList: RxList(['...']),
       type: requestType,
       username: "Jasmine",
@@ -329,7 +316,7 @@ class MessageController extends GetxController{
       return;
     }
 
-    Key needUpdate = addMessage(MessageModel(
+    String needUpdate = addMessage(MessageModel(
       dataList: RxList(['...']),
       type: WordPipeMessageType.raw_text,
       username: "Jasmine",
@@ -379,7 +366,7 @@ class MessageController extends GetxController{
   }
   Future<bool> new_chat(String username, String message, int conversation_id) async{
     String myuuid = await c.getUUID();
-    Key needUpdate = addMessage(MessageModel(
+    String needUpdate = addMessage(MessageModel(
       dataList: RxList(['...']),
       type: WordPipeMessageType.raw_text,
       username: username,
@@ -390,6 +377,7 @@ class MessageController extends GetxController{
     bool result = await c.chat(username, message, conversation_id, needUpdate.toString());
     return result;
   }
+  
   void handleSSE(String channel) async {
     try {
       sseClient = SSEClient.getInstance(Uri.parse(SSE_SERVER_HOST + SSE_SERVER_PATH), SSE_MSG_TYPE, channel);
@@ -405,7 +393,7 @@ class MessageController extends GetxController{
             }else{
               String message_key = json['message_key'];
               if (message_key != ""){
-                final message = findMessageByKey(Key(message_key));
+                final message = findMessageByKey(message_key);
                 if (message.type == WordPipeMessageType.reserved){
                   // 如果在消息列表中没有找到，则新增
                   messages.insert(0, MessageModel.fromJson(json));

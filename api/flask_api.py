@@ -285,78 +285,77 @@ def chat():
         return make_response('message required', 500)
     
     # tic = time.perf_counter()
-    try:
-        logging.info(f'[{username}]: {message}')
-        if request.headers.get('X-access-token'):
-            # print('X-access-token: ', request.headers['X-access-token'])
-            userDB = UserDB(db_session)
-            u: User = userDB.get_user_by_username(username)
-            if u is None:
-                return make_response('', 500)
-            if u.access_token != request.headers['X-access-token']:
-                return make_response('', 500)
-            if u.access_token_expire_at < int(time.time()):
-                return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
-        else:
-            return make_response('access_token required', 500)
-
-        # 将用户消息记录到数据库
-        myuuid: str = userDB.get_user_by_username(username).uuid
-        s: str = json.loads(json.dumps(message, ensure_ascii=False)) # 防止被SQLAlchemy转义双引号、回车符、制表符和斜杠
-        cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jasmine').uuid, msgCreateTime=int(time.time()), msgContent=s, msgType=1, conversation_id=conversation_id)
-        crdb = ChatRecordDB(db_session)
-        crdb.insert_chat_record(cr)
     
+    logging.info(f'[{username}]: {message}')
+    if request.headers.get('X-access-token'):
+        # print('X-access-token: ', request.headers['X-access-token'])
+        userDB = UserDB(db_session)
+        u: User = userDB.get_user_by_username(username)
+        if u is None:
+            return make_response('', 500)
+        if u.access_token != request.headers['X-access-token']:
+            return make_response('', 500)
+        if u.access_token_expire_at < int(time.time()):
+            return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
+    else:
+        return make_response('access_token required', 500)
 
-        # 替用户发消息。附带好处是可以可以处理禁忌词，替换成*号
-        back_data: json = {}
-        back_data['username'] = username
-        back_data['uuid'] = myuuid
-        dataList: list = list()
-        dataList.append(message)
-        back_data['dataList'] = dataList
-        back_data['type'] = 1 # WordPipeMessageType.text format. See: config.dart
-        back_data['createTime'] = int(time.time())
-        back_data['message_key'] = message_key
-        id = generate_time_based_client_id(prefix=username)
-        sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
+    # 将用户消息记录到数据库
+    myuuid: str = userDB.get_user_by_username(username).uuid
+    s: str = json.loads(json.dumps(message, ensure_ascii=False)) # 防止被SQLAlchemy转义双引号、回车符、制表符和斜杠
+    cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jasmine').uuid, msgCreateTime=int(time.time()), msgContent=s, msgType=1, conversation_id=conversation_id)
+    crdb = ChatRecordDB(db_session)
+    crdb.insert_chat_record(cr)
 
-        if conversation_id != 0:
-            return make_response('', 200)
 
-        # 检查message中是否包含英文单词
-        import re
-        pattern1 = re.compile(r'([a-zA-Z]{3,})') # 注意是3个字符以上的才认为是单词
-        result: list = pattern1.findall(message)
-        # print(result)
-        # 根据用户消息中不同的单词数量，让客户端出现不同的选择界面
-        back_data['username'] = "Jasmine"
-        back_data['uuid'] = userDB.get_user_by_username('Jasmine').uuid
-    except Exception as e:
-        logging.error(e)
-    finally:
-        db_session.close()
+    # 替用户发消息。附带好处是可以可以处理禁忌词，替换成*号
+    back_data: json = {}
+    back_data['username'] = username
+    back_data['uuid'] = myuuid
+    dataList: list = list()
+    dataList.append(message)
+    back_data['dataList'] = dataList
+    back_data['type'] = 1 # WordPipeMessageType.text format. See: config.dart
+    back_data['createTime'] = int(time.time())
+    back_data['message_key'] = message_key
+    id = generate_time_based_client_id(prefix=username)
+    sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
+
+    if conversation_id != 0:
+        return make_response('', 200)
+
+    # 检查message中是否包含英文单词
+    import re
+    pattern1 = re.compile(r'([a-zA-Z]{3,})') # 注意是3个字符以上的才认为是单词
+    result: list = pattern1.findall(message)
+    # print(result)
+    # 根据用户消息中不同的单词数量，让客户端出现不同的选择界面
+    ai_back_data: json = {}
+    ai_back_data['message_key'] = ""
+    ai_back_data['username'] = "Jasmine"
+    ai_back_data['uuid'] = userDB.get_user_by_username('Jasmine').uuid
+    
 
     dataList: list = list()
     if len(result) == 1:
         # 句子中只包含一个单词，大概率是用户想要查询单词的意思
         dataList.append(f"关于`{result[0]}`的具体意思，你是想直接知道答案呢 ，还是想通过例句来猜一猜？")
         dataList.append(result[0]) # 附上单词本身，方便客户端处理
-        back_data['type'] = 101 # WordPipeMessageType.flask_reply_for_Word, See: config.dart
+        ai_back_data['type'] = 101 # WordPipeMessageType.flask_reply_for_Word, See: config.dart
     elif len(result) > 1:
         # 句子中包含多个单词，可能是用户想要翻译句子，TODO 顺便可以猜猜哪个是用户的生词
         dataList.append(message) # 附上用户发来的原文，方便客户端处理 # dataList.append(f"```{message}```")
         dataList.append("句中单词已经高亮，可点击查询。你想让我翻译句子呢？还是在问我问题？")
-        back_data['type'] = 102 # WordPipeMessageType.flask_reply_for_sentence, See: config.dart
+        ai_back_data['type'] = 102 # WordPipeMessageType.flask_reply_for_sentence, See: config.dart
     else:
         # 句子中不包含英文单词，可能是用户想要翻译中文到英文
         dataList.append(message)
         dataList.append("你想让我翻译成英文呢？还是在问我问题？")
-        back_data['type'] = 107 # WordPipeMessageType.flask_reply_for_sentence_zh_en, See: config.dart
-    back_data['dataList'] = dataList
-    back_data['createTime'] = int(time.time())
+        ai_back_data['type'] = 107 # WordPipeMessageType.flask_reply_for_sentence_zh_en, See: config.dart
+    ai_back_data['dataList'] = dataList
+    ai_back_data['createTime'] = int(time.time())
     id = generate_time_based_client_id(prefix=username)
-    sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
+    sse.publish(id=id, data=ai_back_data, type=SSE_MSG_EVENTTYPE, channel=username)
 
 
     # toc = time.perf_counter()

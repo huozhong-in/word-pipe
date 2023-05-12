@@ -712,7 +712,7 @@ class DesktopHome extends StatelessWidget {
                                   right: 0,
                                   bottom: 0,
                                   child: Container(
-                                    height: 410,
+                                    height: 420,
                                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                                     decoration: BoxDecoration(
                                       color: Colors.white70,
