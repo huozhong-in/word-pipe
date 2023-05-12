@@ -99,7 +99,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_POOL_SIZE'] = 100  # 连接池大小
 app.config['SQLALCHEMY_POOL_RECYCLE'] = 3600  # 连接池中连接最长使用时间，单位秒
 # 创建数据库引擎
-engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], poolclass=QueuePool, pool_size=app.config['SQLALCHEMY_POOL_SIZE'], pool_recycle=app.config['SQLALCHEMY_POOL_RECYCLE'])
+engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'], poolclass=QueuePool, pool_size=app.config['SQLALCHEMY_POOL_SIZE'], pool_recycle=app.config['SQLALCHEMY_POOL_RECYCLE'], pool_pre_ping=True)
 # 创建数据库连接
 db = SQLAlchemy(app)
 Session = sessionmaker(bind=engine)
@@ -111,14 +111,6 @@ def before_request():
 
 @app.after_request
 def after_request(response):
-    # if hasattr(g, 'session') and response.status_code < 500:
-    #     try:
-    #         g.session.commit()
-    #     except Exception:
-    #         g.session.rollback()
-    #         raise
-    #     finally:
-    #         g.session.close()
     g.session.close()
     return response
 
@@ -129,8 +121,6 @@ def shutdown_session(exception=None):
 
 @app.teardown_appcontext
 def shutdown_session2(exception=None):
-    # 其他线程中的请求上下文结束时自动释放 session
-    db_session.close()
     db_session.remove()
 
 
@@ -648,22 +638,21 @@ def signin():
         return make_response(jsonify({"errcode":50002,"errmsg":"JSON data required"}), 500)
     if username == None or password == None:
         return make_response(jsonify({"errcode":50003,"errmsg":"Please provide username and password"}), 500)
-    try:
-        userDB = UserDB(db_session)
-        r: dict = userDB.check_password(username, password)
-        if r == {}:
-            return make_response(jsonify({"errcode":50004,"errmsg":"Username Or Password is incorrect"}), 500)
-        ip = request.headers.get('X-Forwarded-For')
-        if ip:
-            ip = ip.split(',')[0]
-        else:
-            ip = request.headers.get('X-Real-IP')
-        if not ip:
-            ip = request.remote_addr
-        if ip:
-            userDB.write_user_ip(username, ip)
-    finally:
-        db_session.close()
+    
+    userDB = UserDB(db_session)
+    r: dict = userDB.check_password(username, password)
+    if r == {}:
+        return make_response(jsonify({"errcode":50004,"errmsg":"Username Or Password is incorrect"}), 500)
+    ip = request.headers.get('X-Forwarded-For')
+    if ip:
+        ip = ip.split(',')[0]
+    else:
+        ip = request.headers.get('X-Real-IP')
+    if not ip:
+        ip = request.remote_addr
+    if ip:
+        userDB.write_user_ip(username, ip)
+    
     r.update(get_openai_apikey())
     r['errcode'] = 0
     r['errmsg'] = 'Success'
