@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/cache_helper.dart';
-import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 

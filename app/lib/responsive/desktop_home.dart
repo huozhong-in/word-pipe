@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/conversation_view.dart';
-import 'package:wordpipe/responsive/responsive_layout.dart';
 import 'package:wordpipe/user_profile.dart';
 import 'package:wordpipe/MessageController.dart';
 import 'package:wordpipe/settings.dart';

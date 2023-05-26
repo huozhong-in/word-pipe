@@ -20,7 +20,7 @@ class WordPipe extends StatelessWidget {
       initialBinding: SettingsBinding(),
       debugShowCheckedModeBanner: false,
       title: 'Word Pipe',
-      theme: appThemeBright,
+      theme: appThemeBright, // https://www.youtube.com/watch?v=6YuQEVN6j-g
       home: ResponsiveLayout()
     );
   }
