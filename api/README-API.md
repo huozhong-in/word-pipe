@@ -1,5 +1,9 @@
 # 使用方法
 
+- clone codebase
+`git clone https://github.com/huozhong-in/word-pipe.git`
+
+
 `https://github.com/skywind3000/ECDICT/releases/download/1.0.28/ecdict-sqlite-28.zip`
 - 下载解压 放在api/db/stardict.db
 
@@ -18,14 +22,11 @@
 `sudo apt-get install libpangocairo-1.0-0` 
 `pip install cairosvg`
 
-- clone codebase
-`git clone `
-
 - install dependents
 `pip install -r requirements.txt`
 
 - develop in localhost
-`sudo gunicorn flask_api:app --workers=1 --worker-class=gevent --worker-connections=10 --bind 127.0.0.1:80 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 300 -env DEBUG_MODE=1`
+`sudo gunicorn flask_api:app --workers=1 --worker-class=gevent --worker-connections=10 --bind 127.0.0.1:80 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 300 --env DEBUG_MODE=1`
 
 - register system service
 `vim /etc/systemd/system/wordpipe.service`
@@ -51,7 +52,7 @@ WantedBy=multi-user.target
 `docker exec -it mariadb /bin/sh`
 `mysql -uroot -p`
 `create database wordpipe;`
-`msyql wordpipe < /var/lib/mysql/temp/t_user.sql`
+`msyql wordpipe < /home/dio/word-pipe/api/db/wordpipe.sql`
 ```
 CREATE USER 'wordpipe'@'localhost' IDENTIFIED BY 'dswybs-yoqoo';
 GRANT ALL PRIVILEGES ON wordpipe.* TO 'wordpipe'@'localhost' WITH GRANT OPTION;
