@@ -25,7 +25,7 @@
 `pip install -r requirements.txt`
 
 - develop in localhost
-`sudo gunicorn flask_api:app --workers=1 --worker-class=gevent --worker-connections=10 --bind 127.0.0.1:80 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 300`
+`sudo gunicorn flask_api:app --workers=1 --worker-class=gevent --worker-connections=10 --bind 127.0.0.1:80 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 300 -env DEBUG_MODE=1`
 
 - register system service
 `vim /etc/systemd/system/wordpipe.service`
@@ -39,7 +39,7 @@ User=root
 Group=root
 WorkingDirectory=/root/word-pipe/api
 Environment="PATH=/root/miniconda3/envs/wordpipe/bin"
-ExecStart=/root/miniconda3/envs/wordpipe/bin/gunicorn flask_api:app --workers=4 --worker-class=gevent --worker-connections=40 --bind 127.0.0.1:9000 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 60 --timeout 60
+ExecStart=/root/miniconda3/envs/wordpipe/bin/gunicorn flask_api:app --workers=8 --worker-class=gevent --worker-connections=80 --bind 127.0.0.1:9000 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 60 --timeout 60
 
 [Install]
 WantedBy=multi-user.target
@@ -47,7 +47,7 @@ WantedBy=multi-user.target
 
 # maridb docker config
 
-`docker run -d  --name=mariadb --restart=unless-stopped -v /opt/mysql_data:/var/lib/mysql -p 127.0.0.1:3306:3306 -e MARIADB_ROOT_PASSWORD=dswybs-yoqoo mariadb:latest`
+`server_config/mysq/run.sh`
 `docker exec -it mariadb /bin/sh`
 `mysql -uroot -p`
 `create database wordpipe;`
@@ -58,6 +58,7 @@ GRANT ALL PRIVILEGES ON wordpipe.* TO 'wordpipe'@'localhost' WITH GRANT OPTION;
 
 CREATE USER 'wordpipe'@'%' IDENTIFIED BY 'dswybs-yoqoo';
 GRANT ALL PRIVILEGES ON wordpipe.* TO 'wordpipe'@'%' WITH GRANT OPTION;
+
 FLUSH PRIVILEGES;
 ```
 

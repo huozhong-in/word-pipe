@@ -11,7 +11,7 @@
  Target Server Version : 100612 (10.6.12-MariaDB-0ubuntu0.22.04.1-log)
  File Encoding         : 65001
 
- Date: 27/05/2023 00:39:43
+ Date: 27/05/2023 23:34:48
 */
 
 SET NAMES utf8mb4;
@@ -34,7 +34,7 @@ CREATE TABLE `t_chat_record` (
   `conversation_id` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`pk_chat_record`),
   KEY `idx_my_chat_record` (`pk_chat_record`,`msgFrom`,`msgTo`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=903 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=911 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ----------------------------
 -- Records of t_chat_record
@@ -941,6 +941,14 @@ INSERT INTO `t_chat_record` (`pk_chat_record`, `msgFrom`, `msgTo`, `msgCreateTim
 INSERT INTO `t_chat_record` (`pk_chat_record`, `msgFrom`, `msgTo`, `msgCreateTime`, `msgContent`, `msgStatus`, `msgType`, `msgSource`, `msgDest`, `conversation_id`) VALUES (900, '02b1c3be-aac5-4867-9361-ca724b87764e', 'b811abd7-c0bb-4301-9664-574d0d8b11f8', 1684913341, 'How To Use Langchain With Azure OpenAI?', 1, 1, 1, 1, 0);
 INSERT INTO `t_chat_record` (`pk_chat_record`, `msgFrom`, `msgTo`, `msgCreateTime`, `msgContent`, `msgStatus`, `msgType`, `msgSource`, `msgDest`, `conversation_id`) VALUES (901, 'b811abd7-c0bb-4301-9664-574d0d8b11f8', '02b1c3be-aac5-4867-9361-ca724b87764e', 1684913362, 'I\'m sorry, but I\'m not sure what you mean by \"Langchain\". If you could provide more context or information, I might be able to better assist you with your question about using it with Azure OpenAI.', 1, 1, 1, 1, 0);
 INSERT INTO `t_chat_record` (`pk_chat_record`, `msgFrom`, `msgTo`, `msgCreateTime`, `msgContent`, `msgStatus`, `msgType`, `msgSource`, `msgDest`, `conversation_id`) VALUES (902, '78aa9442-a1f1-418d-966d-0d67e38be755', 'b811abd7-c0bb-4301-9664-574d0d8b11f8', 1684976971, 'w\'ho are you?', 1, 1, 1, 1, 0);
+INSERT INTO `t_chat_record` (`pk_chat_record`, `msgFrom`, `msgTo`, `msgCreateTime`, `msgContent`, `msgStatus`, `msgType`, `msgSource`, `msgDest`, `conversation_id`) VALUES (903, '02b1c3be-aac5-4867-9361-ca724b87764e', 'b811abd7-c0bb-4301-9664-574d0d8b11f8', 1685156639, 'elevation', 1, 1, 1, 1, 0);
+INSERT INTO `t_chat_record` (`pk_chat_record`, `msgFrom`, `msgTo`, `msgCreateTime`, `msgContent`, `msgStatus`, `msgType`, `msgSource`, `msgDest`, `conversation_id`) VALUES (904, '02b1c3be-aac5-4867-9361-ca724b87764e', 'b811abd7-c0bb-4301-9664-574d0d8b11f8', 1685156680, 'elevation', 1, 1, 1, 1, 0);
+INSERT INTO `t_chat_record` (`pk_chat_record`, `msgFrom`, `msgTo`, `msgCreateTime`, `msgContent`, `msgStatus`, `msgType`, `msgSource`, `msgDest`, `conversation_id`) VALUES (905, '02b1c3be-aac5-4867-9361-ca724b87764e', 'b811abd7-c0bb-4301-9664-574d0d8b11f8', 1685156909, 'I\'m sorry, but I\'m not sure what you mean by \"Langchain\". If you could provide more context or information, I might be able to better assist you with your question about using it with Azure OpenAI.', 1, 1, 1, 1, 0);
+INSERT INTO `t_chat_record` (`pk_chat_record`, `msgFrom`, `msgTo`, `msgCreateTime`, `msgContent`, `msgStatus`, `msgType`, `msgSource`, `msgDest`, `conversation_id`) VALUES (906, '02b1c3be-aac5-4867-9361-ca724b87764e', 'b811abd7-c0bb-4301-9664-574d0d8b11f8', 1685183413, 'configuration', 1, 1, 1, 1, 0);
+INSERT INTO `t_chat_record` (`pk_chat_record`, `msgFrom`, `msgTo`, `msgCreateTime`, `msgContent`, `msgStatus`, `msgType`, `msgSource`, `msgDest`, `conversation_id`) VALUES (907, '02b1c3be-aac5-4867-9361-ca724b87764e', 'b811abd7-c0bb-4301-9664-574d0d8b11f8', 1685183483, 'configuration', 1, 1, 1, 1, 0);
+INSERT INTO `t_chat_record` (`pk_chat_record`, `msgFrom`, `msgTo`, `msgCreateTime`, `msgContent`, `msgStatus`, `msgType`, `msgSource`, `msgDest`, `conversation_id`) VALUES (908, '02b1c3be-aac5-4867-9361-ca724b87764e', 'b811abd7-c0bb-4301-9664-574d0d8b11f8', 1685184649, '在人类世界，涌现可以类比为“开窍”、“融汇贯通”。这种现象人类自己也解释不清，所以对于AI的涌现现象不能理解也是正常的。', 1, 1, 1, 1, 26);
+INSERT INTO `t_chat_record` (`pk_chat_record`, `msgFrom`, `msgTo`, `msgCreateTime`, `msgContent`, `msgStatus`, `msgType`, `msgSource`, `msgDest`, `conversation_id`) VALUES (909, 'b811abd7-c0bb-4301-9664-574d0d8b11f8', '02b1c3be-aac5-4867-9361-ca724b87764e', 1685184657, '涌现现象的确与人类世界中的一些现象有些相似之处，比如说人类社会中的群体智慧、集体行动等。但是，涌现现象是一种更为复杂和抽象的现象，它涉及到数学、物理、信息科学等多个领域的知识。因此，对于AI的涌现现象不能理解也是正常的，需要通过深入研究和实践来逐步理解和应用。', 1, 1, 1, 1, 26);
+INSERT INTO `t_chat_record` (`pk_chat_record`, `msgFrom`, `msgTo`, `msgCreateTime`, `msgContent`, `msgStatus`, `msgType`, `msgSource`, `msgDest`, `conversation_id`) VALUES (910, '02b1c3be-aac5-4867-9361-ca724b87764e', 'b811abd7-c0bb-4301-9664-574d0d8b11f8', 1685190560, '火箭的回收都有哪些方式？', 1, 1, 1, 1, 36);
 COMMIT;
 
 -- ----------------------------
@@ -1139,7 +1147,7 @@ CREATE TABLE `t_user` (
 -- Records of t_user
 -- ----------------------------
 BEGIN;
-INSERT INTO `t_user` (`pk_user`, `uuid`, `unionid`, `access_token`, `access_token_expire_at`, `refresh_token`, `refresh_token_expire_at`, `mobile`, `user_name`, `password`, `email`, `is_email_verified`, `avatar`, `last_ip`, `sex`, `ctime`, `utime`, `is_ban`, `premium`) VALUES (1, '02b1c3be-aac5-4867-9361-ca724b87764e', '', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJEaW8iLCJleHAiOjE2ODc1MTA0NzF9.eVgYBkoKHroCNDoVVSkbgS_eHzUjsi-AbTt_86JDItY', 1687510471, '', 0, '', 'Dio', 'e4ef79d93e6d9922a024b5cb3d263ff9db8b20860715bd84836b787d34bc9dd5', '', 0, NULL, '223.104.41.46', 0, 1681444180, NULL, 0, 1);
+INSERT INTO `t_user` (`pk_user`, `uuid`, `unionid`, `access_token`, `access_token_expire_at`, `refresh_token`, `refresh_token_expire_at`, `mobile`, `user_name`, `password`, `email`, `is_email_verified`, `avatar`, `last_ip`, `sex`, `ctime`, `utime`, `is_ban`, `premium`) VALUES (1, '02b1c3be-aac5-4867-9361-ca724b87764e', '', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJEaW8iLCJleHAiOjE2ODc3NzUzOTd9.E9NfDwx8YJfs8kq_E9wgKCfQJ8QxVx18Wa5G0D7KiEU', 1687775397, '', 0, '', 'Dio', 'e4ef79d93e6d9922a024b5cb3d263ff9db8b20860715bd84836b787d34bc9dd5', '', 0, NULL, '221.219.99.213', 0, 1681444180, NULL, 0, 1);
 INSERT INTO `t_user` (`pk_user`, `uuid`, `unionid`, `access_token`, `access_token_expire_at`, `refresh_token`, `refresh_token_expire_at`, `mobile`, `user_name`, `password`, `email`, `is_email_verified`, `avatar`, `last_ip`, `sex`, `ctime`, `utime`, `is_ban`, `premium`) VALUES (2, 'f968a76f-720b-4b1d-9194-e6816aefce00', '', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJCb25ueSIsImV4cCI6MTY4NDgxMDAzMX0.QOdsb4yL3zbW5Leg3wWZyB-nNlClbs5IpR27NuCECK0', 1684810031, '', 0, '', 'Bonny', 'b63f8c2d44de268c0b13faf160a76122b87b1ca4081ba7d028a3ae7d0db2db89', '', 0, NULL, '221.219.99.207', 0, 1681445785, NULL, 0, 1);
 INSERT INTO `t_user` (`pk_user`, `uuid`, `unionid`, `access_token`, `access_token_expire_at`, `refresh_token`, `refresh_token_expire_at`, `mobile`, `user_name`, `password`, `email`, `is_email_verified`, `avatar`, `last_ip`, `sex`, `ctime`, `utime`, `is_ban`, `premium`) VALUES (3, 'b811abd7-c0bb-4301-9664-574d0d8b11f8', '', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJKYXJ2aXMiLCJleHAiOjE2ODQwMzg4ODd9.l0JcRCbycRARo9SXqyW45M74GgXJboyEHWwyG-iv3a8', 1684038887, '', 0, '', 'Jasmine', '646628d9ee5abb439cde8fefd57c9994d174172913aa1cea7bab5b2bd8e02411', '', 0, NULL, '', 0, 1681446887, NULL, 0, 1);
 INSERT INTO `t_user` (`pk_user`, `uuid`, `unionid`, `access_token`, `access_token_expire_at`, `refresh_token`, `refresh_token_expire_at`, `mobile`, `user_name`, `password`, `email`, `is_email_verified`, `avatar`, `last_ip`, `sex`, `ctime`, `utime`, `is_ban`, `premium`) VALUES (4, '2d617eed-0b88-4c5f-9b21-7aae68840ba3', '', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX25hbWUiOiJGYW5nIiwiZXhwIjoxNjg0MDc5NDEzfQ.sWFnLP8XBi8zLHUNI2aXNeRbrY8N4IZCnWiCcgl2fdU', 1684079413, '', 0, '', 'Fang', '02131ba77bf4b6ff5985adf7357b7b34b1c0e29ebb6875764b86650c601f53c4', '', 0, NULL, '', 0, 1681447466, NULL, 0, 1);
