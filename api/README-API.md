@@ -36,11 +36,11 @@ Description=Gunicorn instance to serve wordpipe
 After=network.target
 
 [Service]
-User=root
-Group=root
-WorkingDirectory=/root/word-pipe/api
-Environment="PATH=/root/miniconda3/envs/wordpipe/bin"
-ExecStart=/root/miniconda3/envs/wordpipe/bin/gunicorn flask_api:app --workers=8 --worker-class=gevent --worker-connections=80 --bind 127.0.0.1:9000 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 60 --timeout 60
+User=dio
+Group=dio
+WorkingDirectory=/home/dio//word-pipe/api
+Environment="PATH=/home/dio//miniconda3/envs/wordpipe/bin"
+ExecStart=/home/dio//miniconda3/envs/wordpipe/bin/gunicorn flask_api:app --workers=8 --worker-class=gevent --worker-connections=80 --bind 127.0.0.1:9000 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 60 --timeout 60
 
 [Install]
 WantedBy=multi-user.target
@@ -48,7 +48,7 @@ WantedBy=multi-user.target
 
 # maridb docker config
 
-`server_config/mysq/run.sh`
+See: `server_config/mysql/run.sh` for docker depolyment, OR `cp my.cnf /etc/mysql/my.cnf` for native
 `docker exec -it mariadb /bin/sh`
 `mysql -uroot -p`
 `create database wordpipe;`
@@ -64,7 +64,7 @@ FLUSH PRIVILEGES;
 ```
 
 # redis docker config
-`docker run -d --name redis-stack --restart=unless-stopped -p 127.0.0.1:6379:6379 -p 127.0.0.1:8001:8001 redis/redis-stack:latest`
+See: `server_config/redis/run.sh`
 
 # ngixn conf 
 See: `server_config/nginx/wordpipe.in.conf`
