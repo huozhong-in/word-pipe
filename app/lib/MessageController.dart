@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:dart_openai/openai.dart';
+import 'package:dart_openai/dart_openai.dart';
 import 'package:wordpipe/MessageModel.dart';
 import 'package:wordpipe/responsive/responsive_layout.dart';
 import 'package:wordpipe/sse_client.dart';
