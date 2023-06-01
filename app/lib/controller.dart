@@ -279,7 +279,7 @@ class SettingsController extends GetxController {
   // 关闭英语输入助手
   RxBool englishInputHelperConfig = true.obs;
   // 聊天区域字体大小
-  RxDouble fontSizeConfig = 16.0.obs;
+  RxDouble fontSizeConfig = 18.0.obs;
   // AI助手回答问题使用语言配置
   RxInt aiAssistantLanguage = 0.obs; // 0-English, 1-Chinese
   // 用单词造句时可以使用这个单词其他词性形式

@@ -47,7 +47,9 @@ class MobileHome extends StatelessWidget {
           );                                          
         }),
         centerTitle: true,
-        backgroundColor: Colors.greenAccent[100],
+        backgroundColor: Color.fromARGB(255, 59, 214, 157),//Colors.greenAccent[100],
+        elevation: 5,
+        scrolledUnderElevation: 5,
         automaticallyImplyLeading: true,
         actions: [
           Obx(() {

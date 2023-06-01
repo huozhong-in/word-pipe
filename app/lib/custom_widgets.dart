@@ -68,8 +68,10 @@ class QuestionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-
+    return Wrap(
+      spacing: 8.0,
+      runSpacing: 4.0,
+      alignment: WrapAlignment.spaceBetween,
       children: [
         Container(
           margin: EdgeInsetsDirectional.symmetric(horizontal: 8),

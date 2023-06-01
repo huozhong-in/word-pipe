@@ -43,9 +43,9 @@ class MessageBubble extends StatelessWidget {
     Widget _buildItem(){
       Color bubbleColor;
       if(isMe){
-        bubbleColor = const Color.fromRGBO(40, 178, 95, 1);
+        bubbleColor = Color.fromARGB(155, 59, 214, 157);//Colors.green[100]!;
       }else{
-        bubbleColor = Colors.green[100]!;
+        bubbleColor = Colors.black12; //const Color.fromRGBO(40, 178, 95, 1);
       }
 
       // 移动端调窄边距
@@ -552,15 +552,15 @@ class MessageBubble extends StatelessWidget {
             alignment: PlaceholderAlignment.middle,
             child: TextButton(
               style: ButtonStyle(
-                minimumSize: MaterialStateProperty.all<Size>(Size(8, 8)),
-                padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(1)),
+                // minimumSize: MaterialStateProperty.all<Size>(Size(8, 8)),
+                // padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(1)),
                 backgroundColor: isMe? MaterialStateProperty.all<Color>(Color.fromRGBO(40, 178, 95, 1)) : MaterialStateProperty.all<Color>(Colors.green[100]!),
                 overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(2),
-                  )
-                )
+                // shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                //   RoundedRectangleBorder(
+                //     borderRadius: BorderRadius.circular(2),
+                //   )
+                // )
               ),
               onPressed: () async {
                 c.chat(await c.getUserName(), match.group(0)!, 0, '');

@@ -92,7 +92,18 @@ final ThemeData appThemeDark = ThemeData(
 final ThemeData appThemeBright = ThemeData(
   useMaterial3: true,
   brightness: Brightness.light,
-  primarySwatch: Colors.green,
+  primarySwatch: MaterialColor(0xFF98F5F8, {
+    50: Color(0xFFE1F7F8),
+    100: Color(0xFFB5F0F5),
+    200: Color(0xFF85E8F2),
+    300: Color(0xFF54E0EF),
+    400: Color(0xFF2CDAED),
+    500: Color(0xFF04D3EA),
+    600: Color(0xFF03C9E1),
+    700: Color(0xFF02B1C7),
+    800: Color(0xFF0199AD),
+    900: Color(0xFF017A8C),
+  }),
   // primaryColor: Color(0xFF98F5F8), //青色辅助色
   primaryColor: Colors.greenAccent[100],
   scaffoldBackgroundColor: const Color(0xFFF5F7FD),
