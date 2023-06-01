@@ -289,7 +289,7 @@ class SettingsController extends GetxController {
   // AI助手TTS语音发声人选择-中英混合
   RxString aiAssistantTtsVoiceZhEn = 'zh-CN-XiaoxiaoNeural'.obs;
   // AI助手TTS语音语速
-  RxDouble aiAssistantTtsRate = RxDouble(-10);
+  RxInt aiAssistantTtsRate = RxInt(-10);
   // User's OpenAI API Key
   RxString openAiApiKey = ''.obs;
 
@@ -305,7 +305,7 @@ class SettingsController extends GetxController {
     useOtherWordForms.value = await prefs.getBool('useOtherWordForms') ?? useOtherWordForms.value;
     aiAssistantTtsVoice.value = await prefs.getString('aiAssistantTtsVoice') ?? aiAssistantTtsVoice.value;
     aiAssistantTtsVoiceZhEn.value = await prefs.getString('aiAssistantTtsVoiceZhEn') ?? aiAssistantTtsVoiceZhEn.value;
-    aiAssistantTtsRate.value = await prefs.getDouble('aiAssistantTtsRate') ?? aiAssistantTtsRate.value;
+    aiAssistantTtsRate.value = await prefs.getInt('aiAssistantTtsRate') ?? aiAssistantTtsRate.value;
     openAiApiKey.value = await prefs.getString('openAiApiKey') ?? openAiApiKey.value;
     freeChatMode.value = await prefs.getBool('freeChatMode') ?? freeChatMode.value;
   }
@@ -334,9 +334,9 @@ class SettingsController extends GetxController {
     aiAssistantTtsVoiceZhEn.value = value;
     await prefs.setString('aiAssistantTtsVoiceZhEn', value);
   }
-  void setAiAssistantTtsRate(double value) async {
+  void setAiAssistantTtsRate(int value) async {
     aiAssistantTtsRate.value = value;
-    await prefs.setDouble('aiAssistantTtsRate', value);
+    await prefs.setInt('aiAssistantTtsRate', value);
   }
   void setOpenAiApiKey(String value) async {
     openAiApiKey.value = value;

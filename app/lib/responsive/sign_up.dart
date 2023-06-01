@@ -34,10 +34,15 @@ class SignUp extends StatelessWidget {
       return Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: Text('Sign Up', style: TextStyle(color: Colors.white70, fontSize: 24)),
+          title: Text('用户注册', style: TextStyle(color: Colors.white70, fontSize: 24)),
           centerTitle: true,
           backgroundColor: CustomColors.appBarColor2,
           automaticallyImplyLeading: false,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(50),
+            ),
+          ),
         ),
         body: Form(
           key: _formKey,
@@ -49,7 +54,7 @@ class SignUp extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    padding: EdgeInsets.only(top: 15),
+                    padding: EdgeInsets.symmetric(vertical: 20),
                     child: RichText(
                           text: TextSpan(
                             text: 'Word Pipe',
@@ -90,7 +95,7 @@ class SignUp extends StatelessWidget {
                         // hintStyle: TextStyle(
                         //   color: Colors.grey,
                         // ),
-                        labelText: "user name",
+                        labelText: "用户名",
                         labelStyle: TextStyle(
                           color: Colors.black54,
                         ),
@@ -146,7 +151,7 @@ class SignUp extends StatelessWidget {
                             keyboardType: TextInputType.text,
                             textInputAction: TextInputAction.next,
                             decoration: InputDecoration(
-                              labelText: "password",
+                              labelText: "密码",
                               labelStyle: TextStyle(
                                 color: Colors.black54,
                               ),
@@ -216,7 +221,7 @@ class SignUp extends StatelessWidget {
                         // hintStyle: TextStyle(
                         //   color: Colors.grey,
                         // ),
-                        labelText: "password again",
+                        labelText: "确认密码",
                         labelStyle: TextStyle(
                           color: Colors.black54,
                         ),
@@ -258,7 +263,7 @@ class SignUp extends StatelessWidget {
                         //     ),
                         //   ),
                       ),
-                      validator: (value) => _passwordField.text == _passwordField2.text ? null : "passwords don't match",
+                      validator: (value) => _passwordField.text == _passwordField2.text ? null : "两次输入的密码不一致",
                     );
                     })
                   ),
@@ -275,7 +280,7 @@ class SignUp extends StatelessWidget {
                         keyboardType: TextInputType.text,
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
-                          labelText: "invite code",
+                          labelText: "邀请码",
                           labelStyle: TextStyle(
                             color: Colors.redAccent,
                           ),
@@ -295,7 +300,7 @@ class SignUp extends StatelessWidget {
                     height: 45,
                     alignment: Alignment.centerLeft,
                     child: TextButton(
-                      child: Text("Already have an account?",
+                      child: Text("已有账号? 点此登录",
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green[900]),
                       ),
                       onPressed: () {
@@ -306,41 +311,46 @@ class SignUp extends StatelessWidget {
                       },
                     ),
                   ),
-                  Container(
-                    width: MediaQuery.of(context).size.width / 1.3,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10.0),
-                      // color: Colors.orangeAccent,
-                      gradient: new LinearGradient(
-
-                        colors: [
-                          CustomColors.splashStart,
-                          CustomColors.splashEnd,
-                        ],
-                      ),
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        _usernameFocusNode.unfocus();
-                        _passwordFocusNode.unfocus();
-                        _passwordFocusNode2.unfocus();
-                        if (_formKey.currentState!.validate()) {
-                          if (await c.signup_with_promo(_usernameField.text, _passwordField.text, _promoField.text)){
-                            Get.offAll(ResponsiveLayout());
-                          }else{
-                            customSnackBar(title: "Error", content: "Please check your invite code or username already exist.");
-                          }
-                        }else{
-                          customSnackBar(title: "Error", content: "Please check your username or password length.");
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        elevation: 0,
-                      ),
-                      child: const Text("Sign up", style: TextStyle(color: Colors.white, fontSize: 14),
+                  Align(
+                    alignment: Alignment.center,
+                    child: FractionallySizedBox(
+                      widthFactor: 0.5,
+                      child: Container(
+                        width: MediaQuery.of(context).size.width / 1.3,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10.0),
+                          // color: Colors.orangeAccent,
+                          gradient: new LinearGradient(
+                            colors: [
+                              CustomColors.splashStart,
+                              CustomColors.splashEnd,
+                            ],
+                          ),
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            _usernameFocusNode.unfocus();
+                            _passwordFocusNode.unfocus();
+                            _passwordFocusNode2.unfocus();
+                            if (_formKey.currentState!.validate()) {
+                              if (await c.signup_with_promo(_usernameField.text, _passwordField.text, _promoField.text)){
+                                Get.offAll(ResponsiveLayout());
+                              }else{
+                                customSnackBar(title: "Error", content: "邀请码不正确，或用户名已经存在.");
+                              }
+                            }else{
+                              customSnackBar(title: "Error", content: "请检查用户名或密码的长度.");
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            elevation: 0,
+                          ),
+                          child: const Text("注册", style: TextStyle(color: Colors.white, fontSize: 20),
+                          ),
+                        ),
                       ),
                     ),
                   ),

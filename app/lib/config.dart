@@ -128,9 +128,10 @@ final ThemeData appThemeBright = ThemeData(
     onBackground: Color.fromARGB(255, 31, 165, 69),
     onError: Colors.white,
     brightness: Brightness.light,
-  ).copyWith(secondary: Color.fromARGB(255, 59, 214, 157)),
-  visualDensity: VisualDensity.adaptivePlatformDensity,
-  textSelectionTheme: const TextSelectionThemeData(
+  ).copyWith(
+    secondary: Color.fromARGB(255, 59, 214, 157)),
+    visualDensity: VisualDensity.adaptivePlatformDensity,
+    textSelectionTheme: const TextSelectionThemeData(
     cursorColor: Colors.red,
     selectionColor: Colors.yellow,
     selectionHandleColor: Colors.black,
@@ -138,8 +139,8 @@ final ThemeData appThemeBright = ThemeData(
 );
 
 class CustomColors {
-  static const Color splashStart = Color.fromARGB(255, 24, 198, 56);
-  static const Color splashEnd = Color.fromARGB(255, 3, 103, 16);
+  static const Color splashStart = Color.fromARGB(255, 59, 214, 157);
+  static const Color splashEnd = Color.fromARGB(255, 31, 165, 69); //Color.fromARGB(255, 24, 198, 56);
   static const Color smallTipText = Color(0xFF676769);
   static const Color linkTipText = Color(0xFF0D25BE);
 
@@ -153,7 +154,7 @@ class CustomColors {
   static const Color gradientStart = Color.fromARGB(255, 148, 231, 225);
   static const Color gradientEnd = Color.fromARGB(255, 62, 182, 226);
   static const Color appBarColor = Color.fromARGB(255, 25, 172, 225);
-  static const Color appBarColor2 =Color.fromARGB(255, 31, 165, 69);
+  static const Color appBarColor2 =Color.fromARGB(255, 59, 214, 157);
   static const Color inputTextFieldBorder = Color(0xFF4285F4);
   static const Color desktopLeftNav = Color.fromARGB(255, 122, 207, 238);
   static const Color desktopLeftNav2 = Color.fromARGB(255, 59, 214, 157);

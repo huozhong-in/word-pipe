@@ -26,10 +26,15 @@ class MobileSignIn extends StatelessWidget {
     return GestureDetector(
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Sign In', style: TextStyle(color: Colors.white70, fontSize: 24)),
+          title: Text('用户登录', style: TextStyle(color: Colors.white70, fontSize: 24)),
           centerTitle: true,
           backgroundColor: CustomColors.appBarColor2,
           automaticallyImplyLeading: false,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(50),
+            ),
+          ),
         ),
         resizeToAvoidBottomInset : true,
         body: Container(
@@ -45,13 +50,13 @@ class MobileSignIn extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        padding: EdgeInsets.only(top: 15),
+                        padding: EdgeInsets.symmetric(vertical: 20),
                         child: RichText(
                           text: TextSpan(
                             text: 'Word Pipe',
                             style: TextStyle(
                               color: Colors.black54,
-                              fontSize: 16,
+                              fontSize: 20,
                               fontFamily: 'Comfortaa',
                               fontWeight: FontWeight.w600),
                             children: <TextSpan>[
@@ -92,7 +97,7 @@ class MobileSignIn extends StatelessWidget {
                               // hintStyle: TextStyle(
                               //   color: Colors.grey,
                               // ),
-                              labelText: "user name",
+                              labelText: "用户名",
                               labelStyle: TextStyle(
                                 color: Colors.black54,
                               ),
@@ -148,7 +153,7 @@ class MobileSignIn extends StatelessWidget {
                               //   color: Colors.grey,
                               // ),
                               // errorText: _errorText.value,
-                              labelText: "password",
+                              labelText: "密码",
                               labelStyle: TextStyle(
                                 color: Colors.black54,
                               ),
@@ -208,7 +213,7 @@ class MobileSignIn extends StatelessWidget {
                                 onPressed: () {
                                   Get.offAll(SignUp());
                                 },
-                                child: Text("Haven't an account? go to Sign Up",
+                                child: Text("没有账号? 点此注册",
                                   style: TextStyle(fontSize: 14,fontWeight: FontWeight.bold, color: Colors.green[900]),
                                 ),
                               ),
@@ -252,7 +257,7 @@ class MobileSignIn extends StatelessWidget {
                                       customSnackBar(title: "Errcode:${rsp['errcode']}", content: '${rsp['errmsg']}');
                                     }
                                   }else{
-                                    customSnackBar(title: "Error", content: 'Please check your username or password length');
+                                    customSnackBar(title: "Error", content: '请检查用户名或密码的长度');
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
@@ -260,7 +265,7 @@ class MobileSignIn extends StatelessWidget {
                                   shadowColor: Colors.transparent,
                                   elevation: 0,
                                 ),
-                                child: const Text("Sign in", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                                child: const Text("登录", style: TextStyle(color: Colors.white, fontSize: 20),
                                 ),
                               ),
                             ),

@@ -476,14 +476,14 @@ class Settings extends StatelessWidget {
                                                 Text('Slow'),
                                                 Expanded(
                                                   child: Slider(
-                                                      value: settingsController.aiAssistantTtsRate.value,
+                                                      value: settingsController.aiAssistantTtsRate.value as double,
                                                       min: -20,
                                                       max: 20,
                                                       divisions: 4,
                                                       label: settingsController.aiAssistantTtsRate.value.round().toString(),
                                                       activeColor: Colors.green[600],
                                                       onChanged: (double value) {
-                                                        settingsController.setAiAssistantTtsRate(value);
+                                                        settingsController.setAiAssistantTtsRate(value as int);
                                                       },
                                                     )
                                                 ),

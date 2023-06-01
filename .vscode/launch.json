@@ -6,7 +6,25 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "WordPipeMobileWeb",
+            "name": "macOS",
+            "type": "dart",
+            "request": "launch",
+            "cwd": "app",
+            "program": "lib/main.dart",
+            "deviceId": "macOS",
+            "flutterMode": "debug",
+        },
+        {
+            "name": "iOS",
+            "type": "dart",
+            "request": "launch",
+            "cwd": "app",
+            "program": "lib/main.dart",
+            "deviceId": "iPhone 14 Pro",
+            "flutterMode": "debug",
+        },
+        {
+            "name": "Mobile-Web",
             "type": "dart",
             "request": "launch",
             "cwd": "app",
@@ -19,30 +37,16 @@
             ]
         },
         {
-            "name": "WordPipePCWebHtml",
+            "name": "PC-Web(Html)",
             "cwd": "app",
             "request": "launch",
             "program": "lib/main.dart",
             "type": "dart",
-            // "flutterMode": "debug",
+            "flutterMode": "debug",
             "deviceId": "chrome",
             "toolArgs": [
                 "--web-renderer=html"
             ]
-        },
-        {
-            "name": "WordPipe-profile",
-            "cwd": "app",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "profile"
-        },
-        {
-            "name": "WordPipe-release",
-            "cwd": "app",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "release"
         }
     ]
 }

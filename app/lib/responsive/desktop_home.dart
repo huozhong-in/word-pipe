@@ -430,7 +430,7 @@ class DesktopHome extends StatelessWidget {
                 ),
               ),
               child: ListView(
-                padding: EdgeInsets.only(top: 10),
+                padding: EdgeInsets.only(top: 30),
                 children: <Widget>[
                   Center(
                     child: Container(
