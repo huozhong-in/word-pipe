@@ -410,10 +410,10 @@ class DesktopHome extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 180,
+              width: 187,
               constraints: BoxConstraints(
-                maxWidth: 180,
-                minWidth: 180,
+                maxWidth: 187,
+                minWidth: 187,
               ),
               decoration: BoxDecoration(
                 // color: Color.fromARGB(255, 131, 198, 175),
@@ -502,14 +502,14 @@ class DesktopHome extends StatelessWidget {
                   ),
                   ListTile(
                     leading: Icon(Icons.account_circle),
-                    title: Text('Profile', style: TextStyle(fontSize: 16)),
+                    title: Text('我的', style: TextStyle(fontSize: 16)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
                     onTap: () => Get.offAll(UserProfile()),
                   ),
                   ListTile(
                     leading: Icon(Icons.settings),
-                    title: Text('Settings', style: TextStyle(fontSize: 16)),
+                    title: Text('设置', style: TextStyle(fontSize: 16)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
                     onTap: () => Get.offAll(Settings()),
@@ -517,7 +517,7 @@ class DesktopHome extends StatelessWidget {
                   
                   ListTile(
                     leading: Icon(Icons.info),
-                    title: Text('About', style: TextStyle(fontSize: 16)),
+                    title: Text('关于', style: TextStyle(fontSize: 16)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
                     onTap: () => Get.offAll(AboutUs()),
@@ -529,7 +529,7 @@ class DesktopHome extends StatelessWidget {
                       activeTrackColor: Colors.green[100],
                       inactiveThumbColor: Colors.green[200],
                       inactiveTrackColor: Colors.green[100],
-                      title: Text('English Input Helper', 
+                      title: Text('英语打字助手', 
                       style: TextStyle(fontSize: 12)), 
                       value:  settingsController.englishInputHelperConfig.value, 
                       onChanged: ((bool value) {
@@ -544,8 +544,8 @@ class DesktopHome extends StatelessWidget {
                       activeTrackColor: Colors.green[100],
                       inactiveThumbColor: Colors.green[200],
                       inactiveTrackColor: Colors.green[100],
-                      title: Text('Free-Chat Mode', style: TextStyle(fontSize: 12)), 
-                      subtitle: Text('PRO  only', style: appThemeBright.textTheme.labelSmall!.copyWith(color: Colors.blue)),
+                      title: Text('连续对话模式', style: TextStyle(fontSize: 12)), 
+                      subtitle: Text('会员专享', style: appThemeBright.textTheme.labelSmall!.copyWith(color: Colors.blue)),
                       value: settingsController.freeChatMode.value,
                       onChanged: ((bool value) async {
                         if (value==true){
@@ -629,7 +629,7 @@ class DesktopHome extends StatelessWidget {
                                                   children: [
                                                     Icon(Icons.edit, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey,),
                                                     SizedBox(width: 10),
-                                                    Text('Edit', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
+                                                    Text('修改', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
                                                   ],
                                                 ),
                                               ),
@@ -640,7 +640,7 @@ class DesktopHome extends StatelessWidget {
                                                   children: [
                                                     Icon(Icons.delete, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey,),
                                                     SizedBox(width: 10),
-                                                    Text('Delete', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
+                                                    Text('删除', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
                                                   ],
                                                 ),
                                               ),
@@ -867,7 +867,7 @@ class DesktopHome extends StatelessWidget {
                             shape: CircleBorder(),
                           ),
                           child: Tooltip(
-                            message: 'Not open yet',
+                            message: '暂未开放',
                             child: IconButton(
                               color: Colors.grey,
                               hoverColor: Colors.black54,
@@ -893,7 +893,7 @@ class DesktopHome extends StatelessWidget {
                                 color: Colors.green[900],
                           ),
                           child: Tooltip(
-                            message: GetPlatform.isMacOS ? '⌘+Enter to send' : 'Ctrl+Enter to send',
+                            message: GetPlatform.isMacOS ? '⌘+Enter 发送' : 'Ctrl+Enter 发送',
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green[800],

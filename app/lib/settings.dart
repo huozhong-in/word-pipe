@@ -33,13 +33,19 @@ class Settings extends StatelessWidget {
           } else if (snapshot.connectionState == ConnectionState.done) {
             if (username != "") {
                 return Scaffold(
-                    appBar: AppBar(
+                    appBar: AppBar(          
                       title: const Text('Settings', style: TextStyle(color: Colors.white70, fontSize: 24)),
                       centerTitle: true,
                       backgroundColor: Colors.green.withOpacity(0.6),
                       automaticallyImplyLeading: false,
+                      toolbarHeight: 70,
+                      // shape: RoundedRectangleBorder(
+                      //   borderRadius: BorderRadius.vertical(
+                      //     bottom: Radius.circular(50),
+                      //   ),
+                      // ),
                       leading: IconButton(
-                        icon: Icon(Icons.arrow_back),
+                        icon: Icon(Icons.arrow_back, size: 30,),
                         onPressed: () {
                           Get.offAll(ResponsiveLayout());
                         },
