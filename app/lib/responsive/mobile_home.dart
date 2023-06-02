@@ -424,14 +424,14 @@ class MobileHome extends StatelessWidget {
     if (messageController.conversation_id.value == -1){
       messageController.conversation_id.value = await messageController.conversation_CUD(_username, "create", messageController.conversation_id.value);
     }
-    bool ret = await messageController.new_chat(_username, text.trim(), messageController.conversation_id.value);
-    if(ret == true){
+    Map<String, dynamic>  ret = await messageController.new_chat(_username, text.trim(), messageController.conversation_id.value);
+    if(ret['errcode'] as int == 0){
       _textController.clear();
       if (settingsController.freeChatMode.value == true){
         messageController.freeChat('gpt-3.5-turbo', messageController.conversation_id.value, text);
       }
     }else{
-      customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
+      customSnackBar(title: "Error", content: ret['errmsg'] as String);
       // 三秒后跳转到登录页面
       Future.delayed(Duration(seconds: 3), () {
         Get.offAll(ResponsiveLayout());

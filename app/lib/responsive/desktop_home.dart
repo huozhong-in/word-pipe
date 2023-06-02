@@ -45,8 +45,8 @@ class DesktopHome extends StatelessWidget {
     if (messageController.conversation_id.value == -1){
       messageController.conversation_id.value = await messageController.conversation_CUD(_username, "create", messageController.conversation_id.value);
     }
-    bool ret = await messageController.new_chat(_username, text.trim(), messageController.conversation_id.value);
-    if(ret == true){
+    Map<String, dynamic> ret = await messageController.new_chat(_username, text.trim(), messageController.conversation_id.value);
+    if(ret['errcode'] as int == 0){
       _textController.clear();
       _matchWords.clear();
       _indexHighlight = 0;
@@ -54,7 +54,7 @@ class DesktopHome extends StatelessWidget {
         messageController.freeChat('gpt-3.5-turbo', messageController.conversation_id.value, text);
       }
     }else{
-      customSnackBar(title: "Error", content: "Failed to send message, please Sign In again.");
+      customSnackBar(title: "Error", content: ret['errmsg'] as String);
       // // 三秒后跳转到登录页面
       // Future.delayed(Duration(seconds: 3), () {
       //   Get.offAll(ResponsiveLayout());
@@ -565,7 +565,7 @@ class DesktopHome extends StatelessWidget {
                               _commentFocus.requestFocus();
                             } else {
                               settingsController.freeChatMode.value = false;
-                              customSnackBar(title: "Error", content: "Please config OpenAI key in config page or upgrade to PRO version.");
+                              customSnackBar(title: "Error", content: "请设置自己的OpenAI API key或者升级为付费会员.");
                             }
                           }
                         }else{

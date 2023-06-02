@@ -149,7 +149,7 @@ def prefix_search() -> Response:
     
     # tic = time.perf_counter()
 
-    global trie    
+    global trie
     r = trie.keys(k)[0:50]
     result = dict()
     result["result"] = list(r)
@@ -292,13 +292,13 @@ def chat():
         userDB = UserDB(db_session)
         u: User = userDB.get_user_by_username(username)
         if u is None:
-            return make_response('', 500)
+            return make_response('用户不存在', 500)
         if u.access_token != request.headers['X-access-token']:
-            return make_response('', 500)
+            return make_response('access_token不正确', 500)
         if u.access_token_expire_at < int(time.time()):
-            return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
+            return make_response(jsonify({"errcode":50007,"errmsg":"access_token过期"}), 401)
     else:
-        return make_response('access_token required', 500)
+        return make_response('access_token缺失', 500)
 
     # 将用户消息记录到数据库
     myuuid: str = userDB.get_user_by_username(username).uuid
@@ -322,7 +322,7 @@ def chat():
     sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
 
     if conversation_id != 0:
-        return make_response('', 200)
+        return make_response({"errcode": 0}, 200)
 
     # 检查message中是否包含英文单词
     import re
@@ -360,7 +360,7 @@ def chat():
 
     # toc = time.perf_counter()
     # print(f"[Processed in {toc - tic:0.4f} seconds]")
-    return make_response('', 200)
+    return make_response({"errcode": 0}, 200)
 
 @app.route('/api/tts', methods = ['POST'])
 def tts():

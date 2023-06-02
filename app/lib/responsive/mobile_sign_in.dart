@@ -53,18 +53,20 @@ class MobileSignIn extends StatelessWidget {
                         padding: EdgeInsets.symmetric(vertical: 20),
                         child: RichText(
                           text: TextSpan(
-                            text: 'Word Pipe',
-                            style: TextStyle(
-                              color: Colors.black54,
-                              fontSize: 20,
-                              fontFamily: 'Comfortaa',
-                              fontWeight: FontWeight.w600),
                             children: <TextSpan>[
+                              TextSpan(
+                                text: 'Word Pipe',
+                                style: TextStyle(
+                                  color: Colors.black54,
+                                  fontSize: 22,
+                                  fontFamily: 'Comfortaa',
+                                  fontWeight: FontWeight.w600),
+                              ),
                               TextSpan(
                                 text: '  alpha',
                                 style: TextStyle(
-                                  color: Colors.black54,
-                                  fontSize: 10),
+                                  color: Colors.blue,
+                                  fontSize: 12),
                               ),
                             ],
                           )
@@ -274,43 +276,21 @@ class MobileSignIn extends StatelessWidget {
                       ],
                     ),
                   ),
-                //   const Divider(
-                //     height: 60,
-                //     thickness: 1,
-                //     indent: 30,
-                //     endIndent: 30,
-                //     color: Colors.grey,
-                //   ),
-                //   Container(
-                //     width: MediaQuery.of(context).size.width / 1.4,
-                //     height: 45,
-                //     alignment: AlignmentDirectional.topCenter,
-                //     child: Text("Register or login as an account",
-                //       style: textFontStyle.copyWith(fontSize: 14, color: CustomColors.smallTipText),
-                //     ),
-                //   ),
-                //   Row(
-                //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                //     children: [
-                //       IconButton(
-                //           onPressed: (){
-                           
-                //           },
-                //           icon: Icon(Icons.email)),
-                //       IconButton(onPressed: (){}, icon: FaIcon(FontAwesomeIcons.mobile), color: Colors.grey),
-                //       IconButton(onPressed: (){}, icon: FaIcon(FontAwesomeIcons.apple), color: Colors.grey),
-                //       IconButton(onPressed: (){}, icon: FaIcon(FontAwesomeIcons.google), color: Colors.grey),
-                //     ],
-                //   ),
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                //   children: [
-                //     IconButton(onPressed: (){}, icon: Icon(Icons.facebook), color: Colors.grey),
-                //     IconButton(onPressed: (){}, icon: FaIcon(FontAwesomeIcons.twitter), color: Colors.grey),
-                //     IconButton(onPressed: (){}, icon: FaIcon(FontAwesomeIcons.github), color: Colors.grey),
-                //     IconButton(onPressed: (){}, icon: Icon(Icons.square), color: Colors.transparent),
-                //   ],
-                // ),
+                  if ( ! GetPlatform.isMobile) const Divider(
+                    height: 60,
+                    thickness: 1,
+                    indent: 30,
+                    endIndent: 30,
+                    color: Colors.grey,
+                  ),
+                  if ( ! GetPlatform.isMobile) Container(
+                    width: MediaQuery.of(context).size.width / 1.4,
+                    height: 45,
+                    alignment: AlignmentDirectional.topCenter,
+                    child: Text("Copyright 2023 wordpipe.in",
+                      style: TextStyle(fontSize: 14, color: CustomColors.smallTipText),
+                    ),
+                  )
                 ],
               ),
             ),

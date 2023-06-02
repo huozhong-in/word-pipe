@@ -3,7 +3,7 @@ import 'package:wordpipe/config.dart';
 import 'package:wordpipe/cache_helper.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'dart:developer';
 
 class Controller extends GetxController{
   final WordsProvider _wordsProvider = WordsProvider();
@@ -62,7 +62,7 @@ class Controller extends GetxController{
   Future<List<dynamic>> getWords(List<dynamic> word_json_list) async {
     return await _wordsProvider.getWords(word_json_list);
   }
-  Future<bool> chat(String username, String message, int conversation_id, String message_key) async{
+  Future<Map<String ,dynamic>> chat(String username, String message, int conversation_id, String message_key) async{
     return await _userProvider.chat(username, message, conversation_id, message_key);
   }
   Future<Map<String, dynamic>> signin(String username, String password) async{
@@ -165,7 +165,7 @@ class WordsProvider extends GetConnect {
 
 class UserProvider extends GetConnect {
 
-  Future<bool> chat(String username, String message, int conversation_id, String message_key) async{
+  Future<Map<String, dynamic>> chat(String username, String message, int conversation_id, String message_key) async{
     // String baseUrl='$HTTP_SERVER_HOST/chat';
     // Uri url = Uri.parse(baseUrl).replace(
     //   queryParameters: <String, String>{
@@ -192,14 +192,15 @@ class UserProvider extends GetConnect {
     }
     final response = await post(url.toString(), data, headers: hs, contentType: 'application/json');
     if (response.statusCode == 200) {
-      return true;
-    } else {
-      // signout
-      if(await CacheHelper.hasData('sessionData')){
-        await CacheHelper.setData('sessionData', null);
+        return Map<String, dynamic>.from(response.body);
+      } else {
+        // signout
+        if(await CacheHelper.hasData('sessionData')){
+          await CacheHelper.setData('sessionData', null);
+        }
+        log('createorder error: ${response.body}');
+        return {"errcode": 3, "errmsg": response.body};
       }
-      return false;
-    }
   }
 
   Future<Map<String, dynamic>> signin(String username, String password) async{

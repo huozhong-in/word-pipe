@@ -23,14 +23,14 @@ pod update
 
 ## TODO
 
-
+- [ ] errcode errmsg/ sse client
 - 品牌元素
   - [ ] 名字图标
   - [ ] 图标和favicon
-  - [ ] 启动图，要考虑深色主题在mac app上的效果
+  - [x] 启动图，要考虑深色主题在mac app上的效果
   - [ ] 动效
 - 产品功能
-  - [ ] svg to png
+  - [x] svg to png
   - [ ] 语音消息转文字后，帮助用户润色，然后再读出来。口语润色自带语法纠错。
   - [ ] 桌面版本，必须能在线更新。Apple developer，Google developer. https://docs.flutter.dev/ui/assets-and-images#updating-the-app-icon
   - [x] free chat mode，用户输入OpenAI apikey后开通

@@ -364,7 +364,7 @@ class MessageController extends GetxController{
       }
     });
   }
-  Future<bool> new_chat(String username, String message, int conversation_id) async{
+  Future<Map<String, dynamic>> new_chat(String username, String message, int conversation_id) async{
     String myuuid = await c.getUUID();
     String needUpdate = addMessage(MessageModel(
       dataList: RxList(['...']),
@@ -374,8 +374,7 @@ class MessageController extends GetxController{
       createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       key: UniqueKey(),
     ));
-    bool result = await c.chat(username, message, conversation_id, needUpdate.toString());
-    return result;
+    return await c.chat(username, message, conversation_id, needUpdate.toString());
   }
   
   void handleSSE(String channel) async {

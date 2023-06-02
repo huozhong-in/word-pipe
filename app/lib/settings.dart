@@ -34,7 +34,7 @@ class Settings extends StatelessWidget {
             if (username != "") {
                 return Scaffold(
                     appBar: AppBar(          
-                      title: const Text('Settings', style: TextStyle(color: Colors.white70, fontSize: 24)),
+                      title: const Text('参数设置', style: TextStyle(color: Colors.white70, fontSize: 24)),
                       centerTitle: true,
                       backgroundColor: Colors.green.withOpacity(0.6),
                       automaticallyImplyLeading: false,
@@ -57,7 +57,7 @@ class Settings extends StatelessWidget {
                         child: Column(
                           children: [
                             SizedBox(height: 20),
-                            Text('Chat conversion font size', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                            Text('聊天字体尺寸', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
                             SizedBox(height: 20),                          
                             Container(
                               // width: 200,
@@ -69,7 +69,7 @@ class Settings extends StatelessWidget {
                                   children: [
                                     Row(
                                       children: [
-                                        Text('Small'),
+                                        Text('小'),
                                         Expanded(
                                           child: Slider(
                                               value: settingsController.fontSizeConfig.value,
@@ -83,10 +83,10 @@ class Settings extends StatelessWidget {
                                               },
                                             )
                                         ),
-                                        Text('Large'),
+                                        Text('大'),
                                       ],
                                     ),
-                                    Text('Current font size: ' + settingsController.fontSizeConfig.value.round().toString()),
+                                    Text('当前尺寸: ' + settingsController.fontSizeConfig.value.round().toString()),
                                   ],
                                 );
                               },)
@@ -94,7 +94,7 @@ class Settings extends StatelessWidget {
                             SizedBox(height: 20,),
                             Divider(height: 1, thickness: 1, color: Colors.black12, indent: 20, endIndent: 20,),
                             SizedBox(height: 20,),
-                            Text('When Jasmine answer question, use', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                            Text('当Jasmine回答问题时，使用', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
                             SizedBox(height: 20),
                             Container(
                               margin: const EdgeInsets.all(20),
@@ -119,7 +119,7 @@ class Settings extends StatelessWidget {
                                             value: 1,
                                             activeColor: Colors.green[600],
                                             groupValue: settingsController.aiAssistantLanguage.value,
-                                            title: Text('中文'),
+                                            title: Text('汉语'),
                                             onChanged: (value) {
                                               settingsController.setAiAssistantLanguage(value as int);
                                             },
@@ -127,11 +127,11 @@ class Settings extends StatelessWidget {
                                         ),
                                       ],
                                     ),
-                                    Text('Current language: ' + (settingsController.aiAssistantLanguage.value == 0 ? 'English' : '中文')),
+                                    Text('当前语言: ' + (settingsController.aiAssistantLanguage.value == 0 ? 'English' : '汉语')),
                                     SizedBox(height: 20,),
                                     Divider(height: 1, thickness: 1, color: Colors.black12, indent: 20, endIndent: 20,),
                                     SizedBox(height: 20,),
-                                    Text('When Jasmine make new sentences, can use word\'s various forms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                                    Text('当Jasmine造句时，可以使用单词的多种形态', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
                                     SizedBox(height: 20),
                                     Row(
                                       children: [
@@ -140,7 +140,7 @@ class Settings extends StatelessWidget {
                                             value: true,
                                             activeColor: Colors.green[600],
                                             groupValue: settingsController.useOtherWordForms.value,
-                                            title: Text('Yes'),
+                                            title: Text('是'),
                                             onChanged: (value) {
                                               settingsController.toggleUseOtherWordForms(value as bool);
                                             },
@@ -151,7 +151,7 @@ class Settings extends StatelessWidget {
                                             value: false,
                                             activeColor: Colors.green[600],
                                             groupValue: settingsController.useOtherWordForms.value,
-                                            title: Text('No'),
+                                            title: Text('否'),
                                             onChanged: (value) {
                                               settingsController.toggleUseOtherWordForms(value as bool);
                                             },
@@ -162,7 +162,7 @@ class Settings extends StatelessWidget {
                                     SizedBox(height: 20,),
                                     Divider(height: 1, thickness: 1, color: Colors.black12, indent: 20, endIndent: 20,),
                                     SizedBox(height: 20,),
-                                    Text('Your OpenAI API key', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                                    Text('使用你私有的OpenAI API key', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
                                     SizedBox(height: 20),
                                     Container(
                                       margin: const EdgeInsets.all(20),
@@ -173,7 +173,7 @@ class Settings extends StatelessWidget {
                                               controller: openAiApiKeyController,
                                               decoration: InputDecoration(
                                                 border: OutlineInputBorder(),
-                                                labelText: 'OpenAI API key',
+                                                labelText: '这里粘贴OpenAI API key',
                                                 labelStyle: TextStyle(
                                                   color: Colors.black54,
                                                 ),
@@ -217,7 +217,7 @@ class Settings extends StatelessWidget {
                                               // },
                                             ),
                                             SizedBox(height: 20,),
-                                            Text('Current OpenAI API key: '),
+                                            Text('当前 OpenAI API key: '),
                                             SelectableText(settingsController.openAiApiKey.value),
                                           ],
                                         );
@@ -226,7 +226,7 @@ class Settings extends StatelessWidget {
                                     SizedBox(height: 20,),
                                     Divider(height: 1, thickness: 1, color: Colors.black12, indent: 20, endIndent: 20,),
                                     SizedBox(height: 20,),
-                                    Text('Voice of English-Chinese mixed message', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                                    Text('中英文混合句子的朗读者', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
                                     SizedBox(height: 20),
                                     RadioListTile(
                                       title: Text('Xiaoxiao (zh-CN)'),
@@ -285,7 +285,7 @@ class Settings extends StatelessWidget {
                                     SizedBox(height: 20,),
                                     Divider(height: 1, thickness: 1, color: Colors.black12, indent: 20, endIndent: 20,),
                                     SizedBox(height: 20,),
-                                    Text('Voice of English only message', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                                    Text('纯英语句子的朗读者', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
                                     SizedBox(height: 20),
                                     RadioListTile(
                                       title: Text('Aria (en-US)'),
@@ -470,7 +470,7 @@ class Settings extends StatelessWidget {
                                     SizedBox(height: 20,),
                                     Divider(height: 1, thickness: 1, color: Colors.black12, indent: 20, endIndent: 20,),
                                     SizedBox(height: 20,),
-                                    Text('Jasmine\'s voice rate (%)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                                    Text('Jasmine的语速调节 (%)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
                                     SizedBox(height: 20),                        
                                     Container(
                                       margin: const EdgeInsets.all(20),
@@ -479,7 +479,7 @@ class Settings extends StatelessWidget {
                                           children: [
                                             Row(
                                               children: [
-                                                Text('Slow'),
+                                                Text('慢'),
                                                 Expanded(
                                                   child: Slider(
                                                       value: settingsController.aiAssistantTtsRate.value as double,
@@ -493,10 +493,10 @@ class Settings extends StatelessWidget {
                                                       },
                                                     )
                                                 ),
-                                                Text('Fast'),
+                                                Text('快'),
                                               ],
                                             ),
-                                            Text('current voice rate: ' + settingsController.aiAssistantTtsRate.value.round().toString() + '%'),
+                                            Text('当前语速: ' + settingsController.aiAssistantTtsRate.value.round().toString() + '%'),
                                           ],
                                         );
                                       },)
