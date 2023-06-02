@@ -57,7 +57,7 @@ class SignUp extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: 20),
                     child: RichText(
                           text: TextSpan(
-                            text: 'Word Pipe',
+                            text: 'WordPipe',
                             style: Theme.of(context).textTheme.displaySmall?.copyWith(
                               color: Colors.black54,
                               fontSize: 16,
@@ -67,7 +67,7 @@ class SignUp extends StatelessWidget {
                               TextSpan(
                                 text: '  alpha',
                                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                                  color: Colors.black54,
+                                  color: Colors.blue,
                                   fontSize: 10),
                               ),
                             ],
@@ -305,9 +305,9 @@ class SignUp extends StatelessWidget {
                       ),
                       onPressed: () {
                         if ( GetPlatform.isDesktop)
-                          Get.offAll(DesktopSignIn());
+                          Get.offAll(() => DesktopSignIn());
                         else
-                          Get.offAll(MobileSignIn());
+                          Get.offAll(() => MobileSignIn());
                       },
                     ),
                   ),
@@ -335,7 +335,7 @@ class SignUp extends StatelessWidget {
                             _passwordFocusNode2.unfocus();
                             if (_formKey.currentState!.validate()) {
                               if (await c.signup_with_promo(_usernameField.text, _passwordField.text, _promoField.text)){
-                                Get.offAll(ResponsiveLayout());
+                                Get.offAll(() => ResponsiveLayout());
                               }else{
                                 customSnackBar(title: "Error", content: "邀请码不正确，或用户名已经存在.");
                               }

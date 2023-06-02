@@ -141,7 +141,7 @@ class WordsProvider extends GetConnect {
       await CacheHelper.setData(word, data);
       return data;
     } else {
-      throw Exception('Failed to fetch items in getWord("$word")');
+      return [];
     }
   }
 

@@ -36,7 +36,7 @@ class MessageController extends GetxController{
   Rx<ButtonState> buttonNotifier = ButtonState.paused.obs;
 
   
-  late final SSEClient sseClient;
+  late SSEClient sseClient;
   bool sse_connected = false;
   
 
@@ -143,7 +143,7 @@ class MessageController extends GetxController{
     lastSegmentBeginId = await chatRecord.chatHistory(username, last_id, conversation_id.value);
     if(lastSegmentBeginId == -2){
       await c.signout();
-      Get.offAll(ResponsiveLayout());
+      Get.offAll(() => ResponsiveLayout());
     }
     // update();
     return lastSegmentBeginId;
@@ -159,7 +159,7 @@ class MessageController extends GetxController{
     }
     if(result == 0){
       await c.signout();
-      Get.offAll(ResponsiveLayout());
+      Get.offAll(() => ResponsiveLayout());
     }
     return result;
   }

@@ -55,7 +55,7 @@ class MobileSignIn extends StatelessWidget {
                           text: TextSpan(
                             children: <TextSpan>[
                               TextSpan(
-                                text: 'Word Pipe',
+                                text: 'WordPipe',
                                 style: TextStyle(
                                   color: Colors.black54,
                                   fontSize: 22,
@@ -213,7 +213,7 @@ class MobileSignIn extends StatelessWidget {
                             children: [
                               TextButton(
                                 onPressed: () {
-                                  Get.offAll(SignUp());
+                                  Get.offAll(() => SignUp());
                                 },
                                 child: Text("没有账号? 点此注册",
                                   style: TextStyle(fontSize: 14,fontWeight: FontWeight.bold, color: Colors.green[900]),
@@ -254,7 +254,7 @@ class MobileSignIn extends StatelessWidget {
                                   if (_formKey.currentState!.validate()) {
                                     Map<String, dynamic> rsp = await c.signin(_usernameField.text, _passwordField.text);
                                     if (rsp['errcode'] == 0) {
-                                        Get.offAll(ResponsiveLayout());
+                                        Get.offAll(() => ResponsiveLayout());
                                     }else{
                                       customSnackBar(title: "Errcode:${rsp['errcode']}", content: '${rsp['errmsg']}');
                                     }

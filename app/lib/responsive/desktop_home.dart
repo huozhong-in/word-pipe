@@ -115,8 +115,7 @@ class DesktopHome extends StatelessWidget {
       String currentWordPart = _currentWord.substring(0, cursorPosition - startIndex);
       if (currentWordPart != "") {
         // 将单词前面的字符串当作前缀，拿到匹配的单词列表
-        Future<List<dynamic>> r =  c.searchWords(currentWordPart.toLowerCase());
-        r.then((value){
+        c.searchWords(currentWordPart.toLowerCase()).then((value){
           try{
             List<dynamic> n = value[0]['result'];
             build_matchWords_list(n.map((e) => e.toString()).toList(), '');
@@ -150,17 +149,19 @@ class DesktopHome extends StatelessWidget {
       );
       // 获取列表中被高亮单词的详细信息，放入_wordDetail中，即在右侧显示音标、定义和翻译等信息
       if(i == _indexHighlight){
-        Future<List<dynamic>> r = c.getWord(element);
-        r.then((m){
+        c.getWord(element).then((m){
           _wordDetail.clear();
-          try{
-            Map<String, dynamic> stringMap = Map<String, dynamic>.from(m[0]);
-            stringMap.forEach((key, value) {
-              _wordDetail[key] = value.toString();
-            });
-          }catch(e){
-            _wordDetail.clear();
-            log("build_matchWords_list($element) " + e.toString());
+          if (m.length != 0 && m[0] != null){
+            try{
+              Map<String, dynamic> stringMap = Map<String, dynamic>.from(m[0]);
+              stringMap.forEach((key, value) {
+                _wordDetail[key] = value.toString();
+              });
+            }catch(e){
+              _wordDetail.clear();
+              log("build_matchWords_list($element) " + e.toString());
+            }
+            
           }
         });
       }
@@ -410,10 +411,10 @@ class DesktopHome extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 187,
+              width: 200,
               constraints: BoxConstraints(
-                maxWidth: 187,
-                minWidth: 187,
+                maxWidth: 200,
+                minWidth: 200,
               ),
               decoration: BoxDecoration(
                 // color: Color.fromARGB(255, 131, 198, 175),
@@ -438,7 +439,7 @@ class DesktopHome extends StatelessWidget {
                       alignment: AlignmentDirectional.center,
                       child: RichText(
                         text: TextSpan(
-                          text: 'Word Pipe',
+                          text: 'WordPipe',
                           style: Theme.of(context).textTheme.displaySmall?.copyWith(
                             color: Colors.black54,
                             fontSize: 18,
@@ -448,7 +449,7 @@ class DesktopHome extends StatelessWidget {
                             TextSpan(
                               text: '  alpha',
                               style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                                color: Colors.black54,
+                                color: Colors.blue,
                                 fontSize: 12),
                             ),
                           ],
@@ -505,22 +506,22 @@ class DesktopHome extends StatelessWidget {
                     title: Text('我的', style: TextStyle(fontSize: 16)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
-                    onTap: () => Get.offAll(UserProfile()),
+                    onTap: () => Get.offAll(() => UserProfile()),
                   ),
                   ListTile(
                     leading: Icon(Icons.settings),
                     title: Text('设置', style: TextStyle(fontSize: 16)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
-                    onTap: () => Get.offAll(Settings()),
+                    onTap: () => Get.offAll(() => Settings()),
                   ),
                   
                   ListTile(
                     leading: Icon(Icons.info),
-                    title: Text('关于', style: TextStyle(fontSize: 16)),
+                    title: Text('关于WordPipe', style: TextStyle(fontSize: 16)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
-                    onTap: () => Get.offAll(AboutUs()),
+                    onTap: () => Get.offAll(() => AboutUs()),
                   ),
                   Divider(),
                   Obx(() {
@@ -530,7 +531,7 @@ class DesktopHome extends StatelessWidget {
                       inactiveThumbColor: Colors.green[200],
                       inactiveTrackColor: Colors.green[100],
                       title: Text('英语打字助手', 
-                      style: TextStyle(fontSize: 12)), 
+                      style: TextStyle(fontSize: 14)), 
                       value:  settingsController.englishInputHelperConfig.value, 
                       onChanged: ((bool value) {
                         settingsController.toggleEnglishInputHelper(value);
@@ -544,8 +545,8 @@ class DesktopHome extends StatelessWidget {
                       activeTrackColor: Colors.green[100],
                       inactiveThumbColor: Colors.green[200],
                       inactiveTrackColor: Colors.green[100],
-                      title: Text('连续对话模式', style: TextStyle(fontSize: 12)), 
-                      subtitle: Text('会员专享', style: appThemeBright.textTheme.labelSmall!.copyWith(color: Colors.blue)),
+                      title: Text('连续对话模式', style: TextStyle(fontSize: 14)), 
+                      subtitle: Text('会员专享', style: TextStyle(fontSize: 12, color: Colors.blue)),
                       value: settingsController.freeChatMode.value,
                       onChanged: ((bool value) async {
                         if (value==true){
@@ -565,7 +566,7 @@ class DesktopHome extends StatelessWidget {
                               _commentFocus.requestFocus();
                             } else {
                               settingsController.freeChatMode.value = false;
-                              customSnackBar(title: "Error", content: "请设置自己的OpenAI API key或者升级为付费会员.");
+                              customSnackBar(title: "错误提示", content: "请设置自己的OpenAI API key或者升级为付费会员.");
                             }
                           }
                         }else{
@@ -650,17 +651,17 @@ class DesktopHome extends StatelessWidget {
                                                 // show a dialog for modify messageControll.seletedConversationName
                                                 conversationNameController.text = messageController.selectedConversationName.value;
                                                 Get.defaultDialog(
-                                                  title: 'Edit',
+                                                  title: '编辑',
                                                   content: TextField(
                                                     controller: conversationNameController,
                                                     decoration: InputDecoration(
                                                       border: OutlineInputBorder(),
-                                                      labelText: 'Conversation Name',
+                                                      labelText: '话题名称',
                                                     ),
                                                     maxLength: 50,
                                                   ),
-                                                  textConfirm: 'Save',
-                                                  textCancel: 'Cancel',
+                                                  textConfirm: '保存',
+                                                  textCancel: '取消',
                                                   confirmTextColor: Colors.white,
                                                   buttonColor: Colors.green,
                                                   onConfirm: () async {
@@ -675,10 +676,10 @@ class DesktopHome extends StatelessWidget {
                                               } else if (value == 'delete') {
                                                 // show a dialog for delete messageControll.radioListTile current item
                                                 Get.defaultDialog(
-                                                  title: 'Delete',
-                                                  content: Text('Are you sure to delete this conversation?'),
-                                                  textConfirm: 'Delete',
-                                                  textCancel: 'Cancel',
+                                                  title: '删除话题',
+                                                  content: Text('你确定要删除当前话题记录吗?'),
+                                                  textConfirm: '删除',
+                                                  textCancel: '取消',
                                                   confirmTextColor: Colors.white,
                                                   buttonColor: Colors.red,
                                                   onConfirm: () async {
@@ -735,7 +736,7 @@ class DesktopHome extends StatelessWidget {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text(
-                                              'Live vocab experience',
+                                              '实时拼写提示',
                                               style: TextStyle(
                                                 fontSize: 16, 
                                                 fontWeight: FontWeight.w600,
@@ -744,7 +745,7 @@ class DesktopHome extends StatelessWidget {
                                                 ),
                                             ),
                                             Text(
-                                              '↑↓ to choose word\n⏎ to confirm',
+                                              '↑↓ 选择单词\n⏎ 确认',
                                               style: TextStyle(fontSize: 10),
                                               textAlign: TextAlign.right,
                                             ),
@@ -765,7 +766,7 @@ class DesktopHome extends StatelessWidget {
                                                   () => ListView.builder(
                                                     itemBuilder: (_, int index) => InkWell(
                                                       onDoubleTap: () {
-                                                        customSnackBar(title: "select word", content: _matchWords[index].text);
+                                                        customSnackBar(title: "选择条目", content: _matchWords[index].text);
                                                       },
                                                       child: _matchWords[index],
                                                     ),
@@ -863,7 +864,7 @@ class DesktopHome extends StatelessWidget {
                       children: [
                         Ink(
                           decoration: const ShapeDecoration(
-                            color: CustomColors.gradientEnd,
+                            color: CustomColors.inputTextFieldBorder,
                             shape: CircleBorder(),
                           ),
                           child: Tooltip(
@@ -871,6 +872,7 @@ class DesktopHome extends StatelessWidget {
                             child: IconButton(
                               color: Colors.grey,
                               hoverColor: Colors.black54,
+                              iconSize: 30,
                               onPressed: () {
                           
                               }, 
@@ -886,19 +888,19 @@ class DesktopHome extends StatelessWidget {
                         ),
                         Container(
                           width: 45,
-                          height: 40,
+                          height: 45,
                           margin: EdgeInsets.only(left: 5),
-                          decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5.0),
-                                color: Colors.green[900],
-                          ),
+                          // decoration: BoxDecoration(
+                          //       borderRadius: BorderRadius.circular(25.0),
+                          //       color: Colors.green[900],
+                          // ),
                           child: Tooltip(
                             message: GetPlatform.isMacOS ? '⌘+Enter 发送' : 'Ctrl+Enter 发送',
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green[800],
+                                backgroundColor: Color.fromARGB(255, 59, 214, 157),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5.0),
+                                  borderRadius: BorderRadius.circular(25.0),
                                   ),
                                 padding: const EdgeInsets.all(0),
                               ),
@@ -906,7 +908,7 @@ class DesktopHome extends StatelessWidget {
                                 _handleSubmitted(_textController.text);
                                 _commentFocus.requestFocus();
                               },
-                              child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                              child: const Icon(Icons.send_rounded, color: Colors.black54, size: 24),
                             ),
                           )
                         ),
@@ -1033,7 +1035,7 @@ class MatchWords extends StatelessWidget {
         color: Colors.black87,
         backgroundColor:
             isSelected ? Colors.greenAccent : Colors.transparent,
-        fontSize: 12,
+        fontSize: 14,
         fontWeight: fullMatch ? FontWeight.bold : FontWeight.normal,
         );
 

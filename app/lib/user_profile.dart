@@ -37,84 +37,82 @@ class UserProfile extends StatelessWidget {
           } else if (snapshot.connectionState ==
               ConnectionState.done) {
             if (username != "") {
-                return MaterialApp(
-                  debugShowCheckedModeBanner: false,
-                  home: Scaffold(
-                    appBar: AppBar(
-                      title: const Text('User Profile', style: TextStyle(color: Colors.white70, fontSize: 24)),
-                      centerTitle: true,
-                      backgroundColor: Colors.green.withOpacity(0.6),
-                      automaticallyImplyLeading: false,
-                      leading: IconButton(
-                        icon: Icon(Icons.arrow_back),
-                        onPressed: () {
-                          Get.offAll(ResponsiveLayout());
-                        },
-                      )
-                    ),
-                    body: Center(
-                      child: Column(
-                        children: [
-                          SizedBox(height: 20),
-                          Text('User ID: $username'),
-                          SizedBox(height: 20),                          
-                          Container(
-                            width: 100,
-                            height: 100,
-                            // color: Colors.black12,
-                            margin: const EdgeInsets.only(left: 8),
-                              
-                            child: CachedNetworkImage(
-                              imageUrl: "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${username}",
-                              imageBuilder: (context, imageProvider) => Container(
-                                width: 100,
-                                height: 100,
-                                margin: const EdgeInsets.only(right: 8),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(3),
-                                  image: DecorationImage(
-                                    image: imageProvider,
-                                    fit: BoxFit.scaleDown,
-                                  ),
+                return Scaffold(
+                  appBar: AppBar(
+                    title: const Text('我的资料', style: TextStyle(color: Colors.white, fontSize: 24)),
+                    centerTitle: true,
+                    backgroundColor: Color.fromARGB(255, 59, 214, 157),
+                    automaticallyImplyLeading: false,
+                    toolbarHeight: 70,
+                    leading: IconButton(
+                      icon: Icon(Icons.arrow_back),
+                      onPressed: () {
+                        Get.offAll(() => ResponsiveLayout());
+                      },
+                    )
+                  ),
+                  body: Center(
+                    child: Column(
+                      children: [
+                        SizedBox(height: 20),
+                        Text('用户ID: $username'),
+                        SizedBox(height: 20),                          
+                        Container(
+                          width: 100,
+                          height: 100,
+                          // color: Colors.black12,
+                          margin: const EdgeInsets.only(left: 8),
+                            
+                          child: CachedNetworkImage(
+                            imageUrl: "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${username}",
+                            imageBuilder: (context, imageProvider) => Container(
+                              width: 100,
+                              height: 100,
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(3),
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.scaleDown,
                                 ),
                               ),
-                              placeholder: (context, url) => Container(
-                                width: 100,
-                                height: 100,
-                                color: Colors.black12,
-                                margin: const EdgeInsets.only(right: 8),
-                                child: Center(child: CircularProgressIndicator()),
-                              ),
-                              errorWidget: (context, url, error) => Icon(Icons.error),
-                            )
-                          ),
-                          SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () async {
-                              bool r = await c.signout();
-                              if (r){
-                                // 登出后清空消息列表
-                                messageController.messages.clear();
-                                messageController.closeSSE();
-                                messageController.messsage_view_first_build = true;
-                                messageController.conversationNameMap.clear();
-                                messageController.lastSegmentBeginId = 0;
-                                messageController.selectedConversationName.value = "";
-                                messageController.conversation_id.value = 0;
-                                Get.offAll(ResponsiveLayout());
-                              }else{
-                                Get.snackbar("Error", "Sign out failed");
-                              }
-                            },
-                            child: Text('Sign Out'),
-                          ),
-                        ],
-                      )
-                    ),
-                  )
+                            ),
+                            placeholder: (context, url) => Container(
+                              width: 100,
+                              height: 100,
+                              color: Colors.black12,
+                              margin: const EdgeInsets.only(right: 8),
+                              child: Center(child: CircularProgressIndicator()),
+                            ),
+                            errorWidget: (context, url, error) => Icon(Icons.error),
+                          )
+                        ),
+                        SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () async {
+                            bool r = await c.signout();
+                            if (r){
+                              // 登出后清空消息列表
+                              messageController.messages.clear();
+                              messageController.closeSSE();
+                              messageController.messsage_view_first_build = true;
+                              messageController.conversationNameMap.clear();
+                              messageController.lastSegmentBeginId = 0;
+                              messageController.selectedConversationName.value = "";
+                              messageController.conversation_id.value = 0;
+                              Get.offAll(() => ResponsiveLayout());
+                            }else{
+                              Get.snackbar("Error", "Sign out failed");
+                            }
+                          },
+                          child: Text('登出'),
+                        ),
+                      ],
+                    )
+                  ),
                 );
             }else{
-              Get.offAll(ResponsiveLayout());
+              Get.offAll(() => ResponsiveLayout());
             }
           }
         return Container(
@@ -144,6 +142,4 @@ class UserProfile extends StatelessWidget {
       },
     );
   }
-
-  
 }
