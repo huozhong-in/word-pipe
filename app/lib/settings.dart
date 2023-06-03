@@ -15,12 +15,11 @@ class Settings extends StatelessWidget {
 
   Future<bool> checkUserLogin() async {
     // 异步方法检查用户登录状态，返回true表示已登录，false表示未登录
-    Future<String> myId = c.getUserName();
-    myId.then((value) => username = value);
+    c.getUserName().then((value) => username = value);
     if (username == "") {
       return Future.value(false);
     }
-    return Future.value(true);    
+    return Future.value(true);
   }
 
   @override
@@ -126,7 +125,7 @@ class Settings extends StatelessWidget {
                                   SizedBox(height: 20,),
                                   Divider(height: 1, thickness: 1, color: Colors.black12, indent: 20, endIndent: 20,),
                                   SizedBox(height: 20,),
-                                  Text('当Jasmine造句时，可以使用单词的多种形态', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                                  Text('当Jasmine造句时，使用单词的多种形态', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
                                   SizedBox(height: 20),
                                   Row(
                                     children: [

@@ -256,10 +256,10 @@ class MobileSignIn extends StatelessWidget {
                                     if (rsp['errcode'] == 0) {
                                         Get.offAll(() => ResponsiveLayout());
                                     }else{
-                                      customSnackBar(title: "Errcode:${rsp['errcode']}", content: '${rsp['errmsg']}');
+                                      customSnackBar(title: "错误码:${rsp['errcode']}", content: '${rsp['errmsg']}');
                                     }
                                   }else{
-                                    customSnackBar(title: "Error", content: '请检查用户名或密码的长度');
+                                    customSnackBar(title: "注意", content: '请检查用户名或密码的长度');
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(

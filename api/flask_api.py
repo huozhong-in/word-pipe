@@ -641,7 +641,7 @@ def signin():
     userDB = UserDB(db_session)
     r: dict = userDB.check_password(username, password)
     if r == {}:
-        return make_response(jsonify({"errcode":50004,"errmsg":"Username Or Password is incorrect"}), 500)
+        return make_response(jsonify({"errcode":50004,"errmsg":"用户名或密码不正确"}), 500)
     ip = request.headers.get('X-Forwarded-For')
     if ip:
         ip = ip.split(',')[0]

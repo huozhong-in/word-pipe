@@ -515,7 +515,6 @@ class DesktopHome extends StatelessWidget {
                     minVerticalPadding: 0,
                     onTap: () => Get.offAll(() => Settings()),
                   ),
-                  
                   ListTile(
                     leading: Icon(Icons.info),
                     title: Text('关于WordPipe', style: TextStyle(fontSize: 16)),
@@ -523,6 +522,34 @@ class DesktopHome extends StatelessWidget {
                     minVerticalPadding: 0,
                     onTap: () => Get.offAll(() => AboutUs()),
                   ),
+                  // Padding(
+                  //   padding: const EdgeInsets.only(left: 22, right: 22, top: 16, bottom: 16),
+                  //   child: ElevatedButton(
+                  //     style: ButtonStyle(
+                  //       backgroundColor: MaterialStateProperty.all<Color>(Colors.greenAccent.withOpacity(0.5)),
+                  //       foregroundColor: MaterialStateProperty.all<Color>(Colors.white70),
+                  //       overlayColor: MaterialStateProperty.all<Color>(Colors.amberAccent[200]!),
+                  //     ),
+                  //     onPressed: (){
+                  //       c.getMacAppVersion().then((value) {
+                  //         Get.defaultDialog(
+                  //           title: '版本 ${value}',
+                  //           middleText: '是否下载新版本？',
+                  //           textConfirm: '下载',
+                  //           textCancel: '取消',
+                  //           confirmTextColor: Colors.white,
+                  //           buttonColor: Colors.greenAccent,
+                  //           cancelTextColor: Colors.white,
+                  //           onConfirm: () {
+                  //             // c.downloadMacApp();
+                  //           },
+                  //         );
+                  //       });
+                  //     }, 
+                  //     child: 
+                  //     Text('检测到新版本', style: TextStyle(fontSize: 16, decorationColor: Colors.white))
+                  //   ),
+                  // ),
                   Divider(),
                   Obx(() {
                     return SwitchListTile(

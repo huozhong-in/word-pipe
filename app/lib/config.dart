@@ -110,7 +110,7 @@ final ThemeData appThemeBright = ThemeData(
   fontFamily: "Roboto",
   fontFamilyFallback: ["PingFang SC", "Heiti SC",],
   
-  textTheme: TextTheme( //文本主题
+  textTheme: TextTheme(
     displayLarge: TextStyle(fontSize: 72.0, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 31, 165, 69)),
     displayMedium: TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 24, 198, 56)),
     displaySmall: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white),
@@ -140,13 +140,14 @@ final ThemeData appThemeBright = ThemeData(
     onError: Colors.white,
     brightness: Brightness.light,
   ).copyWith(
-    secondary: Color.fromARGB(255, 59, 214, 157)),
+      secondary: Color.fromARGB(255, 59, 214, 157)
+    ),
     visualDensity: VisualDensity.adaptivePlatformDensity,
-    textSelectionTheme: const TextSelectionThemeData(
-    cursorColor: Colors.red,
-    selectionColor: Colors.yellow,
-    selectionHandleColor: Colors.black,
-  )
+    textSelectionTheme: TextSelectionThemeData(
+      cursorColor: Colors.red,
+      selectionColor: Colors.yellow[200],
+      selectionHandleColor: Colors.black,
+    )
 );
 
 class CustomColors {

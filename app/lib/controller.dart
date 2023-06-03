@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/cache_helper.dart';
 import 'dart:async';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:developer';
 
@@ -88,25 +89,16 @@ class Controller extends GetxController{
     }
     return true;
   }
-  // Future<String> imageTypes(String url) async {
-  //   var response = await http.head(Uri.parse(url));
-  //   if (response.statusCode != 200){
-  //     return "not exists";
-  //   }
-  //   // response.headers.forEach((key, value) {
-  //   //   print(key + " : " + value);
-  //   // });
-  //   if(response.headers['content-type'] != null){
-  //     if(response.headers['content-type']!.contains('jpeg')){
-  //       return "jpeg";
-  //     }else if(response.headers['content-type']!.contains('png')){
-  //       return "png";
-  //     }else if(response.headers['content-type']!.contains('svg')){
-  //       return "svg";
-  //     }   
-  //   }
-  //   return "not exists";
-  // }
+  
+  Future<String> getMacAppVersion() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    // String appName = packageInfo.appName;
+    // String packageName = packageInfo.packageName;
+    // String version = packageInfo.version;
+    String buildNumber = packageInfo.buildNumber;
+    
+    return buildNumber; 
+  }
 }
 
 

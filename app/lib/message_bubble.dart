@@ -483,24 +483,16 @@ class MessageBubble extends StatelessWidget {
       spans.add(
         WidgetSpan(  
           alignment: PlaceholderAlignment.middle,
-          child: TextButton(
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
-              overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
-              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                )
-              )
-            ),
+          child: ElevatedButton(
             onPressed: () async {
               messageController.getChatCompletion('gpt-3.5-turbo', dataList[1] as String, WordPipeMessageType.reply_for_query_word);
             }, 
             child: Text(
               "直接告诉我答案",
               style: TextStyle(
-                color: Color.fromARGB(255, 11, 66, 93),
-                // decoration: TextDecoration.underline
+                fontSize: settingsController.fontSizeConfig.value,
+                color: Colors.blue[900],
+                fontWeight: FontWeight.normal
               )
             )
           )
@@ -510,23 +502,16 @@ class MessageBubble extends StatelessWidget {
       spans.add(
         WidgetSpan(  
           alignment: PlaceholderAlignment.middle,
-          child: TextButton(
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
-              overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
-              shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                )
-              )
-            ),
+          child: ElevatedButton(
             onPressed: () async {
               messageController.getChatCompletion('gpt-3.5-turbo', dataList[1] as String, WordPipeMessageType.reply_for_query_word_example_sentence);
             }, 
             child: Text(
               "生成例句猜猜看",
               style: TextStyle(
-                color: Color.fromARGB(255, 11, 66, 93),
+                fontSize: settingsController.fontSizeConfig.value,
+                color: Colors.blue[900],
+                fontWeight: FontWeight.normal
               )
             )
           )
@@ -540,7 +525,7 @@ class MessageBubble extends StatelessWidget {
   
   List<InlineSpan> _wordHighlight(List<dynamic> dataList, {bool autoNewline = false}) {
     List<InlineSpan> spans = [];
-    RegExp exp = RegExp(r'\b[a-zA-Z]{3,}(?:-[a-zA-Z]{3,})*\b');
+    RegExp exp = RegExp(r'\b[a-zA-Z]{4,}(?:-[a-zA-Z]{4,})*\b');
     for (int i = 0; i < dataList.length; i++) {
       String text = dataList[i] as String;
       var matches = exp.allMatches(text);
@@ -554,7 +539,7 @@ class MessageBubble extends StatelessWidget {
               style: ButtonStyle(
                 // minimumSize: MaterialStateProperty.all<Size>(Size(8, 8)),
                 // padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(1)),
-                backgroundColor: isMe? MaterialStateProperty.all<Color>(Color.fromRGBO(40, 178, 95, 1)) : MaterialStateProperty.all<Color>(Colors.green[100]!),
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.white24),
                 overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
                 // shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                 //   RoundedRectangleBorder(
@@ -569,8 +554,9 @@ class MessageBubble extends StatelessWidget {
                 match.group(0)!,
                 style: TextStyle(
                   fontSize: settingsController.fontSizeConfig.value,
-                  color: Color.fromARGB(255, 11, 66, 93),
+                  color: Colors.black87,
                   // textBaseline: TextBaseline.alphabetic,
+                  fontWeight: FontWeight.normal
                 )
               )
             )

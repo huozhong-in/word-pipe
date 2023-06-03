@@ -174,9 +174,6 @@ List<OpenAIChatCompletionChoiceMessageModel> prompt_template_translate_sentence_
 
 List<OpenAIChatCompletionChoiceMessageModel> prompt_template_guess_word_from_sentence(String sentence){
   List<OpenAIChatCompletionChoiceMessageModel> modelList = [];
-  // 从英文句子中猜用户生词
-  // TODO 根据我的生词本、职业资料，猜测我已经熟悉某些行业单词，就把这些单词权重调低
-
   var r_system = OpenAIChatCompletionChoiceMessageModel(
     role: OpenAIChatMessageRole.system,
     content: "你是我的英语老师。你会根据COCA(Corpus of Contemporary American English)词频来猜测当我遇到一个英文句子时，其中的哪些会是我的生词。",
