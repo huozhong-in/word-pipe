@@ -490,7 +490,7 @@ class Settings extends StatelessWidget {
                                               Text('快'),
                                             ],
                                           ),
-                                          Text('当前语速: ' + settingsController.aiAssistantTtsRate.value.round().toString() + '%'),
+                                          Text('快慢程度: ' + settingsController.aiAssistantTtsRate.value.round().toString() + '%'),
                                         ],
                                       );
                                     },)

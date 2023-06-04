@@ -20,7 +20,7 @@
             "request": "launch",
             "cwd": "app",
             "program": "lib/main.dart",
-            "deviceId": "iPhone 14 Pro",
+            "deviceId": "iPhone SE (3rd generation)",
             "flutterMode": "debug",
         },
         {

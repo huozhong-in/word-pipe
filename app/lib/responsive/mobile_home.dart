@@ -222,72 +222,52 @@ class MobileHome extends StatelessWidget {
                   );                    
                 },),
                 Obx(() {
-                  return Visibility(
-                    visible: settingsController.freeChatMode.value,
-                    child: Container(
-                      width: 160,
-                      margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
-                      constraints: BoxConstraints(
-                        maxWidth: 160,
-                        minWidth: 160,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Color.fromARGB(255, 94, 211, 168).withOpacity(0.5),
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(5),
-                          bottomRight: Radius.circular(5),
-                        ),
-                      ),
-                      child: ListView(
-                        shrinkWrap: true,
-                        children: [
-                          Tooltip(
-                            message: '开个新话题',
-                            child: ListTile(
-                              leading: Icon(Icons.add),
-                              title: Text('新话题', style: appThemeBright.textTheme.bodyMedium),
-                              minLeadingWidth: 0,
-                              minVerticalPadding: 0,
-                              onTap: () async {
-                                messageController.messages.clear();
-                                messageController.lastSegmentBeginId = 0;
-                                messageController.messsage_view_first_build = true;
-                                messageController.conversation_id.value = -2; // 强制MessageView刷新
-                                messageController.conversation_id.value = -1;
-                                messageController.selectedConversationName.value = '';
-                                if (messageController.scaffoldKey.currentState != null && messageController.scaffoldKey.currentState!.hasDrawer && messageController.scaffoldKey.currentState!.isDrawerOpen){
-                                  messageController.scaffoldKey.currentState!.closeDrawer();
-                                }
-                                messageController.commentFocus.requestFocus();
-                              },
-                            ),
-                          ),
-                          // Divider(),
-                          FutureBuilder<List<dynamic>>(
-                            future: _getListTile(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                messageController.radioListTiles.clear();
-                                for (var i = 0; i < snapshot.data!.length; i++) {
-                                  Map<String, dynamic> item = snapshot.data![i];
-                                  messageController.radioListTiles.add(customRadioListTile(item));
-                                }
-                                return Obx(() {
-                                  return ListView(
-                                    shrinkWrap: true,
-                                    children: messageController.radioListTiles,
-                                  );
-                                },);
-                              } else if (snapshot.hasError) {
-                                return Text("${snapshot.error}");
-                              }
-                              return Center(child: CircularProgressIndicator());
-                            },
-                          )
-                        ],
-                      ),
-                    ),
-                  );
+                  if (settingsController.freeChatMode.value){
+                    return FutureBuilder<List<dynamic>>(
+                      future: _getListTile(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          messageController.radioListTiles.clear();
+                          for (var i = 0; i < snapshot.data!.length; i++) {
+                            Map<String, dynamic> item = snapshot.data![i];
+                            messageController.radioListTiles.add(customRadioListTile(item));
+                          }
+                          return Column(
+                            children: [
+                              Tooltip(
+                                message: '开个新话题',
+                                child: ListTile(
+                                  tileColor: Color.fromARGB(255, 94, 211, 168).withOpacity(0.5),
+                                  leading: Icon(Icons.add),
+                                  title: Text('新话题', style: appThemeBright.textTheme.bodyMedium),
+                                  minLeadingWidth: 0,
+                                  minVerticalPadding: 0,
+                                  onTap: () async {
+                                    messageController.messages.clear();
+                                    messageController.lastSegmentBeginId = 0;
+                                    messageController.messsage_view_first_build = true;
+                                    messageController.conversation_id.value = -2; // 强制MessageView刷新
+                                    messageController.conversation_id.value = -1;
+                                    messageController.selectedConversationName.value = '';
+                                    if (messageController.scaffoldKey.currentState != null && messageController.scaffoldKey.currentState!.hasDrawer && messageController.scaffoldKey.currentState!.isDrawerOpen){
+                                      messageController.scaffoldKey.currentState!.closeDrawer();
+                                    }
+                                    messageController.commentFocus.requestFocus();
+                                  },
+                                ),
+                              ),
+                              ...messageController.radioListTiles
+                            ],
+                          );
+                        } else if (snapshot.hasError) {
+                          return Text("${snapshot.error}");
+                        }
+                        return Center(child: CircularProgressIndicator());
+                      },
+                    );
+                  }else{
+                    return Container();
+                  }
                 }),
               ],
             ),
@@ -315,7 +295,6 @@ class MobileHome extends StatelessWidget {
               Container(
                 margin: const EdgeInsets.fromLTRB(5, 0, 5, 5),
                 padding: const EdgeInsets.all(10),
-                // height: 100,
                 decoration: BoxDecoration(
                   color: Colors.white70,
                   borderRadius: const BorderRadius.all(Radius.circular(15)),
@@ -339,10 +318,6 @@ class MobileHome extends StatelessWidget {
                       width: 45,
                       height: 45,
                       margin: EdgeInsets.only(left: 5),
-                      // decoration: BoxDecoration(
-                      //       borderRadius: BorderRadius.circular(25.0),
-                      //       color: Colors.green[900],
-                      // ),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color.fromARGB(255, 59, 214, 157),
@@ -436,11 +411,7 @@ class MobileHome extends StatelessWidget {
         messageController.freeChat('gpt-3.5-turbo', messageController.conversation_id.value, text);
       }
     }else{
-      customSnackBar(title: "Error", content: ret['errmsg'] as String);
-      // 三秒后跳转到登录页面
-      Future.delayed(Duration(seconds: 3), () {
-        Get.offAll(ResponsiveLayout());
-      });
+      customSnackBar(title: "错误", content: ret['errmsg'] as String);
     }   
   }
 }

@@ -609,7 +609,7 @@ def signup_with_promo():
     userDB = UserDB(db_session)
     user: User = userDB.get_user_by_username(username)
     if user != None:
-        return make_response(jsonify({"errcode":50005,"errmsg":"User already exists"}), 500)
+        return make_response(jsonify({"errcode":50005,"errmsg":"用户已经存在"}), 500)
     
     try:
         r: dict = userDB.create_user_by_username(user_name=username, password=password, promo=promo)
@@ -618,7 +618,7 @@ def signup_with_promo():
     finally:
         db_session.close()
     if r == {}:
-        return make_response(jsonify({"errcode": 50006,"errmsg": 'User create failed'}), 500)
+        return make_response(jsonify({"errcode": 50006,"errmsg": '用户注册失败，请稍后重试'}), 500)
     r.update(get_openai_apikey())
     return make_response(jsonify(r), 200)
 

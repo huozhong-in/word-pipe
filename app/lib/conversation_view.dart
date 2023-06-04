@@ -29,11 +29,11 @@ class ConversationView extends StatelessWidget {
           return Visibility(
             visible: settingsController.freeChatMode.value,
             child: Container(
-              width: 160,
+              width: 180,
               margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
               constraints: BoxConstraints(
-                maxWidth: 160,
-                minWidth: 160,
+                maxWidth: 180,
+                minWidth: 180,
               ),
               decoration: BoxDecoration(
                 color: Color.fromARGB(255, 94, 211, 168).withOpacity(0.5),
@@ -63,7 +63,6 @@ class ConversationView extends StatelessWidget {
                       },
                     ),
                   ),
-                  // Divider(),
                   FutureBuilder<List<dynamic>>(
                     future: _getListTile(),
                     builder: (context, snapshot) {
@@ -73,12 +72,10 @@ class ConversationView extends StatelessWidget {
                           Map<String, dynamic> item = snapshot.data![i];
                           messageController.radioListTiles.add(customRadioListTile(item));
                         }
-                        return Obx(() {
-                          return ListView(
-                            shrinkWrap: true,
-                            children: messageController.radioListTiles,
-                          );
-                        },);
+                        return ListView(
+                          shrinkWrap: true,
+                          children: messageController.radioListTiles,
+                        );
                       } else if (snapshot.hasError) {
                         return Text("${snapshot.error}");
                       }

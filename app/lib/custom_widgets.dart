@@ -39,10 +39,9 @@ Widget customRadioListTile(Map<String, dynamic> item) {
       activeColor: Colors.green[900],
       contentPadding: EdgeInsets.fromLTRB(0, 0, 0, 0),
       selected: messageController.conversation_id.value == pkConversation,
-      tileColor: messageController.conversation_id.value == pkConversation ? Colors.green[100] : Colors.white,
-      // secondary: messageController.conversation_id.value == pkConversation ? Icon(Icons.edit, color: Colors.grey, size: 14,): null,
+      tileColor: Color.fromARGB(255, 94, 211, 168).withOpacity(0.5),
+      selectedTileColor: Color.fromARGB(255, 94, 211, 168).withOpacity(0.5),
       shape: RoundedRectangleBorder(
-        // borderRadius: BorderRadius.circular(5),
         side: BorderSide(
           color: messageController.conversation_id.value == pkConversation ? Colors.green[900]! : Colors.grey[300]!,
           width: 1,
