@@ -7,8 +7,6 @@ import 'package:wordpipe/user_profile.dart';
 import 'package:wordpipe/MessageController.dart';
 import 'package:wordpipe/settings.dart';
 import 'package:wordpipe/about_us.dart';
-import 'package:wordpipe/responsive/responsive_layout.dart';
-
 import '../config.dart';
 
 // ignore: must_be_immutable
@@ -66,7 +64,7 @@ class MobileHome extends StatelessWidget {
                       children: [
                         Icon(Icons.edit, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey,),
                         SizedBox(width: 10),
-                        Text('编辑', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
+                        Text('修改名称', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
                       ],
                     ),
                   ),
@@ -77,7 +75,7 @@ class MobileHome extends StatelessWidget {
                       children: [
                         Icon(Icons.delete, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey,),
                         SizedBox(width: 10),
-                        Text('删除', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
+                        Text('删除话题', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
                       ],
                     ),
                   ),

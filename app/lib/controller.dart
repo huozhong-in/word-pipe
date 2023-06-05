@@ -94,10 +94,10 @@ class Controller extends GetxController{
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     // String appName = packageInfo.appName;
     // String packageName = packageInfo.packageName;
-    // String version = packageInfo.version;
-    String buildNumber = packageInfo.buildNumber;
+    String version = packageInfo.version;
+    // String buildNumber = packageInfo.buildNumber;
     
-    return buildNumber; 
+    return version; 
   }
 }
 

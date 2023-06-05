@@ -20,7 +20,7 @@
             "request": "launch",
             "cwd": "app",
             "program": "lib/main.dart",
-            "deviceId": "iPhone SE (3rd generation)",
+            "deviceId": "iPhone 14 Pro",
             "flutterMode": "debug",
         },
         {
@@ -30,6 +30,15 @@
             "cwd": "app",
             "program": "lib/main.dart",
             "deviceId": "Dio的iPhone",
+            "flutterMode": "debug",
+        },
+        {
+            "name": "iPad-simulator",
+            "type": "dart",
+            "request": "launch",
+            "cwd": "app",
+            "program": "lib/main.dart",
+            "deviceId": "iPad Air (5th generation)",
             "flutterMode": "debug",
         },
         {

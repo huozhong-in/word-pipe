@@ -1,8 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/conversation_view.dart';
@@ -11,6 +14,8 @@ import 'package:wordpipe/MessageController.dart';
 import 'package:wordpipe/settings.dart';
 import 'package:wordpipe/about_us.dart';
 import 'package:wordpipe/custom_widgets.dart';
+import 'package:updat/updat.dart';
+import 'package:updat/theme/chips/default.dart';
 import 'dart:developer';
 
 // ignore: must_be_immutable
@@ -404,7 +409,7 @@ class DesktopHome extends StatelessWidget {
   Widget build(context){
     
     _commentFocus = messageController.commentFocus;
-    
+
     return Scaffold(
       appBar: null,
       body: Center(
@@ -522,33 +527,79 @@ class DesktopHome extends StatelessWidget {
                     minVerticalPadding: 0,
                     onTap: () => Get.offAll(() => AboutUs()),
                   ),
-                  // Padding(
-                  //   padding: const EdgeInsets.only(left: 22, right: 22, top: 16, bottom: 16),
-                  //   child: ElevatedButton(
-                  //     style: ButtonStyle(
-                  //       backgroundColor: MaterialStateProperty.all<Color>(Colors.greenAccent.withOpacity(0.5)),
-                  //       foregroundColor: MaterialStateProperty.all<Color>(Colors.white70),
-                  //       overlayColor: MaterialStateProperty.all<Color>(Colors.amberAccent[200]!),
-                  //     ),
-                  //     onPressed: (){
-                  //       c.getMacAppVersion().then((value) {
-                  //         Get.defaultDialog(
-                  //           title: '版本 ${value}',
-                  //           middleText: '是否下载新版本？',
-                  //           textConfirm: '下载',
-                  //           textCancel: '取消',
-                  //           confirmTextColor: Colors.white,
-                  //           buttonColor: Colors.greenAccent,
-                  //           cancelTextColor: Colors.white,
-                  //           onConfirm: () {
-                  //             // c.downloadMacApp();
-                  //           },
-                  //         );
-                  //       });
-                  //     }, 
-                  //     child: 
-                  //     Text('检测到新版本', style: TextStyle(fontSize: 16, decorationColor: Colors.white))
+                  FutureBuilder<String>(
+                    future: c.getMacAppVersion(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 22, right: 22, top: 16, bottom: 16),
+                          child: UpdatWidget(
+                            getLatestVersion: () async {
+                              // Github gives us a super useful latest endpoint, and we can use it to get the latest stable release
+                              final data = await http.get(Uri.parse(
+                                "https://api.github.com/repos/huozhong-in/word-pipe/releases/latest",
+                              ));
+                      
+                              // Return the tag name, which is always a semantically versioned string.
+                              return jsonDecode(data.body)["tag_name"];
+                            },
+                            getBinaryUrl: (version) async {
+                              // Github also gives us a great way to download the binary for a certain release (as long as we use a consistent naming scheme)
+                      
+                              // Make sure that this link includes the platform extension with which to save your binary.
+                              // If you use https://exapmle.com/latest/macos for instance then you need to create your own file using `getDownloadFileLocation`
+                              String platformExt = "";
+                              GetPlatform.isMacOS ? platformExt = "dmg" : platformExt = "exe";
+                              return "https://github.com/huozhong-in/word-pipe/releases/download/$version/WordPipe-${Platform.operatingSystem}-$version.$platformExt";
+                            },
+                            appName: "WordPipe", // This is used to name the downloaded files.
+                            getChangelog: (_, __) async {
+                              // That same latest endpoint gives us access to a markdown-flavored release body. Perfect!
+                              final data = await http.get(Uri.parse(
+                                "https://api.github.com/repos/huozhong-in/word-pipe/releases/latest",
+                              ));
+                              return jsonDecode(data.body)["body"];
+                            },
+                            updateChipBuilder: defaultChip,
+                            openOnDownload: true,
+                            closeOnInstall: true,
+                            currentVersion: snapshot.data!,
+                            callback: (status) {
+                              print(status);
+                              // print('currentVersion: ${snapshot.data!}');
+                            },
+                          )
+                        );
+                      } else if (snapshot.hasError) {
+                        return Text("${snapshot.error}");
+                      }
+                      return Center(child: CircularProgressIndicator());
+                    },
+                  ),
+                  // ElevatedButton(
+                  //   style: ButtonStyle(
+                  //     backgroundColor: MaterialStateProperty.all<Color>(Colors.greenAccent.withOpacity(0.5)),
+                  //     foregroundColor: MaterialStateProperty.all<Color>(Colors.white70),
+                  //     overlayColor: MaterialStateProperty.all<Color>(Colors.amberAccent[200]!),
                   //   ),
+                  //   onPressed: (){
+                  //     c.getMacAppVersion().then((value) {
+                  //       Get.defaultDialog(
+                  //         title: '版本 ${value}',
+                  //         middleText: '是否下载新版本？',
+                  //         textConfirm: '下载',
+                  //         textCancel: '取消',
+                  //         confirmTextColor: Colors.white,
+                  //         buttonColor: Colors.greenAccent,
+                  //         cancelTextColor: Colors.white,
+                  //         onConfirm: () {
+                  //           // c.downloadMacApp();
+                  //         },
+                  //       );
+                  //     });
+                  //   }, 
+                  //   child: 
+                  //   Text('检测到新版本', style: TextStyle(fontSize: 16, decorationColor: Colors.white))
                   // ),
                   Divider(),
                   Obx(() {
@@ -657,7 +708,7 @@ class DesktopHome extends StatelessWidget {
                                                   children: [
                                                     Icon(Icons.edit, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey,),
                                                     SizedBox(width: 10),
-                                                    Text('修改', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
+                                                    Text('修改名称', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
                                                   ],
                                                 ),
                                               ),
@@ -668,7 +719,7 @@ class DesktopHome extends StatelessWidget {
                                                   children: [
                                                     Icon(Icons.delete, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey,),
                                                     SizedBox(width: 10),
-                                                    Text('删除', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
+                                                    Text('删除话题', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
                                                   ],
                                                 ),
                                               ),
