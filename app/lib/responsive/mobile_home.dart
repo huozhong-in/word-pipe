@@ -1,3 +1,5 @@
+import 'dart:developer';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:wordpipe/custom_widgets.dart';
@@ -7,6 +9,9 @@ import 'package:wordpipe/user_profile.dart';
 import 'package:wordpipe/MessageController.dart';
 import 'package:wordpipe/settings.dart';
 import 'package:wordpipe/about_us.dart';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:async';
 import '../config.dart';
 
 // ignore: must_be_immutable
@@ -355,8 +360,19 @@ class MobileHome extends StatelessWidget {
         prefixIcon: IconButton(
             color: Colors.grey,
             hoverColor: Colors.black54,
-            onPressed: () {
-              customSnackBar(title: "提示", content: "功能暂未开放");
+            onPressed: () async {
+              final record = Record();
+              if (await record.hasPermission()) {
+                // Directory temporaryDirectory = await getTemporaryDirectory();
+                // String voiceFilePath = temporaryDirectory.path + '/voice.m4a';
+                // log(voiceFilePath);
+                // await record.start(
+                //   path: voiceFilePath,
+                //   encoder: AudioEncoder.aacLc,
+                //   bitRate: 128000,
+                //   samplingRate: 44100,
+                // );
+              }
             }, 
             icon: const Icon(Icons.mic_rounded)
           ),

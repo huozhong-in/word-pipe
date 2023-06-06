@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -16,6 +19,8 @@ import 'package:wordpipe/about_us.dart';
 import 'package:wordpipe/custom_widgets.dart';
 import 'package:updat/updat.dart';
 import 'package:updat/theme/chips/default.dart';
+import 'package:flutter_desktop_audio_recorder/flutter_desktop_audio_recorder.dart';
+import 'package:just_waveform/just_waveform.dart';
 import 'dart:developer';
 
 // ignore: must_be_immutable
@@ -34,6 +39,15 @@ class DesktopHome extends StatelessWidget {
   late final Map<String, String> _wordDetail = <String, String>{}.obs;
   ScrollController _scrollController = ScrollController();
   final TextEditingController conversationNameController = TextEditingController();
+
+  RxBool _hasMicPermission = false.obs;
+  FlutterDesktopAudioRecorder recorder = FlutterDesktopAudioRecorder();
+  RxString _m4aFileName = "".obs;
+  RxBool _isRecording = false.obs;
+  RxDouble recordProgress = 0.0.obs;
+  RxDouble playProgress = 0.0.obs;
+  Timer? timer;
+  Rx<Stream<WaveformProgress>?> progressStream = Rx(const Stream.empty());
 
   Future<String> _getUserName() async {
     _username = await c.getUserName();
@@ -60,10 +74,6 @@ class DesktopHome extends StatelessWidget {
       }
     }else{
       customSnackBar(title: "Error", content: ret['errmsg'] as String);
-      // // 三秒后跳转到登录页面
-      // Future.delayed(Duration(seconds: 3), () {
-      //   Get.offAll(ResponsiveLayout());
-      // });
     }   
   }
   
@@ -240,7 +250,7 @@ class DesktopHome extends StatelessWidget {
   }
 
 
-  Widget _myTextFild(BuildContext context){
+  Widget _myTextField(BuildContext context){
     return Focus(
       onKey: (node, RawKeyEvent event) {
           // 判断在Windows平台则用Ctrl+Enter发送信息
@@ -405,6 +415,117 @@ class DesktopHome extends StatelessWidget {
       );
   }
 
+  Future<void> _showWaveforms(String fileName) async {
+    final audioFile = File(p.join((await getTemporaryDirectory()).path, '$fileName.bak.m4a'));
+    try {
+      await audioFile.writeAsBytes(
+        (await rootBundle.load('audio/$fileName.m4a')).buffer.asUint8List()
+        );
+      final waveFile = File(p.join((await getTemporaryDirectory()).path, '$fileName.wave'));
+      progressStream.value = JustWaveform.extract(audioInFile: audioFile, waveOutFile: waveFile).asBroadcastStream();
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Widget _myWaveformsBar(BuildContext context){
+    return SizedBox(
+      height: 100,
+      // width: 60,
+      child: Row(
+        children: [
+          // IconButton(
+          //   color: Colors.red[100],
+          //   hoverColor: Colors.red[200],
+          //   iconSize: 40,
+          //   onPressed: () async {
+          //     if (messageController.ttsPlayer.playerState.playing){
+          //       await messageController.ttsPlayer.pause();
+          //     }
+          //     messageController.whichIsPlaying.value = '';
+          //     Directory temporaryDirectory = await getTemporaryDirectory();
+          //     String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
+          //     print(filePath);
+          //     messageController.ttsPlayer.setFilePath(filePath).then((duration) {
+          //       print(duration);
+          //       messageController.ttsPlayer.play();
+          //     });
+              
+          //   }, 
+          //   icon: Icon(Icons.play_arrow, color: Colors.green[100],)
+          // ),
+          Obx(() {
+            return Expanded(
+              child: StreamBuilder<WaveformProgress?>(
+                stream: progressStream.value,
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        'Error: ${snapshot.error}',
+                        style: Theme.of(context).textTheme.titleLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  }
+                  final progress = snapshot.data?.progress ?? 0.0;
+                  final waveform = snapshot.data?.waveform;
+                  if (waveform == null) {
+                    return Center(
+                      child: Text(
+                        '${(100 * progress).toInt()}%',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    );
+                  }
+                  return AudioWaveformWidget(
+                    waveform: waveform,
+                    start: Duration.zero,
+                    duration: waveform.duration,
+                  );
+                },
+              )
+              // Stack(
+              //   children: [
+              //     Container(
+              //       decoration: BoxDecoration(
+              //         borderRadius: BorderRadius.circular(5),
+              //         color: Colors.grey[300],
+              //       )
+              //     ),
+              //     Obx(() => Positioned(
+              //       left: 80,
+              //       top: 0,
+              //       height: 20,
+              //       width: 10 * recordProgress.value,
+              //       child: Container(
+              //         color: Colors.green,
+              //       ),
+              //     )),
+              //   ],
+              // ),
+            );
+          },),
+          IconButton(
+            color: Colors.red[100],
+            hoverColor: Colors.red[200],
+            iconSize: 40,
+            onPressed: () async {
+              Directory temporaryDirectory = await getTemporaryDirectory();
+              String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
+              // delete file `filePath`
+              File file = File(filePath);
+              file.delete();
+              _m4aFileName.value = '';
+               
+            }, 
+            icon: Icon(Icons.cancel, color: Colors.red[100]) // for X symbol
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(context){
     
@@ -422,7 +543,6 @@ class DesktopHome extends StatelessWidget {
                 minWidth: 200,
               ),
               decoration: BoxDecoration(
-                // color: Color.fromARGB(255, 131, 198, 175),
                 color: Color.fromARGB(255, 94, 211, 168).withOpacity(0.5),
                 borderRadius: BorderRadius.only(
                   // topLeft: Radius.circular(5),
@@ -531,6 +651,9 @@ class DesktopHome extends StatelessWidget {
                     future: c.getMacAppVersion(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
+                        if (snapshot.data! == '0.0.0')
+                          return Container();
+                        
                         return Padding(
                           padding: const EdgeInsets.only(left: 22, right: 22, top: 16, bottom: 16),
                           child: UpdatWidget(
@@ -565,42 +688,17 @@ class DesktopHome extends StatelessWidget {
                             closeOnInstall: true,
                             currentVersion: snapshot.data!,
                             callback: (status) {
-                              print(status);
+                              // print(status);
                               // print('currentVersion: ${snapshot.data!}');
                             },
                           )
                         );
-                      } else if (snapshot.hasError) {
-                        return Text("${snapshot.error}");
+                      // } else if (snapshot.hasError) {
+                      //   return Text("${snapshot.error}");
                       }
                       return Center(child: CircularProgressIndicator());
                     },
                   ),
-                  // ElevatedButton(
-                  //   style: ButtonStyle(
-                  //     backgroundColor: MaterialStateProperty.all<Color>(Colors.greenAccent.withOpacity(0.5)),
-                  //     foregroundColor: MaterialStateProperty.all<Color>(Colors.white70),
-                  //     overlayColor: MaterialStateProperty.all<Color>(Colors.amberAccent[200]!),
-                  //   ),
-                  //   onPressed: (){
-                  //     c.getMacAppVersion().then((value) {
-                  //       Get.defaultDialog(
-                  //         title: '版本 ${value}',
-                  //         middleText: '是否下载新版本？',
-                  //         textConfirm: '下载',
-                  //         textCancel: '取消',
-                  //         confirmTextColor: Colors.white,
-                  //         buttonColor: Colors.greenAccent,
-                  //         cancelTextColor: Colors.white,
-                  //         onConfirm: () {
-                  //           // c.downloadMacApp();
-                  //         },
-                  //       );
-                  //     });
-                  //   }, 
-                  //   child: 
-                  //   Text('检测到新版本', style: TextStyle(fontSize: 16, decorationColor: Colors.white))
-                  // ),
                   Divider(),
                   Obx(() {
                     return SwitchListTile(
@@ -942,26 +1040,79 @@ class DesktopHome extends StatelessWidget {
                       children: [
                         Ink(
                           decoration: const ShapeDecoration(
-                            color: CustomColors.inputTextFieldBorder,
+                            color: CustomColors.gradientEnd,
                             shape: CircleBorder(),
                           ),
-                          child: Tooltip(
-                            message: '暂未开放',
-                            child: IconButton(
-                              color: Colors.grey,
-                              hoverColor: Colors.black54,
-                              iconSize: 30,
-                              onPressed: () {
-                          
-                              }, 
-                              icon: const Icon(Icons.mic_rounded)
-                            ),
-                          ),
+                          child: Obx(() {
+                            void playVoice(String filePath) async {
+                              if (messageController.ttsPlayer.playerState.playing){
+                                await messageController.ttsPlayer.pause();
+                              }
+                              messageController.whichIsPlaying.value = '';                            
+                              print("playVoice(): $filePath");
+                              messageController.ttsPlayer.setFilePath(filePath).then((duration) {
+                                print(duration);
+                                messageController.ttsPlayer.play();
+                              });
+                            }
+
+                            return Tooltip(
+                              message: '录制语音',
+                              child: IconButton(
+                                color: Colors.grey,
+                                hoverColor: Colors.red[100],
+                                iconSize: 30,
+                                onPressed: () async {
+                                  if (messageController.ttsPlayer.playerState.playing){
+                                    return;
+                                  }
+                                  _hasMicPermission.value = await recorder.hasMicPermission();
+                                  if(_hasMicPermission.value){
+                                    Directory temporaryDirectory = await getTemporaryDirectory();
+                                    String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
+                                    if(_isRecording.value){
+                                      if(await recorder.isRecording()){
+                                        timer?.cancel();
+                                        recorder.stop();
+                                      }
+                                      _isRecording.value = false;
+                                      _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
+                                    }else{
+                                      _m4aFileName.value = DateTime.now().millisecondsSinceEpoch.toString();
+                                      recorder.start(path: temporaryDirectory.path, fileName: _m4aFileName.value)
+                                        .then((_) {
+                                          _isRecording.value = true;
+                                          timer = Timer.periodic(Duration(seconds: 1), (_) {
+                                            if (recordProgress.value < 60) {
+                                              recordProgress.value++;
+                                            } else {
+                                              timer?.cancel();
+                                              recorder.stop();
+                                              _isRecording.value = false;
+                                              _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
+                                            }
+                                          });
+                                        });
+                                    }
+                                  }else{
+                                    recorder.requestMicPermission();
+                                  }
+                                }, 
+                                icon: Icon(Icons.mic_rounded, color: _isRecording.value? Colors.red : Colors.grey,)
+                              ),
+                            );
+                          },) 
                         ),
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.only(left: 10),
-                            child: _myTextFild(context),
+                            child: Obx(() {
+                              if(_m4aFileName.value != ""){
+                                return _myWaveformsBar(context);
+                              }else{
+                                return _myTextField(context);
+                              }
+                            },)
                           )
                         ),
                         Container(
@@ -1127,3 +1278,10 @@ class MatchWords extends StatelessWidget {
   }
 }
 
+class Utilities {
+  static Future<String> getVoiceFilePath() async {
+    // Directory appDocumentsDirectory = await getApplicationDocumentsDirectory();
+    Directory temporaryDirectory = await getTemporaryDirectory();
+    return temporaryDirectory.path;
+  }
+}

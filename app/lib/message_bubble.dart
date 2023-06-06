@@ -96,13 +96,13 @@ class MessageBubble extends StatelessWidget {
                               Visibility(
                                 visible: isMe == false,
                                 child: Tooltip(
-                                  message: "Play audio",
+                                  message: "播放音频",
                                   child: Container(
                                     width: 30,
                                     height: 30,
                                     margin: const EdgeInsets.all(1),
                                     child: IconButton(
-                                      onPressed: () {
+                                      onPressed: () async {
                                         String keyString = key.hashCode.toString();
                                         // 判断已经是当前音频的播放状态，则点击暂停
                                         if (messageController.whichIsPlaying.value == keyString) {
@@ -119,16 +119,11 @@ class MessageBubble extends StatelessWidget {
                                         }else{
                                           // 如果是在播放其他音频，则先停止播放，重新设置正在播放的音频
                                           if (messageController.ttsPlayer.playerState.playing){
-                                            messageController.ttsPlayer.pause().then((value) {
-                                              messageController.whichIsPlaying.value = keyString;
-                                              messageController.buttonNotifier.value = ButtonState.loading;
-                                              messageController.addToTTSJobs(keyString, dataList.join('').split('[W0RDP1PE]')[0]);
-                                            });
-                                          }else{
-                                            messageController.whichIsPlaying.value = keyString;
-                                            messageController.buttonNotifier.value = ButtonState.loading;
-                                            messageController.addToTTSJobs(keyString, dataList.join('').split('[W0RDP1PE]')[0]);
+                                            await messageController.ttsPlayer.pause();
                                           }
+                                          messageController.whichIsPlaying.value = keyString;
+                                          messageController.buttonNotifier.value = ButtonState.loading;
+                                          messageController.addToTTSJobs(keyString, dataList.join('').split('[W0RDP1PE]')[0]);
                                         }
                                       },
                                       icon: Obx(() {
@@ -152,7 +147,7 @@ class MessageBubble extends StatelessWidget {
                                 ),
                               ),
                               Tooltip(
-                                message: "Copy to clipboard",
+                                message: "复制到剪贴板",
                                 child: Container(
                                   width: 30,
                                   height: 30,
@@ -169,7 +164,7 @@ class MessageBubble extends StatelessWidget {
                                         }
                                         Clipboard.setData(ClipboardData(text: total_text));
                                         if (total_text.length > 0)
-                                          customSnackBar(title: "Success", content: "Copied to clipboard");
+                                          customSnackBar(title: "操作成功", content: "已复制到剪贴板");
                                       }                              
                                     },
                                     icon: Icon(Icons.copy, size: 15, color: Colors.black26)

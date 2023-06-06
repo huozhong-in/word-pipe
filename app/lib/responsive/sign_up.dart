@@ -17,12 +17,10 @@ class SignUp extends StatelessWidget {
   final FocusNode _usernameFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
   final FocusNode _passwordFocusNode2 = FocusNode();
-  final FocusNode _promoFocusNode = FocusNode();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameField = TextEditingController();
   final TextEditingController _passwordField = TextEditingController();
   final TextEditingController _passwordField2 = TextEditingController();
-  final TextEditingController _promoField = TextEditingController();
   RxBool _obscureText = true.obs;
   RxBool _obscureText2 = true.obs;
 
@@ -182,16 +180,6 @@ class SignUp extends StatelessWidget {
                                   width: 1,
                                 ),
                               ),
-                              // suffixIcon: 
-                              //   IconButton(
-                              //     onPressed: (){
-                              //       _obscureText.value = !_obscureText.value;
-                              //     },
-                              //     icon: Icon(
-                              //       _obscureText.value ? Icons.visibility : Icons.visibility_off,
-                              //       color: Colors.grey,
-                              //     ),
-                              //   )
                             ),
                             validator: (value) => Validator.validatePassword(
                               password: value!,
@@ -252,48 +240,10 @@ class SignUp extends StatelessWidget {
                             width: 1,
                           ),
                         ),
-                        // suffixIcon:
-                        //   IconButton(
-                        //     onPressed: (){
-                        //       _obscureText2.value = !_obscureText2.value;
-                        //     },
-                        //     icon: Icon(
-                        //       _obscureText2.value ? Icons.visibility : Icons.visibility_off,
-                        //       color: Colors.grey,
-                        //     ),
-                        //   ),
                       ),
                       validator: (value) => _passwordField.text == _passwordField2.text ? null : "两次输入的密码不一致",
                     );
                     })
-                  ),
-                  SizedBox(height: MediaQuery.of(context).size.height / 35,),
-                  Container(
-                    width: MediaQuery.of(context).size.width / 1.3,
-                    height: 70,
-                    child: 
-                      TextFormField(
-                        style: const TextStyle(color: Colors.black87),
-                        textAlignVertical: TextAlignVertical.bottom,
-                        controller: _promoField,
-                        focusNode: _promoFocusNode,
-                        keyboardType: TextInputType.text,
-                        textInputAction: TextInputAction.done,
-                        decoration: InputDecoration(
-                          labelText: "邀请码",
-                          labelStyle: TextStyle(
-                            color: Colors.redAccent,
-                          ),
-                          prefixIcon: Icon(Icons.person_add_alt_1, color: Colors.redAccent,),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10),),
-                            borderSide: BorderSide(
-                              color: Colors.grey,
-                              width: 1,
-                            ),
-                          ),
-                      )
-                    )
                   ),
                   Container(
                     width: MediaQuery.of(context).size.width / 1.3,
@@ -334,10 +284,11 @@ class SignUp extends StatelessWidget {
                             _passwordFocusNode.unfocus();
                             _passwordFocusNode2.unfocus();
                             if (_formKey.currentState!.validate()) {
-                              if (await c.signup_with_promo(_usernameField.text, _passwordField.text, _promoField.text)){
+                              Map<String, dynamic> result = await c.signup(_usernameField.text, _passwordField.text);
+                              if (result["errcode"] as int == 0){
                                 Get.offAll(() => ResponsiveLayout());
                               }else{
-                                customSnackBar(title: "Error", content: "邀请码不正确，或用户名已经存在.");
+                                customSnackBar(title: "Error", content: result["errmsg"] as String);
                               }
                             }else{
                               customSnackBar(title: "Error", content: "请检查用户名或密码的长度.");

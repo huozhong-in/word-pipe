@@ -561,35 +561,10 @@ def contact_us():
     img_byte_arr.seek(0)
     return send_file(img_byte_arr, mimetype='image/jpeg')
 
-# @app.route('/api/user/signup', methods = ['POST'])
-# def signup():
-#     '''
-#     用户注册
-#     '''
-#     if request.method != 'POST':
-#         return make_response(jsonify({"errcode":50001,"errmsg":"Please use POST method"}), 500)
-#     try:
-#         data: dict = request.get_json()
-#         username: str = data.get('username')
-#         password: str = data.get('password')
-#     except:
-#         return make_response(jsonify({"errcode":50002,"errmsg":"JSON data required"}), 500)
-#     if username == None or password == None:
-#         return make_response('Please provide username and password', 500)
-# userDB = UserDB(db_session)
-#     user: User = userDB.get_user_by_username(username)
-#     if user != None:
-#         return make_response(jsonify({"errcode":50005,"errmsg":"User already exists"}), 500)
-#     r: dict = userDB.create_user_by_username(user_name=username, password=password)
-#     if r == {}:
-#         return make_response(jsonify({"errcode": 50006,"errmsg": 'User create failed'}), 500)
-#     r.update(get_openai_apikey())
-#     return make_response(jsonify(r), 200)
-
-@app.route('/api/user/signup_with_promo', methods = ['POST'])
-def signup_with_promo():
+@app.route('/api/user/signup', methods = ['POST'])
+def signup():
     '''
-    用户用邀请码注册
+    用户注册
     '''
     if request.method != 'POST':
         return make_response(jsonify({"errcode":50001,"errmsg":"Please use POST method"}), 500)
@@ -597,30 +572,56 @@ def signup_with_promo():
         data: dict = request.get_json()
         username: str = data.get('username')
         password: str = data.get('password')
-        promo: str = data.get('promo')
-    except Exception as e:
-        logging.info(e)
+    except:
         return make_response(jsonify({"errcode":50002,"errmsg":"JSON data required"}), 500)
-    if username == None or password == None or promo == None:
-        return make_response('Please provide username, password and promo code.', 500)
-    if promo == '':
-        return make_response('Please provide promo code.', 500)
-    
+    if username == None or password == None:
+        return make_response('Please provide username and password', 500)
     userDB = UserDB(db_session)
     user: User = userDB.get_user_by_username(username)
     if user != None:
         return make_response(jsonify({"errcode":50005,"errmsg":"用户已经存在"}), 500)
-    
-    try:
-        r: dict = userDB.create_user_by_username(user_name=username, password=password, promo=promo)
-    except Exception as e:
-        logging.info(e)
-    finally:
-        db_session.close()
+    r: dict = userDB.create_user_by_username(user_name=username, password=password)
     if r == {}:
-        return make_response(jsonify({"errcode": 50006,"errmsg": '用户注册失败，请稍后重试'}), 500)
+        return make_response(jsonify({"errcode": 50006,"errmsg": '用户新建失败'}), 500)
     r.update(get_openai_apikey())
+    r.update({'errcode': 0})
     return make_response(jsonify(r), 200)
+
+# @app.route('/api/user/signup_with_promo', methods = ['POST'])
+# def signup_with_promo():
+#     '''
+#     用户用邀请码注册
+#     '''
+#     if request.method != 'POST':
+#         return make_response(jsonify({"errcode":50001,"errmsg":"Please use POST method"}), 500)
+#     try:
+#         data: dict = request.get_json()
+#         username: str = data.get('username')
+#         password: str = data.get('password')
+#         promo: str = data.get('promo')
+#     except Exception as e:
+#         logging.info(e)
+#         return make_response(jsonify({"errcode":50002,"errmsg":"JSON data required"}), 500)
+#     if username == None or password == None or promo == None:
+#         return make_response('Please provide username, password and promo code.', 500)
+#     if promo == '':
+#         return make_response('Please provide promo code.', 500)
+    
+#     userDB = UserDB(db_session)
+#     user: User = userDB.get_user_by_username(username)
+#     if user != None:
+#         return make_response(jsonify({"errcode":50005,"errmsg":"用户已经存在"}), 500)
+    
+#     try:
+#         r: dict = userDB.create_user_by_username(user_name=username, password=password, promo=promo)
+#     except Exception as e:
+#         logging.info(e)
+#     finally:
+#         db_session.close()
+#     if r == {}:
+#         return make_response(jsonify({"errcode": 50006,"errmsg": '用户注册失败，请稍后重试'}), 500)
+#     r.update(get_openai_apikey())
+#     return make_response(jsonify(r), 200)
 
 @app.route('/api/user/signin', methods = ['POST'])
 def signin():
@@ -976,7 +977,7 @@ def name_a_conversation():
                 'content': 'Q: ' + q + '\nA: ' + a + '\n请给以上对话起一个名字，25汉字或50英文字符以内，以便作为聊天窗口的标题'
             }
         ],
-        temperature=0.8,
+        temperature=0.3,
         max_tokens=64,
     )
     # print(response)

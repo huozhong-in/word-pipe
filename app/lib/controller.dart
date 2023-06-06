@@ -4,17 +4,14 @@ import 'package:wordpipe/cache_helper.dart';
 import 'dart:async';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:sqflite/sqflite.dart';
+// import 'package:path_provider/path_provider.dart';
 import 'dart:developer';
 
 class Controller extends GetxController{
   final WordsProvider _wordsProvider = WordsProvider();
   final UserProvider _userProvider = UserProvider();
   
-  // Future<bool> a() async {
-  //   final SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   return prefs.containsKey('sessionData');
-  // }
-
   Future<Map<String, dynamic>> getSessionData() async{
     return await _userProvider.getLocalStorge();
   }
@@ -69,19 +66,8 @@ class Controller extends GetxController{
   Future<Map<String, dynamic>> signin(String username, String password) async{
     return await _userProvider.signin(username, password);
   }
-  // Future<bool> signup(String username, String password) async{
-  //   if (await _userProvider.signup(username, password)){
-  //     return true;
-  //   }else{
-  //     return false;
-  //   }
-  // }
-  Future<bool> signup_with_promo(String username, String password, String promo) async{
-    if (await _userProvider.signup_with_promo(username, password, promo)){
-      return true;
-    }else{
-      return false;
-    }
+  Future<Map<String, dynamic>> signup(String username, String password) async{
+    return await _userProvider.signup(username, password);
   }
   Future<bool> signout() async{
     if(await CacheHelper.hasData('sessionData')){
@@ -91,18 +77,27 @@ class Controller extends GetxController{
   }
   
   Future<String> getMacAppVersion() async {
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    if (GetPlatform.isMacOS == false)
+      return "0.0.0";
+    
+    final PackageInfo packageInfo = await PackageInfo.fromPlatform();
     // String appName = packageInfo.appName;
     // String packageName = packageInfo.packageName;
     String version = packageInfo.version;
     // String buildNumber = packageInfo.buildNumber;
-    
+
     return version; 
   }
 }
 
 
 class WordsProvider extends GetConnect {
+  // @override
+  // void onInit() async {
+  //   String dbPath = await getDatabasesPath();
+  //   var db = await openDatabase( dbPath+ 'my_db.db');
+  // }
+
   Future<List<dynamic>> searchWords(String word) async{
     // 检查缓存中是否有数据
     if (await CacheHelper.hasData(word)) {
@@ -207,33 +202,18 @@ class UserProvider extends GetConnect {
     }
     return rsp;
   }
-  // Future<bool> signup(String username, String password) async{
-  //   Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signup');
-  //   Map data = {};
-  //   data['username'] = username;
-  //   data['password'] = password;
-  //   final response = await post(url.toString(), data);
-  //   if (response.statusCode == 200) {
-  //     Map<String, dynamic> rsp = Map<String, dynamic>.from(response.body);
-  //     await setLocalStorge(username, rsp);
-  //     return true;
-  //   } else {
-  //     return false;
-  //   }
-  // }
-  Future<bool> signup_with_promo(String username, String password, String promo) async{
-    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signup_with_promo');
+  Future<Map<String, dynamic>> signup(String username, String password) async{
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signup');
     Map data = {};
     data['username'] = username;
     data['password'] = password;
-    data['promo'] = promo;
     final response = await post(url.toString(), data);
     if (response.statusCode == 200) {
       Map<String, dynamic> rsp = Map<String, dynamic>.from(response.body);
       await setLocalStorge(username, rsp);
-      return true;
+      return rsp;
     } else {
-      return false;
+      return {"errcode": 2, "errmsg": response.body};
     }
   }
   Future<void> setLocalStorge(String username, Map<String, dynamic> rsp) async {
