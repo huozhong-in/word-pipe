@@ -1,10 +1,12 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageController.dart';
+import 'dart:math' as math;
 import 'package:just_waveform/just_waveform.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 Widget customRadioListTile(Map<String, dynamic> item) {
   final MessageController messageController = Get.find<MessageController>();
@@ -185,6 +187,13 @@ SnackbarController customSnackBar({required String title, required String conten
 //   static String getValue(int number) => ActivityType.values.firstWhere((activity) => activity.number == number).value;
 // }
 
+class Utilities {
+  static Future<String> getVoiceFilePath() async {
+    // Directory appDocumentsDirectory = await getApplicationDocumentsDirectory();
+    Directory temporaryDirectory = await getTemporaryDirectory();
+    return temporaryDirectory.path;
+  }
+}
 
 class AudioWaveformWidget extends StatefulWidget {
   final Color waveColor;
@@ -213,17 +222,16 @@ class AudioWaveformWidget extends StatefulWidget {
 class _AudioWaveformState extends State<AudioWaveformWidget> {
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: CustomPaint(
-        painter: AudioWaveformPainter(
-          waveColor: widget.waveColor,
-          waveform: widget.waveform,
-          start: widget.start,
-          duration: widget.duration,
-          scale: widget.scale,
-          strokeWidth: widget.strokeWidth,
-          pixelsPerStep: widget.pixelsPerStep,
-        ),
+    return CustomPaint(
+      size: Size(double.infinity, 100.0),
+      painter: AudioWaveformPainter(
+        waveColor: widget.waveColor,
+        waveform: widget.waveform,
+        start: widget.start,
+        duration: widget.duration,
+        scale: widget.scale,
+        strokeWidth: widget.strokeWidth,
+        pixelsPerStep: widget.pixelsPerStep,
       ),
     );
   }
@@ -272,8 +280,8 @@ class AudioWaveformPainter extends CustomPainter {
       final minY = normalise(waveform.getPixelMin(sampleIdx), height);
       final maxY = normalise(waveform.getPixelMax(sampleIdx), height);
       canvas.drawLine(
-        Offset(x + strokeWidth / 2, max(strokeWidth * 0.75, minY)),
-        Offset(x + strokeWidth / 2, min(height - strokeWidth * 0.75, maxY)),
+        Offset(x + strokeWidth / 2, math.max(strokeWidth * 0.75, minY)),
+        Offset(x + strokeWidth / 2, math.min(height - strokeWidth * 0.75, maxY)),
         wavePaint,
       );
     }

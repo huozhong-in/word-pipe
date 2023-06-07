@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:just_waveform/just_waveform.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -20,7 +21,7 @@ import 'package:wordpipe/custom_widgets.dart';
 import 'package:updat/updat.dart';
 import 'package:updat/theme/chips/default.dart';
 import 'package:flutter_desktop_audio_recorder/flutter_desktop_audio_recorder.dart';
-import 'package:just_waveform/just_waveform.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'dart:developer';
 
 // ignore: must_be_immutable
@@ -47,7 +48,8 @@ class DesktopHome extends StatelessWidget {
   RxDouble recordProgress = 0.0.obs;
   RxDouble playProgress = 0.0.obs;
   Timer? timer;
-  Rx<Stream<WaveformProgress>?> progressStream = Rx(const Stream.empty());
+  Rx<Stream<WaveformProgress>> progressStream = Rx(Stream.empty());
+
 
   Future<String> _getUserName() async {
     _username = await c.getUserName();
@@ -416,47 +418,51 @@ class DesktopHome extends StatelessWidget {
   }
 
   Future<void> _showWaveforms(String fileName) async {
-    final audioFile = File(p.join((await getTemporaryDirectory()).path, '$fileName.bak.m4a'));
     try {
-      await audioFile.writeAsBytes(
-        (await rootBundle.load('audio/$fileName.m4a')).buffer.asUint8List()
-        );
+      final Uint8List audioData = File(p.join((await getTemporaryDirectory()).path, '$fileName.m4a')).readAsBytesSync();
+      final File audioFile = File(p.join((await getTemporaryDirectory()).path, '$fileName.bak.m4a'));
+      audioFile.writeAsBytesSync(audioData);
       final waveFile = File(p.join((await getTemporaryDirectory()).path, '$fileName.wave'));
-      progressStream.value = JustWaveform.extract(audioInFile: audioFile, waveOutFile: waveFile).asBroadcastStream();
+      progressStream.value = JustWaveform.extract(
+        audioInFile: audioFile, 
+        waveOutFile: waveFile,
+        // zoom: const WaveformZoom.pixelsPerSecond(100)
+      ).asBroadcastStream();
+      progressStream.value.listen((waveformProgress) {
+        // print('Progress: %${(100 * waveformProgress.progress).toInt()}');
+        if (waveformProgress.waveform != null) {
+          print(waveformProgress.waveform!.sampleRate);
+        }
+      });
     } catch (e) {
       print(e);
     }
   }
+  
 
   Widget _myWaveformsBar(BuildContext context){
-    return SizedBox(
+    return Container(
       height: 100,
-      // width: 60,
+      width: double.maxFinite,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: const BorderRadius.all(Radius.circular(20.0)),
+      ),
+      // constraints: BoxConstraints(
+      //   // maxWidth: 200,
+      //   // minWidth: 200,
+      //   maxHeight: 100,
+      //   minHeight: 100,
+      // ),
+      padding: const EdgeInsets.all(16.0),
       child: Row(
+        // mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // IconButton(
-          //   color: Colors.red[100],
-          //   hoverColor: Colors.red[200],
-          //   iconSize: 40,
-          //   onPressed: () async {
-          //     if (messageController.ttsPlayer.playerState.playing){
-          //       await messageController.ttsPlayer.pause();
-          //     }
-          //     messageController.whichIsPlaying.value = '';
-          //     Directory temporaryDirectory = await getTemporaryDirectory();
-          //     String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
-          //     print(filePath);
-          //     messageController.ttsPlayer.setFilePath(filePath).then((duration) {
-          //       print(duration);
-          //       messageController.ttsPlayer.play();
-          //     });
-              
-          //   }, 
-          //   icon: Icon(Icons.play_arrow, color: Colors.green[100],)
-          // ),
-          Obx(() {
-            return Expanded(
-              child: StreamBuilder<WaveformProgress?>(
+          Expanded(
+            child: Obx(() {
+              return StreamBuilder<WaveformProgress>(
                 stream: progressStream.value,
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
@@ -472,40 +478,26 @@ class DesktopHome extends StatelessWidget {
                   final waveform = snapshot.data?.waveform;
                   if (waveform == null) {
                     return Center(
-                      child: Text(
-                        '${(100 * progress).toInt()}%',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
+                      child: SpinKitWave(color: Colors.blue, type: SpinKitWaveType.center, itemCount: 8, size: 50,),
+                      // child: Text(
+                      //   '${(100 * progress).toInt()}%',
+                      //   style: Theme.of(context).textTheme.titleLarge,
+                      // ),
                     );
                   }
+                  if(progress==1){
+                    print('waveform.duration: ${waveform.duration}');
+                  }
                   return AudioWaveformWidget(
+                    scale: 1.0,
                     waveform: waveform,
                     start: Duration.zero,
                     duration: waveform.duration,
                   );
                 },
-              )
-              // Stack(
-              //   children: [
-              //     Container(
-              //       decoration: BoxDecoration(
-              //         borderRadius: BorderRadius.circular(5),
-              //         color: Colors.grey[300],
-              //       )
-              //     ),
-              //     Obx(() => Positioned(
-              //       left: 80,
-              //       top: 0,
-              //       height: 20,
-              //       width: 10 * recordProgress.value,
-              //       child: Container(
-              //         color: Colors.green,
-              //       ),
-              //     )),
-              //   ],
-              // ),
-            );
-          },),
+              );
+            },),
+          ),
           IconButton(
             color: Colors.red[100],
             hoverColor: Colors.red[200],
@@ -513,13 +505,12 @@ class DesktopHome extends StatelessWidget {
             onPressed: () async {
               Directory temporaryDirectory = await getTemporaryDirectory();
               String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
-              // delete file `filePath`
               File file = File(filePath);
               file.delete();
               _m4aFileName.value = '';
                
             }, 
-            icon: Icon(Icons.cancel, color: Colors.red[100]) // for X symbol
+            icon: Icon(Icons.cancel, color: Colors.red[100])
           ),
         ],
       ),
@@ -1055,52 +1046,67 @@ class DesktopHome extends StatelessWidget {
                                 messageController.ttsPlayer.play();
                               });
                             }
-
-                            return Tooltip(
-                              message: '录制语音',
-                              child: IconButton(
-                                color: Colors.grey,
-                                hoverColor: Colors.red[100],
-                                iconSize: 30,
-                                onPressed: () async {
-                                  if (messageController.ttsPlayer.playerState.playing){
-                                    return;
-                                  }
-                                  _hasMicPermission.value = await recorder.hasMicPermission();
-                                  if(_hasMicPermission.value){
-                                    Directory temporaryDirectory = await getTemporaryDirectory();
-                                    String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
-                                    if(_isRecording.value){
-                                      if(await recorder.isRecording()){
-                                        timer?.cancel();
-                                        recorder.stop();
+                            return Stack(
+                              children: <Widget>[
+                                Positioned.fill(
+                                  child: CircularProgressIndicator(
+                                    value: _isRecording.value? 1 - recordProgress.value / 60 : 0,
+                                    valueColor: AlwaysStoppedAnimation(Colors.redAccent),
+                                    strokeWidth: 5,
+                                  ),
+                                ),
+                                Center(
+                                  child: IconButton(
+                                    color: Colors.grey,
+                                    hoverColor: Colors.red[100],
+                                    iconSize: 30,
+                                    onPressed: () async {
+                                      if (messageController.ttsPlayer.playerState.playing){
+                                        return;
                                       }
-                                      _isRecording.value = false;
-                                      _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
-                                    }else{
-                                      _m4aFileName.value = DateTime.now().millisecondsSinceEpoch.toString();
-                                      recorder.start(path: temporaryDirectory.path, fileName: _m4aFileName.value)
-                                        .then((_) {
-                                          _isRecording.value = true;
-                                          timer = Timer.periodic(Duration(seconds: 1), (_) {
-                                            if (recordProgress.value < 60) {
-                                              recordProgress.value++;
-                                            } else {
-                                              timer?.cancel();
-                                              recorder.stop();
-                                              _isRecording.value = false;
-                                              _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
-                                            }
-                                          });
-                                        });
-                                    }
-                                  }else{
-                                    recorder.requestMicPermission();
-                                  }
-                                }, 
-                                icon: Icon(Icons.mic_rounded, color: _isRecording.value? Colors.red : Colors.grey,)
-                              ),
+                                      _hasMicPermission.value = await recorder.hasMicPermission();
+                                      if(_hasMicPermission.value){
+                                        Directory temporaryDirectory = await getTemporaryDirectory();
+                                        
+                                        if(_isRecording.value){
+                                          if(await recorder.isRecording()){
+                                            timer?.cancel();
+                                            recorder.stop();
+                                            recordProgress.value = 0;
+                                          }
+                                          _isRecording.value = false;
+                                          final String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
+                                          _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
+                                        }else{
+                                          _m4aFileName.value = DateTime.now().millisecondsSinceEpoch.toString();
+                                          recorder.start(path: temporaryDirectory.path, fileName: _m4aFileName.value)
+                                            .then((_) {
+                                              _isRecording.value = true;
+                                              timer = Timer.periodic(Duration(seconds: 1), (_) {
+                                                if (recordProgress.value < 59) {
+                                                  recordProgress.value++;
+                                                } else {
+                                                  timer?.cancel();
+                                                  recorder.stop();
+                                                  _isRecording.value = false;
+                                                  recordProgress.value = 0;
+                                                  final String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
+                                                  _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
+                                                }
+                                              });
+                                            });
+                                        }
+                                      }else{
+                                        recorder.requestMicPermission();
+                                      }
+                                    }, 
+                                    icon: Icon(Icons.mic_rounded, color: _isRecording.value? Colors.redAccent : Colors.grey,)
+                                  ),
+                                )   
+                              ],
                             );
+
+                            
                           },) 
                         ),
                         Expanded(
@@ -1278,10 +1284,3 @@ class MatchWords extends StatelessWidget {
   }
 }
 
-class Utilities {
-  static Future<String> getVoiceFilePath() async {
-    // Directory appDocumentsDirectory = await getApplicationDocumentsDirectory();
-    Directory temporaryDirectory = await getTemporaryDirectory();
-    return temporaryDirectory.path;
-  }
-}

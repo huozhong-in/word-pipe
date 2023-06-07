@@ -52,6 +52,7 @@ dependencies:
   record: ^4.4.4
   flutter_desktop_audio_recorder: ^0.0.1
   just_waveform: ^0.0.5
+  flutter_spinkit: ^5.2.0
 
 dev_dependencies:
   flutter_test:
