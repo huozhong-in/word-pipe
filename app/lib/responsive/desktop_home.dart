@@ -375,16 +375,8 @@ class DesktopHome extends StatelessWidget {
           maxLines: 3,
           minLines: 3,
           decoration: InputDecoration(
-            hintText: '输入单词或句子' ,
+            hintText: '跟Jamine说点什么吧' ,
             hintStyle: TextStyle(color: Colors.grey),
-            // prefixIcon: IconButton(
-            //     color: Colors.grey,
-            //     hoverColor: Colors.black54,
-            //     onPressed: () {
-            //       // messageController.getChatCompletion('gpt-3.5-turbo', 'What is hallucinate?');
-            //     }, 
-            //     icon: const Icon(Icons.mic_rounded)
-            //   ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(10),),
               borderSide: BorderSide(
@@ -428,12 +420,12 @@ class DesktopHome extends StatelessWidget {
         waveOutFile: waveFile,
         // zoom: const WaveformZoom.pixelsPerSecond(100)
       ).asBroadcastStream();
-      progressStream.value.listen((waveformProgress) {
-        // print('Progress: %${(100 * waveformProgress.progress).toInt()}');
-        if (waveformProgress.waveform != null) {
-          print(waveformProgress.waveform!.sampleRate);
-        }
-      });
+      // progressStream.value.listen((waveformProgress) {
+      //   // print('Progress: %${(100 * waveformProgress.progress).toInt()}');
+      //   if (waveformProgress.waveform != null) {
+      //     print(waveformProgress.waveform!.sampleRate);
+      //   }
+      // });
     } catch (e) {
       print(e);
     }
@@ -444,19 +436,12 @@ class DesktopHome extends StatelessWidget {
     return Container(
       height: 100,
       width: double.maxFinite,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: const BorderRadius.all(Radius.circular(20.0)),
-      ),
-      // constraints: BoxConstraints(
-      //   // maxWidth: 200,
-      //   // minWidth: 200,
-      //   maxHeight: 100,
-      //   minHeight: 100,
+      // decoration: BoxDecoration(
+      //   color: Colors.grey.shade200,
+      //   borderRadius: const BorderRadius.all(Radius.circular(20.0)),
       // ),
       padding: const EdgeInsets.all(16.0),
       child: Row(
-        // mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -474,7 +459,10 @@ class DesktopHome extends StatelessWidget {
                       ),
                     );
                   }
-                  final progress = snapshot.data?.progress ?? 0.0;
+                  // final progress = snapshot.data?.progress ?? 0.0;
+                  // if(progress==1){
+                  //   print('waveform.duration: ${waveform.duration}');
+                  // }
                   final waveform = snapshot.data?.waveform;
                   if (waveform == null) {
                     return Center(
@@ -484,9 +472,6 @@ class DesktopHome extends StatelessWidget {
                       //   style: Theme.of(context).textTheme.titleLarge,
                       // ),
                     );
-                  }
-                  if(progress==1){
-                    print('waveform.duration: ${waveform.duration}');
                   }
                   return AudioWaveformWidget(
                     scale: 1.0,
@@ -498,19 +483,26 @@ class DesktopHome extends StatelessWidget {
               );
             },),
           ),
-          IconButton(
-            color: Colors.red[100],
-            hoverColor: Colors.red[200],
-            iconSize: 40,
-            onPressed: () async {
-              Directory temporaryDirectory = await getTemporaryDirectory();
-              String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
-              File file = File(filePath);
-              file.delete();
-              _m4aFileName.value = '';
-               
-            }, 
-            icon: Icon(Icons.cancel, color: Colors.red[100])
+          Container(
+            alignment: AlignmentDirectional.topEnd,
+            child: IconButton(
+              tooltip: '删除录音',
+              color: Colors.red[100],
+              hoverColor: Colors.red[200],
+              iconSize: 20,
+              onPressed: () async {
+                if (messageController.ttsPlayer.playerState.playing){
+                  await messageController.ttsPlayer.pause();
+                }
+                Directory temporaryDirectory = await getTemporaryDirectory();
+                String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
+                File file = File(filePath);
+                file.delete();
+                _m4aFileName.value = '';
+                messageController.whichIsPlaying.value = '';
+              }, 
+              icon: Icon(Icons.cancel, color: Colors.red[100])
+            ),
           ),
         ],
       ),
@@ -1029,86 +1021,118 @@ class DesktopHome extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        Ink(
-                          decoration: const ShapeDecoration(
-                            color: CustomColors.gradientEnd,
-                            shape: CircleBorder(),
-                          ),
-                          child: Obx(() {
-                            void playVoice(String filePath) async {
-                              if (messageController.ttsPlayer.playerState.playing){
-                                await messageController.ttsPlayer.pause();
-                              }
-                              messageController.whichIsPlaying.value = '';                            
-                              print("playVoice(): $filePath");
-                              messageController.ttsPlayer.setFilePath(filePath).then((duration) {
-                                print(duration);
-                                messageController.ttsPlayer.play();
-                              });
+                        Obx(() {
+                          final String keyString = "[VOICEINPUT]";
+                          void playVoice(String filePath) async {
+                            if (messageController.ttsPlayer.playerState.playing){
+                              await messageController.ttsPlayer.pause();
                             }
-                            return Stack(
-                              children: <Widget>[
-                                Positioned.fill(
-                                  child: CircularProgressIndicator(
-                                    value: _isRecording.value? 1 - recordProgress.value / 60 : 0,
-                                    valueColor: AlwaysStoppedAnimation(Colors.redAccent),
-                                    strokeWidth: 5,
-                                  ),
-                                ),
-                                Center(
-                                  child: IconButton(
-                                    color: Colors.grey,
-                                    hoverColor: Colors.red[100],
-                                    iconSize: 30,
-                                    onPressed: () async {
-                                      if (messageController.ttsPlayer.playerState.playing){
-                                        return;
-                                      }
-                                      _hasMicPermission.value = await recorder.hasMicPermission();
-                                      if(_hasMicPermission.value){
-                                        Directory temporaryDirectory = await getTemporaryDirectory();
-                                        
-                                        if(_isRecording.value){
-                                          if(await recorder.isRecording()){
-                                            timer?.cancel();
-                                            recorder.stop();
-                                            recordProgress.value = 0;
-                                          }
-                                          _isRecording.value = false;
-                                          final String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
-                                          _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
-                                        }else{
-                                          _m4aFileName.value = DateTime.now().millisecondsSinceEpoch.toString();
-                                          recorder.start(path: temporaryDirectory.path, fileName: _m4aFileName.value)
-                                            .then((_) {
-                                              _isRecording.value = true;
-                                              timer = Timer.periodic(Duration(seconds: 1), (_) {
-                                                if (recordProgress.value < 59) {
-                                                  recordProgress.value++;
-                                                } else {
-                                                  timer?.cancel();
-                                                  recorder.stop();
-                                                  _isRecording.value = false;
-                                                  recordProgress.value = 0;
-                                                  final String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
-                                                  _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
-                                                }
-                                              });
-                                            });
-                                        }
-                                      }else{
-                                        recorder.requestMicPermission();
-                                      }
-                                    }, 
-                                    icon: Icon(Icons.mic_rounded, color: _isRecording.value? Colors.redAccent : Colors.grey,)
-                                  ),
-                                )   
-                              ],
+                            messageController.whichIsPlaying.value = keyString;                            
+                            print("playVoice(): $filePath");
+                            messageController.ttsPlayer.setFilePath(filePath).then((duration) {
+                              // print(duration);
+                              messageController.ttsPlayer.play();
+                              messageController.setPlayerListener(purge: false);
+                            });
+                          }
+                          
+                          // 播放语音和暂停播放按钮的显示和控制逻辑
+                          print("whichIsPlaying: " + messageController.whichIsPlaying.value);
+                          if (_m4aFileName.value!='' && _isRecording.value==false){
+                            return IconButton(
+                              iconSize: 35,
+                              onPressed: () async {
+                                // 判断已经是当前音频的播放状态，则点击暂停
+                                if (messageController.whichIsPlaying.value == keyString) {
+                                  if (messageController.buttonNotifier.value == ButtonState.playing) {
+                                    messageController.buttonNotifier.value = ButtonState.paused;
+                                    messageController.ttsPlayer.pause();
+                                  } else if (messageController.buttonNotifier.value == ButtonState.paused) {
+                                    messageController.buttonNotifier.value = ButtonState.playing;
+                                    messageController.ttsPlayer.play();
+                                  }
+                                }else{
+                                  // 如果是在播放其他音频，则先停止播放，重新设置正在播放的音频
+                                  Directory temporaryDirectory = await getTemporaryDirectory();
+                                  final String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
+                                  // _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
+                                  playVoice(filePath);
+                                }
+                              },
+                              icon:  Obx(() {
+                                switch (messageController.buttonNotifier.value) {
+                                  case ButtonState.paused:
+                                    return Icon(Icons.play_arrow, color: Colors.black26);
+                                  case ButtonState.playing:
+                                    return Icon(Icons.pause, color: Colors.black26);
+                                  default:
+                                    return Icon(Icons.play_arrow, color: Colors.black26);
+                                }
+                              }),
                             );
+                          }
 
-                            
-                          },) 
-                        ),
+                          // 录音按钮的显示和控制逻辑
+                          return Stack(
+                            children: <Widget>[
+                              Positioned.fill(
+                                child: CircularProgressIndicator(
+                                  value: _isRecording.value? 1 - recordProgress.value / 60 : 0,
+                                  valueColor: AlwaysStoppedAnimation(Colors.redAccent),
+                                  strokeWidth: 5,
+                                ),
+                              ),
+                              Center(
+                                child: IconButton(
+                                  hoverColor: Colors.redAccent[100],
+                                  tooltip: '录制语音',
+                                  iconSize: 35,
+                                  onPressed: () async {
+                                    _hasMicPermission.value = await recorder.hasMicPermission();
+                                    if(_hasMicPermission.value){
+                                      Directory temporaryDirectory = await getTemporaryDirectory();
+                                      
+                                      if(_isRecording.value){
+                                        if(await recorder.isRecording()){
+                                          timer?.cancel();
+                                          recorder.stop();
+                                          recordProgress.value = 0;
+                                        }
+                                        _isRecording.value = false;
+                                        final String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
+                                        _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
+                                      }else{
+                                        _m4aFileName.value = DateTime.now().millisecondsSinceEpoch.toString();
+                                        if (messageController.ttsPlayer.playerState.playing){
+                                          await messageController.ttsPlayer.pause();
+                                        }
+                                        recorder.start(path: temporaryDirectory.path, fileName: _m4aFileName.value)
+                                          .then((_) {
+                                            _isRecording.value = true;
+                                            timer = Timer.periodic(Duration(seconds: 1), (_) {
+                                              if (recordProgress.value < 60) {
+                                                recordProgress.value++;
+                                              } else {
+                                                timer?.cancel();
+                                                recorder.stop();
+                                                _isRecording.value = false;
+                                                recordProgress.value = 0;
+                                                final String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
+                                                _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
+                                              }
+                                            });
+                                          });
+                                      }
+                                    }else{
+                                      recorder.requestMicPermission();
+                                    }
+                                  }, 
+                                  icon: Icon(Icons.mic_rounded, color: _isRecording.value? Colors.redAccent : Colors.grey,)
+                                ),
+                              )   
+                            ],
+                          );
+                        },),
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.only(left: 10),
@@ -1122,9 +1146,9 @@ class DesktopHome extends StatelessWidget {
                           )
                         ),
                         Container(
-                          width: 45,
-                          height: 45,
-                          margin: EdgeInsets.only(left: 5),
+                          width: 50,
+                          height: 50,
+                          margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
                           // decoration: BoxDecoration(
                           //       borderRadius: BorderRadius.circular(25.0),
                           //       color: Colors.green[900],
@@ -1133,17 +1157,18 @@ class DesktopHome extends StatelessWidget {
                             message: GetPlatform.isMacOS ? '⌘+Enter 发送' : 'Ctrl+Enter 发送',
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
+                                elevation: 1,
                                 backgroundColor: Color.fromARGB(255, 59, 214, 157),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(25.0),
-                                  ),
-                                padding: const EdgeInsets.all(0),
+                                  borderRadius: BorderRadius.circular(18.0),
+                                ),
+                                padding: const EdgeInsets.only(left: 5),
                               ),
                               onPressed: () {
                                 _handleSubmitted(_textController.text);
                                 _commentFocus.requestFocus();
                               },
-                              child: const Icon(Icons.send_rounded, color: Colors.black54, size: 24),
+                              child: const Icon(Icons.send_rounded, color: Colors.black54, size: 30),
                             ),
                           )
                         ),

@@ -45,6 +45,7 @@ class MessageView extends StatelessWidget {
                   dataList: RxList(
                     [
                       'Hi, I am Jasmine. It\'s free-chat mode now. You can talk to me continuously!',
+                      '-----',
                       '你好，我是Jasmine。现在是自由聊天模式，可以连续对话哦！'
                     ]
                   ), 
@@ -62,6 +63,7 @@ class MessageView extends StatelessWidget {
                   dataList: RxList(
                     [
                       'Hi, I am Jasmine. I am here to help you. Try to input a word!',
+                      '-----',
                       '你好，我是Jasmine。希望我能在外语学习方面帮到你。试着输入一个单词吧！'
                     ]
                   ), 
@@ -81,6 +83,7 @@ class MessageView extends StatelessWidget {
                   dataList: RxList(
                     [
                       'Welcome back! It\'s free-chat time :)',
+                      '-----',
                       '欢迎回来！又到自由聊天模式啦 :)'
                     ]
                   ), 
@@ -97,6 +100,7 @@ class MessageView extends StatelessWidget {
                   dataList: RxList(
                     [
                       'Welcome back! Ask me some words or sentences :)',
+                      '-----',
                       '欢迎回来！问我一些单词或句子吧 :)'
                     ]
                   ), 

@@ -63,6 +63,7 @@ class MessageController extends GetxController{
     super.onInit();
 
     scrollController.addListener(_scrollListener);
+
     // 文字转语音播放器的控制，根据服务端返回数据播放
     ttsPlayer = AudioPlayer();
     ttsJobs.listen((Map<String, String> jobs) {
@@ -75,23 +76,29 @@ class MessageController extends GetxController{
           final mp3Url = jobs[whichIsPlaying.value] as String;
           ttsPlayer.setUrl(mp3Url).then((_) {
             ttsPlayer.play();
-            ttsPlayer.playerStateStream.listen((playerState) {
-              final isPlaying = playerState.playing;
-              final processingState = playerState.processingState;
-              if (processingState == ProcessingState.loading ||
-                  processingState == ProcessingState.buffering) {
-                buttonNotifier.value = ButtonState.loading;
-              } else if (!isPlaying) {
-                buttonNotifier.value = ButtonState.paused;
-              } else if (processingState != ProcessingState.completed) {
-                buttonNotifier.value = ButtonState.playing;
-              } else {
-                ttsPlayer.seek(Duration.zero);
-                ttsPlayer.pause();
-                whichIsPlaying.value = '';
-              }
-            });
+            setPlayerListener();
           });
+        }
+      }
+    });
+  }
+
+  void setPlayerListener({bool purge=true}){
+    ttsPlayer.playerStateStream.listen((playerState) {
+      final isPlaying = playerState.playing;
+      final processingState = playerState.processingState;
+      if (processingState == ProcessingState.loading || processingState == ProcessingState.buffering) {
+        buttonNotifier.value = ButtonState.loading;
+      } else if (!isPlaying) {
+        buttonNotifier.value = ButtonState.paused;
+      } else if (processingState != ProcessingState.completed) {
+        buttonNotifier.value = ButtonState.playing;
+      } else {
+        ttsPlayer.seek(Duration.zero);
+        ttsPlayer.pause();
+        if(purge){
+          print("set whichIsPlaying.value = ''");
+          whichIsPlaying.value = '';
         }
       }
     });
