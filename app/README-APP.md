@@ -2,7 +2,11 @@
 
 ## 新增包的方法可以选择不直接修改pubspec.yaml，使用以下命令
 
-`flutter pub run flutter_launcher_icons`
+`flutter pub add xxxx`
+
+## 更新完毕图标后执行以下命令
+
+`dart run flutter_launcher_icons`
 
 ## 本机开web-server，供内网的手机或模拟器测试mobile web
 

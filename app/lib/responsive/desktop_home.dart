@@ -75,7 +75,7 @@ class DesktopHome extends StatelessWidget {
         messageController.freeChat('gpt-3.5-turbo', messageController.conversation_id.value, text);
       }
     }else{
-      customSnackBar(title: "Error", content: ret['errmsg'] as String);
+      customSnackBar(title: "发生错误", content: ret['errmsg'] as String);
     }   
   }
   
@@ -550,9 +550,9 @@ class DesktopHome extends StatelessWidget {
                           text: 'WordPipe',
                           style: Theme.of(context).textTheme.displaySmall?.copyWith(
                             color: Colors.black54,
-                            fontSize: 18,
-                            fontFamily: 'Comfortaa',
-                            fontWeight: FontWeight.w600),
+                            fontSize: 24,
+                            fontFamily: 'SofadiOne'
+                            ),
                           children: <TextSpan>[
                             TextSpan(
                               text: '  alpha',
@@ -768,7 +768,7 @@ class DesktopHome extends StatelessWidget {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
-                                        Text('Jasmine', style: TextStyle(fontFamily: 'Comfortaa', fontSize: 18, fontWeight: FontWeight.w600, color: Colors.green[900])),
+                                        Text('Jasmine', style: TextStyle(fontFamily: 'Roboto', fontSize: 18, fontWeight: FontWeight.w600, color: Colors.green[900])),
                                         Obx(() {
                                           return Text(
                                             messageController.selectedConversationName.value, 
@@ -867,8 +867,8 @@ class DesktopHome extends StatelessWidget {
                               Visibility(
                                 visible: _matchWords.isNotEmpty.obs.value,
                                 child: Positioned(
-                                  left: 0,
-                                  right: 0,
+                                  left: 30,
+                                  right: 30,
                                   bottom: 0,
                                   child: Container(
                                     height: 420,
@@ -896,16 +896,11 @@ class DesktopHome extends StatelessWidget {
                                           children: [
                                             Text(
                                               '实时拼写提示',
-                                              style: TextStyle(
-                                                fontSize: 16, 
-                                                fontWeight: FontWeight.w600,
-                                                fontFamily: 'Comfortaa',
-                                                fontFamilyFallback: ['Arial']
-                                                ),
+                                              style: TextStyle(fontSize: 16),
                                             ),
                                             Text(
-                                              '↑↓ 选择单词\n⏎ 确认',
-                                              style: TextStyle(fontSize: 10),
+                                              '↑↓或鼠标点击选择单词\n⏎ 确认上屏',
+                                              style: TextStyle(fontSize: 12),
                                               textAlign: TextAlign.right,
                                             ),
                                           ],
@@ -972,7 +967,7 @@ class DesktopHome extends StatelessWidget {
                                                           children: <TextSpan>[
                                                             TextSpan(
                                                               text: _wordDetail['phonetic']!=null && _wordDetail['phonetic']!=""?"\\${_wordDetail['phonetic']}\\":"",
-                                                            style: TextStyle(fontSize: 16)
+                                                              style: TextStyle(fontSize: 16)
                                                             ),
                                                             const TextSpan(text: "\n"),
                                                             _addHighlightToTags(_wordDetail),
@@ -1028,7 +1023,7 @@ class DesktopHome extends StatelessWidget {
                               await messageController.ttsPlayer.pause();
                             }
                             messageController.whichIsPlaying.value = keyString;                            
-                            print("playVoice(): $filePath");
+                            // print("playVoice(): $filePath");
                             messageController.ttsPlayer.setFilePath(filePath).then((duration) {
                               // print(duration);
                               messageController.ttsPlayer.play();
@@ -1037,7 +1032,7 @@ class DesktopHome extends StatelessWidget {
                           }
                           
                           // 播放语音和暂停播放按钮的显示和控制逻辑
-                          print("whichIsPlaying: " + messageController.whichIsPlaying.value);
+                          // print("whichIsPlaying: " + messageController.whichIsPlaying.value);
                           if (_m4aFileName.value!='' && _isRecording.value==false){
                             return IconButton(
                               iconSize: 35,
@@ -1060,13 +1055,17 @@ class DesktopHome extends StatelessWidget {
                                 }
                               },
                               icon:  Obx(() {
-                                switch (messageController.buttonNotifier.value) {
-                                  case ButtonState.paused:
-                                    return Icon(Icons.play_arrow, color: Colors.black26);
-                                  case ButtonState.playing:
-                                    return Icon(Icons.pause, color: Colors.black26);
-                                  default:
-                                    return Icon(Icons.play_arrow, color: Colors.black26);
+                                if (messageController.whichIsPlaying.value == keyString) {
+                                  switch (messageController.buttonNotifier.value) {
+                                    case ButtonState.paused:
+                                      return Icon(Icons.play_arrow, color: Colors.grey);
+                                    case ButtonState.playing:
+                                      return Icon(Icons.pause, color: Colors.grey);
+                                    default:
+                                      return Icon(Icons.play_arrow, color: Colors.grey);
+                                  }
+                                } else {
+                                  return Icon(Icons.play_arrow, color: Colors.grey);
                                 }
                               }),
                             );
@@ -1124,10 +1123,11 @@ class DesktopHome extends StatelessWidget {
                                           });
                                       }
                                     }else{
+                                      customSnackBar(title: "没有麦克风权限", content: "请在设置中打开麦克风权限: \n设置->隐私与安全->麦克风->WordPipe");
                                       recorder.requestMicPermission();
                                     }
                                   }, 
-                                  icon: Icon(Icons.mic_rounded, color: _isRecording.value? Colors.redAccent : Colors.grey,)
+                                  icon: Icon(Icons.mic_rounded, color: _isRecording.value? Colors.redAccent : Colors.grey)
                                 ),
                               )   
                             ],
@@ -1193,11 +1193,10 @@ class DesktopHome extends StatelessWidget {
           text: " $word ".replaceFirst('zk', '中考').replaceFirst('gk', '高考').replaceFirst('ky', '考研')
             .replaceFirst('cet4', '四级').replaceFirst('cet6', '六级').replaceFirst('toefl', '托福')
             .replaceFirst('ielts', '雅思').replaceFirst('gre', 'GRE'),
-          style: const TextStyle(fontSize: 12,color: Colors.white, backgroundColor: Colors.teal),
         ));
       children.add(const TextSpan(text: ' '));
       }
-      return TextSpan(children: children);
+      return TextSpan(children: children, style: const TextStyle(fontSize: 16,color: Colors.white, backgroundColor: Colors.teal));
     }else{
       return TextSpan(text: "");
     }    
@@ -1232,16 +1231,15 @@ TextSpan _addHighlightToExchange(Map<String, String> wordDetail) {
       children.add(TextSpan(
         text: wordList[0].replaceFirst('p', '过去式').replaceFirst('d', '过去分词').replaceFirst('i', '现在分词').replaceFirst('3', '第三人称单数')
         .replaceFirst('r', "形容词比较级").replaceFirst('t', "形容词最高级").replaceFirst('s', "名词复数").replaceFirst('0', '原型').replaceFirst('1', '原型变换'),
-        style: const TextStyle(fontSize: 14,color: Colors.teal),
       ));
       if(wordList.length>1){
         children.add(TextSpan(
-        text: wordList[1],
-      ));
+          text: wordList[1],
+        ));
       }
     children.add(const TextSpan(text: '\n'));
     }
-    return TextSpan(children: children);
+    return TextSpan(children: children, style: const TextStyle(fontSize: 16,color: Colors.teal),);
   }else{
     return TextSpan(text: "");
   }    
@@ -1263,13 +1261,12 @@ TextSpan _addHighlightToPos(Map<String, String> wordDetail) {
       ));
       if(wordList.length>1){
         children.add(TextSpan(
-        text: wordList[1]+"%",
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ));
+          text: wordList[1]+"%"
+        ));
       }
     children.add(const TextSpan(text: ' '));
     }
-    return TextSpan(children: children,style: TextStyle(fontSize: 14,color: Colors.blue,),);
+    return TextSpan(children: children, style: TextStyle(fontSize: 16,color: Colors.blue,),);
   }else{
     return TextSpan(text: "");
   }
@@ -1295,7 +1292,7 @@ class MatchWords extends StatelessWidget {
         color: Colors.black87,
         backgroundColor:
             isSelected ? Colors.greenAccent : Colors.transparent,
-        fontSize: 14,
+        fontSize: 16,
         fontWeight: fullMatch ? FontWeight.bold : FontWeight.normal,
         );
 

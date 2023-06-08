@@ -58,9 +58,8 @@ class MobileSignIn extends StatelessWidget {
                                 text: 'WordPipe',
                                 style: TextStyle(
                                   color: Colors.black54,
-                                  fontSize: 22,
-                                  fontFamily: 'Comfortaa',
-                                  fontWeight: FontWeight.w600),
+                                  fontSize: 24,
+                                  fontFamily: 'SofadiOne'),
                               ),
                               TextSpan(
                                 text: '  alpha',

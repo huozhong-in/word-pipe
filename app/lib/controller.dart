@@ -113,7 +113,8 @@ class WordsProvider extends GetConnect {
       await CacheHelper.setData(word, data);
       return data;
     } else {
-      throw Exception('Failed to fetch items in searchWords("$word")');
+      // throw Exception('Failed to fetch items in searchWords("$word")');
+      return [{"result":[]}];
     }
   }
 

@@ -46,6 +46,7 @@ class MessageController extends GetxController{
   // find  MessageModel by key
   MessageModel findMessageByKey(String key) {
     // type为 WordPipeMessageType.reserved 表示没有找到
+    // print("findMessageByKey(): " + key);
     return messages.firstWhere((message) => message.key.toString() == key, orElse: () => MessageModel(
       username: '',
       uuid: '',
@@ -97,7 +98,7 @@ class MessageController extends GetxController{
         ttsPlayer.seek(Duration.zero);
         ttsPlayer.pause();
         if(purge){
-          print("set whichIsPlaying.value = ''");
+          // print("set whichIsPlaying.value = ''");
           whichIsPlaying.value = '';
         }
       }
@@ -350,7 +351,7 @@ class MessageController extends GetxController{
       user: c_id.toString() + "[FREECHAT]" + curr_user,
       temperature: temperature,
     );
-    // TODO 如果返回错误说明用户提供的key无效，则要关掉free chat模式
+    // TODO 如果返回错误说明用户提供的key无效，需要提示用户
     chatStream.listen((chatStreamEvent) {
       // print(chatStreamEvent);
       OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];
@@ -364,17 +365,17 @@ class MessageController extends GetxController{
         message.dataList.add(content);
       }
       if (choice.finishReason != null && choice.finishReason == 'stop'){
-          // 自动给新话题命名
-          if (messages.length == 3 || messages.length == 2){
-            name_a_conversation(curr_user, c_id, messages[1].dataList.join(''), messages[0].dataList.join(''), apiKey);
-          }
+        // 自动给新话题命名
+        if (messages.length == 3 || messages.length == 2){
+          name_a_conversation(curr_user, c_id, messages[1].dataList.join(''), messages[0].dataList.join(''), apiKey);
+        }
       }
     });
   }
   Future<Map<String, dynamic>> new_chat(String username, String message, int conversation_id) async{
     String myuuid = await c.getUUID();
     String needUpdate = addMessage(MessageModel(
-      dataList: RxList(['...']),
+      dataList: RxList([message]),
       type: WordPipeMessageType.raw_text,
       username: username,
       uuid: myuuid,
@@ -398,6 +399,7 @@ class MessageController extends GetxController{
               ttsJobs[json['key']] = HTTP_SERVER_HOST + json['mp3_url'];
             }else{
               String message_key = json['message_key'];
+              // print("message_key: $message_key");
               if (message_key != ""){
                 final message = findMessageByKey(message_key);
                 if (message.type == WordPipeMessageType.reserved){
@@ -405,9 +407,9 @@ class MessageController extends GetxController{
                   messages.insert(0, MessageModel.fromJson(json));
                 }else{
                   // 如果在消息列表中找到了，则更新
-                  if (message.dataList[0] == '...'){
+                  // if (message.dataList[0] == '...'){
                     message.dataList.removeAt(0);
-                  }
+                  // }
                   String content = List<String>.from(json['dataList']).join('');
                   message.dataList.add(content);
                 }

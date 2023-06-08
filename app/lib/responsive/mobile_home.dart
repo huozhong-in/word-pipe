@@ -1,5 +1,3 @@
-import 'dart:developer';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:wordpipe/custom_widgets.dart';
@@ -10,7 +8,6 @@ import 'package:wordpipe/MessageController.dart';
 import 'package:wordpipe/settings.dart';
 import 'package:wordpipe/about_us.dart';
 import 'package:record/record.dart';
-import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 import '../config.dart';
 
@@ -154,7 +151,7 @@ class MobileHome extends StatelessWidget {
                         style: Theme.of(context).textTheme.displaySmall?.copyWith(
                           color: Colors.black54,
                           fontSize: 20,
-                          fontFamily: 'Comfortaa',
+                          fontFamily: 'SofadiOne',
                           fontWeight: FontWeight.w600),
                         children: <TextSpan>[
                           TextSpan(

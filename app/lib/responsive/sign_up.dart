@@ -58,9 +58,8 @@ class SignUp extends StatelessWidget {
                             text: 'WordPipe',
                             style: Theme.of(context).textTheme.displaySmall?.copyWith(
                               color: Colors.black54,
-                              fontSize: 16,
-                              fontFamily: 'Comfortaa',
-                              fontWeight: FontWeight.w600),
+                              fontSize: 24,
+                              fontFamily: 'SofadiOne'),
                             children: <TextSpan>[
                               TextSpan(
                                 text: '  alpha',

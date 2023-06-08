@@ -11,7 +11,7 @@ class AboutUs extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('关于WordPipe', style: TextStyle(color: Colors.white, fontSize: 24)),
+        title: const Text('关于WordPipe', style: TextStyle(color: Colors.white, fontSize: 24, fontFamily: 'SofadiOne')),
         centerTitle: true,
         backgroundColor: Color.fromARGB(255, 59, 214, 157),
         automaticallyImplyLeading: false,

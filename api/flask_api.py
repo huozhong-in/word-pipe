@@ -152,6 +152,8 @@ def prefix_search() -> Response:
     global trie
     r = trie.keys(k)[0:50]
     result = dict()
+    result['errcode'] = 0
+    result['errmsg'] = 'success'
     result["result"] = list(r)
     x = list()
     x.append(result)
