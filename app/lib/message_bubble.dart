@@ -59,7 +59,7 @@ class MessageBubble extends StatelessWidget {
           child: Align(
             alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
             child: SizedBox(
-              width: double.maxFinite,
+              width: double.infinity,
               child: Row(
                 mainAxisAlignment:
                     isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -237,39 +237,54 @@ class MessageBubble extends StatelessWidget {
     if(type == WordPipeMessageType.system){
       // 显示系统消息，比如：某某撤回一条消息，某某加入群聊
       return templateSysMsg(context);
+
     }else if(type == WordPipeMessageType.autoreply){
       // 显示自动回复，比如：你好，我是机器人
       return templateAutoReply(context);
+
     }else if(type == WordPipeMessageType.stream){
       // 因为AI的回复是异步且流式，当消息陆续到达，逐一显示。可以认为每item是一个字符，包括\n，不需要额外处理
       return templateStreamWithHighlight(context);
+
     }else if(type == WordPipeMessageType.raw_text){
       // 加载聊天历史。文本里会有\n，所以依次append即可
       return templateRawText(context);
+
     }else if(type == WordPipeMessageType.flask_reply_for_word){
       // 处理从flask server返回的单词问询消息
       return templateFlaskReply4Word(context);
+
     }else if(type == WordPipeMessageType.flask_reply_for_sentence){
       // 处理从flask server返回的单词例句生成消息
       return templateFlaskReply4Sentence(context);
+
     }else if(type == WordPipeMessageType.reply_for_query_word){
       // 处理从OpenAI API返回的单词查询结果
       return templateReply4Word(context);
+
     }else if(type == WordPipeMessageType.reply_for_query_word_example_sentence){
       // 处理从OpenAI API返回的单词例句生成结果
       return templateReply4WordExampleSentence(context);
+
     }else if(type == WordPipeMessageType.reply_for_translate_sentence){
       // 句子翻译
       return templateReply4TranslateSentence(context);
+
     }else if(type == WordPipeMessageType.reply_for_answer_question){
       // 回答问题
       return templateReply4AnswerQuestion(context);
+
     }else if(type == WordPipeMessageType.flask_reply_for_sentence_zh_en){
       // 处理从flask server返回中文翻译英文
       return templateFlaskReply4SentenceZhEn(context);
+
     }else if(type == WordPipeMessageType.reply_for_translate_sentence_zh_en){
       // 中文翻译英文
       return templateReply4TranslateSentenceZhEn(context);
+    
+    // }else if(type == WordPipeMessageType.text){
+    //   return templateRawText(context);
+
     }else{
       // 普通多行文本，每行是一个字符串
       return templateText(context);

@@ -457,84 +457,76 @@ class DesktopHome extends StatelessWidget {
 
   Widget _myWaveformsBar(BuildContext context){
     return Container(
-      height: 150,
-      width: double.maxFinite,
-      // decoration: BoxDecoration(
-      //   color: Colors.grey.shade200,
-      //   borderRadius: const BorderRadius.all(Radius.circular(20.0)),
-      // ),
       padding: const EdgeInsets.all(16.0),
-      child: Row(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Obx(() {
-                  return StreamBuilder<WaveformProgress>(
-                    stream: progressStream.value,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return Center(
-                          child: Text(
-                            'Error: ${snapshot.error}',
-                            style: Theme.of(context).textTheme.titleLarge,
-                            textAlign: TextAlign.center,
-                          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Container(
+                  height: 80,
+                  child: Obx(() {
+                    return StreamBuilder<WaveformProgress>(
+                      stream: progressStream.value,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Text(
+                              'Error: ${snapshot.error}',
+                              style: Theme.of(context).textTheme.titleLarge,
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        }
+                        // final progress = snapshot.data?.progress ?? 0.0;
+                        // if(progress==1){
+                        //   print('waveform.duration: ${waveform.duration}');
+                        // }
+                        final waveform = snapshot.data?.waveform;
+                        if (waveform == null) {
+                          return Center(
+                            child: SpinKitWave(color: Colors.blue, type: SpinKitWaveType.start),
+                            // child: Text(
+                            //   '${(100 * progress).toInt()}%',
+                            //   style: Theme.of(context).textTheme.titleLarge,
+                            // ),
+                          );
+                        }
+                        return AudioWaveformWidget(
+                          scale: 0.8,
+                          waveform: waveform,
+                          start: Duration.zero,
+                          duration: waveform.duration,
                         );
-                      }
-                      // final progress = snapshot.data?.progress ?? 0.0;
-                      // if(progress==1){
-                      //   print('waveform.duration: ${waveform.duration}');
-                      // }
-                      final waveform = snapshot.data?.waveform;
-                      if (waveform == null) {
-                        return Center(
-                          child: SpinKitWave(color: Colors.blue, type: SpinKitWaveType.center, itemCount: 8, size: 50,),
-                          // child: Text(
-                          //   '${(100 * progress).toInt()}%',
-                          //   style: Theme.of(context).textTheme.titleLarge,
-                          // ),
-                        );
-                      }
-                      return AudioWaveformWidget(
-                        scale: 1.0,
-                        waveform: waveform,
-                        start: Duration.zero,
-                        duration: waveform.duration,
-                      );
-                    },
-                  );
-                },),
-                Container(
-                  height: 50,
-                  width: double.infinity,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: Column(
-                      children: [
-                        Obx(() => Text(stt_string.value , style: TextStyle(fontSize: 16), softWrap: true,)),
-                      ],
-                    ),
-                  ),
+                      },
+                    );
+                  },),
                 ),
-              ],
-            ),
-          ),
+              ),
+              Container(
+                alignment: AlignmentDirectional.topEnd,
+                child: IconButton(
+                  tooltip: '删除录音',
+                  color: Colors.red[100],
+                  hoverColor: Colors.red[200],
+                  iconSize: 20,
+                  onPressed: () async {
+                    deleteAllTempAudioFiles();
+                  }, 
+                  icon: Icon(Icons.cancel, color: Colors.red[100])
+                ),
+              ),
+            ],
+          ),          
           Container(
-            alignment: AlignmentDirectional.topEnd,
-            child: IconButton(
-              tooltip: '删除录音',
-              color: Colors.red[100],
-              hoverColor: Colors.red[200],
-              iconSize: 20,
-              onPressed: () async {
-                deleteAllTempAudioFiles();
-              }, 
-              icon: Icon(Icons.cancel, color: Colors.red[100])
+            height: 70,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Flexible(child: Obx(() => Text(stt_string.value , style: TextStyle(fontSize: 16), softWrap: true,))),
             ),
           ),
         ],

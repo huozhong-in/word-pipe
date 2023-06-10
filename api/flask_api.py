@@ -599,7 +599,7 @@ def get_user_avatar(user_name: str):
         return make_response('', 404)
 
 @app.route('/api/tts/<key>.mp3', methods = ['GET'])
-def tts_audio(key: str):
+def audio_tts(key: str):
     mp3FilePrefix = Path(Path(__file__).parent.absolute() / 'assets/tts')
     mp3File = Path(mp3FilePrefix / f'{key}.mp3')
     if not mp3File.exists():
@@ -607,7 +607,7 @@ def tts_audio(key: str):
     return send_file(mp3File, 'audio/mpeg')
 
 @app.route('/api/stt/<intermediatePath>/<voiceFileName>', methods = ['GET'])
-def stt_audio(intermediatePath: str, voiceFileName: str):
+def audio_stt(intermediatePath: str, voiceFileName: str):
     voiceFilePrefix = Path(USER_AUDIO_PATH / intermediatePath)
     voiceFile = Path(voiceFilePrefix / voiceFileName)
     # print(voiceFile.as_posix())
@@ -942,7 +942,7 @@ def chat_history():
                 'msgCreateTime': cr.msgCreateTime,
                 'msgContent': cr.msgContent,
                 # 'msgStatus': cr.msgStatus,
-                # 'msgType': cr.msgType,
+                'msgType': cr.msgType,
                 # 'msgSource': cr.msgSource,
                 # 'msgDest': cr.msgDest
                 'conversation_id': cr.conversation_id

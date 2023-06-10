@@ -127,7 +127,7 @@ class MessageView extends StatelessWidget {
       // 判断有新消息过来，而且滚动条不在最底端，则显示一个提示气泡，点击后滚动到最底端。因为dataList是一个RxList，所以只要dataList有变化，就会触发这个“滚动条位置判定”函数。
       // messageController.messages.listen((messages) {
       //   messageController.messages.listen((messages) {
-         // TODO 被触发2000多次，这里有性能问题
+         // TODO 被触发2000多次，有没有性能问题？
       //     // print(messages.length);
       //     // if (!messageController.scrollController.position.atEdge && messageController.scrollController.offset != messageController.scrollController.position.minScrollExtent) {
       //     //   newMessageArrived.value = true;
@@ -224,6 +224,7 @@ class MessageView extends StatelessWidget {
             valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
           ));
         } else if (snapshot.hasError) {
+          print(snapshot.error);
           return const Center(child: Text('Failed to load messages.'));
         } else {
           return _buildListView();

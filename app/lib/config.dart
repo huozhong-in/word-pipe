@@ -16,6 +16,7 @@ final String SSE_MSG_DEFAULT_CHANNEL = "users.social";
 final String HTTP_SERVER_HOST = kDebugMode ? "http://192.168.0.166/api" : "https://wordpipe.in/api";
 
 final AVATAR_FILE_DIR = "avatar";
+final VOICE_FILE_DIR = "stt";
 
 
 // 1表示普通文本，3表示图片，34表示语音，43表示视频，47表示表情包，48表示位置，49是卡片消息(文件/视频号/引用/其他),10000表示系统消息

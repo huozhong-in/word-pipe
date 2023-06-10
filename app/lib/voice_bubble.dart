@@ -57,7 +57,7 @@ class VoiceBubble extends StatelessWidget {
         child: Align(
           alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
           child: SizedBox(
-            width: double.maxFinite,
+            width: double.infinity,
             child: Row(
               mainAxisAlignment:
                   isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
@@ -87,29 +87,28 @@ class VoiceBubble extends StatelessWidget {
                           MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
                         child: Container(
                           padding: const EdgeInsets.all(0),
-                          constraints: BoxConstraints(
-                            minWidth: 80,
-                          ),
+                          // constraints: BoxConstraints(
+                          //   minWidth: 80,
+                          // ),
                           child: Column(
                             children: [
                               InkWell(
                                 onTap: () async {
-                                  print("aa");
-                                  // // 根据isSent判断，成功发送到服务器之前从本地播放，之后从服务器`dataList[2]`播放
-                                  // if(isSent.value == false){
-                                  //   Directory temporaryDirectory = await getTemporaryDirectory();
-                                  //   String fileName = dataList[1] as String;
-                                  //   String filePath = temporaryDirectory.path + '/' + fileName + '.m4a';
-                                  //   if (File(filePath).existsSync()) {
-                                  //     messageController.playVoice(key.hashCode.toString(), filePath, false);
-                                  //     return;
-                                  //   }
-                                  // }
-                                  // String filePath = dataList[2] as String;
-                                  // messageController.playVoice(key.hashCode.toString(), HTTP_SERVER_HOST + filePath, true);
+                                  // 根据isSent判断，成功发送到服务器之前从本地播放，之后从服务器`dataList[2]`播放
+                                  if(isSent.value == false){
+                                    Directory temporaryDirectory = await getTemporaryDirectory();
+                                    String fileName = dataList[1] as String;
+                                    String filePath = temporaryDirectory.path + '/' + fileName + '.m4a';
+                                    if (File(filePath).existsSync()) {
+                                      messageController.playVoice(key.hashCode.toString(), filePath, false);
+                                      return;
+                                    }
+                                  }
+                                  String filePath = dataList[2] as String;
+                                  messageController.playVoice(key.hashCode.toString(), HTTP_SERVER_HOST + filePath, true);
                                 },
                                 child: Container(
-                                  width: double.maxFinite,
+                                  width: double.infinity,
                                   padding: EdgeInsets.fromLTRB(0, 12, 25, 12),
                                   alignment: Alignment.centerRight,
                                   child: Icon(
@@ -192,6 +191,7 @@ class VoiceBubble extends StatelessWidget {
     String msg = dataList[0] as String;
     spans.add(TextSpan(text: msg));
     return TextSpan(
+      // text: key.toString(),
       style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
       children: spans,
     );

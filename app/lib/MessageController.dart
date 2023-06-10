@@ -12,7 +12,7 @@ import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/prompts/template_vocab.dart';
 import 'package:wordpipe/prompts/template_freechat.dart';
 import 'package:wordpipe/custom_widgets.dart';
-// import 'package:wordpipe/cache_helper.dart';
+import 'package:flutter_desktop_audio_recorder/flutter_desktop_audio_recorder.dart';
 import 'package:just_audio/just_audio.dart';
 import 'dart:developer';
 
@@ -94,7 +94,7 @@ class MessageController extends GetxController{
     // print("playVoice(): $filePath");
     // 判断filePath是本地路径还是url
     if (filePath.startsWith('http')) {
-      voicePlayer.setUrl(filePath, preload: false).then((duration) {
+      voicePlayer.setUrl(filePath).then((duration) {
         // print(duration);
         voicePlayer.play().then((_) {
           // print("playVoice(): 播放结束");
@@ -727,17 +727,36 @@ class ChatRecord extends GetConnect {
         // print("msgCreatTime:" + msgCreateTime.toString());
         String msgContent = e['msgContent'].toString();
         // print("msgContent:" + msgContent);
-        // int msgType = e['msgType'].toInt();
+        int msgType = e['msgType'] as int;
         // print("msgType:" + msgType.toString());
         // int conversation_id = e['conversation_id'] as int;
         // print("db conversation_id:" + conversation_id.toString());
+        final List<dynamic> dataList = [];
+        switch (msgType){
+          case WordPipeMessageType.audio:
+            dataList.add(msgContent);
+            dataList.add(e['pk_chat_record']);
+            String audio_suffix = FlutterDesktopAudioRecorder().macosFileExtension;
+            // intermediate_path是从msgCreateTime(timestamp格式)中提取的年月日, 例如20210101
+            int msgCreateTime =  DateTime.now().millisecondsSinceEpoch;
+            String intermediate_path = DateTime.fromMillisecondsSinceEpoch(msgCreateTime)
+                .toString()
+                .substring(0, 10)
+                .replaceAll('-', '');
+            String relative_url = '/$VOICE_FILE_DIR/$intermediate_path/${e['pk_chat_record']}.$audio_suffix';
+            dataList.add(relative_url);
+            break;
+          default:
+            dataList.add(msgContent);
+            break;
+        }
         messageController.messages.add(
           MessageModel(
             username: msgFrom, 
             uuid: msgFromUUID,
             createTime: msgCreateTime, 
-            dataList: RxList([msgContent]), 
-            type: WordPipeMessageType.raw_text, 
+            dataList: RxList(dataList), 
+            type: msgType, 
             key: ValueKey(e['pk_chat_record']),
             isSent: true,
             )
