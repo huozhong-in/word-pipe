@@ -49,6 +49,7 @@ class DesktopHome extends StatelessWidget {
   RxDouble playProgress = 0.0.obs;
   Timer? timer;
   Rx<Stream<WaveformProgress>> progressStream = Rx(Stream.empty());
+  RxString stt_string = "".obs;
 
 
   Future<String> _getUserName() async {
@@ -57,6 +58,21 @@ class DesktopHome extends StatelessWidget {
   }
 
   void _handleSubmitted(String text) async {
+    // 发送语音消息
+    if(_m4aFileName.value != ""){
+      if (stt_string.value.trim() == ''){
+        customSnackBar(title: "语音转换失败", content: "请重新录音");
+        return;
+      }
+      Map<String, dynamic> ret = await
+        messageController.voiceChat(_username, stt_string.value.trim(), _m4aFileName.value, messageController.conversation_id.value);
+      if(ret['errcode'] as int == 0){
+        _m4aFileName.value = "";
+        deleteAllTempAudioFiles();
+      }
+      return;
+    }
+    // 发送文本消息
     if(text.trim() == "")
       return;
     if( _username == "")
@@ -66,7 +82,7 @@ class DesktopHome extends StatelessWidget {
     if (messageController.conversation_id.value == -1){
       messageController.conversation_id.value = await messageController.conversation_CUD(_username, "create", messageController.conversation_id.value);
     }
-    Map<String, dynamic> ret = await messageController.new_chat(_username, text.trim(), messageController.conversation_id.value);
+    Map<String, dynamic> ret = await messageController.chat(_username, text.trim(), messageController.conversation_id.value);
     if(ret['errcode'] as int == 0){
       _textController.clear();
       _matchWords.clear();
@@ -375,7 +391,7 @@ class DesktopHome extends StatelessWidget {
           maxLines: 3,
           minLines: 3,
           decoration: InputDecoration(
-            hintText: '跟Jamine说点什么吧' ,
+            hintText: '跟Jasmine说点什么吧' ,
             hintStyle: TextStyle(color: Colors.grey),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(10),),
@@ -426,15 +442,22 @@ class DesktopHome extends StatelessWidget {
       //     print(waveformProgress.waveform!.sampleRate);
       //   }
       // });
+      stt();
     } catch (e) {
       print(e);
     }
   }
-  
+
+  Future<void> stt() async {
+    // 对音频进行文字识别
+    Directory temporaryDirectory = await getTemporaryDirectory();
+    String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
+    stt_string.value = await messageController.convertSpeechToText(filePath);
+  }
 
   Widget _myWaveformsBar(BuildContext context){
     return Container(
-      height: 100,
+      height: 150,
       width: double.maxFinite,
       // decoration: BoxDecoration(
       //   color: Colors.grey.shade200,
@@ -446,42 +469,60 @@ class DesktopHome extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            child: Obx(() {
-              return StreamBuilder<WaveformProgress>(
-                stream: progressStream.value,
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Text(
-                        'Error: ${snapshot.error}',
-                        style: Theme.of(context).textTheme.titleLarge,
-                        textAlign: TextAlign.center,
-                      ),
-                    );
-                  }
-                  // final progress = snapshot.data?.progress ?? 0.0;
-                  // if(progress==1){
-                  //   print('waveform.duration: ${waveform.duration}');
-                  // }
-                  final waveform = snapshot.data?.waveform;
-                  if (waveform == null) {
-                    return Center(
-                      child: SpinKitWave(color: Colors.blue, type: SpinKitWaveType.center, itemCount: 8, size: 50,),
-                      // child: Text(
-                      //   '${(100 * progress).toInt()}%',
-                      //   style: Theme.of(context).textTheme.titleLarge,
-                      // ),
-                    );
-                  }
-                  return AudioWaveformWidget(
-                    scale: 1.0,
-                    waveform: waveform,
-                    start: Duration.zero,
-                    duration: waveform.duration,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Obx(() {
+                  return StreamBuilder<WaveformProgress>(
+                    stream: progressStream.value,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            'Error: ${snapshot.error}',
+                            style: Theme.of(context).textTheme.titleLarge,
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      }
+                      // final progress = snapshot.data?.progress ?? 0.0;
+                      // if(progress==1){
+                      //   print('waveform.duration: ${waveform.duration}');
+                      // }
+                      final waveform = snapshot.data?.waveform;
+                      if (waveform == null) {
+                        return Center(
+                          child: SpinKitWave(color: Colors.blue, type: SpinKitWaveType.center, itemCount: 8, size: 50,),
+                          // child: Text(
+                          //   '${(100 * progress).toInt()}%',
+                          //   style: Theme.of(context).textTheme.titleLarge,
+                          // ),
+                        );
+                      }
+                      return AudioWaveformWidget(
+                        scale: 1.0,
+                        waveform: waveform,
+                        start: Duration.zero,
+                        duration: waveform.duration,
+                      );
+                    },
                   );
-                },
-              );
-            },),
+                },),
+                Container(
+                  height: 50,
+                  width: double.infinity,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: Column(
+                      children: [
+                        Obx(() => Text(stt_string.value , style: TextStyle(fontSize: 16), softWrap: true,)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           Container(
             alignment: AlignmentDirectional.topEnd,
@@ -491,15 +532,7 @@ class DesktopHome extends StatelessWidget {
               hoverColor: Colors.red[200],
               iconSize: 20,
               onPressed: () async {
-                if (messageController.ttsPlayer.playerState.playing){
-                  await messageController.ttsPlayer.pause();
-                }
-                Directory temporaryDirectory = await getTemporaryDirectory();
-                String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
-                File file = File(filePath);
-                file.delete();
-                _m4aFileName.value = '';
-                messageController.whichIsPlaying.value = '';
+                deleteAllTempAudioFiles();
               }, 
               icon: Icon(Icons.cancel, color: Colors.red[100])
             ),
@@ -507,6 +540,29 @@ class DesktopHome extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<bool> deleteAllTempAudioFiles() async {
+    Future<bool> result = Future.value(false);
+    if (messageController.voicePlayer.playerState.playing){
+      await messageController.voicePlayer.pause();
+    }
+    try {
+      Directory temporaryDirectory = await getTemporaryDirectory();
+      temporaryDirectory.listSync().forEach((element) {
+        if (element.path.endsWith('.m4a') || element.path.endsWith('.wave')){
+          element.deleteSync();
+        }
+      });
+      result = Future.value(true);
+    } catch (e) {
+      log(e.toString());
+      result = Future.value(false);
+    } finally {
+      _m4aFileName.value = '';
+      messageController.whichIsPlaying.value = '';
+      return result;
+    }
   }
 
   @override
@@ -545,24 +601,7 @@ class DesktopHome extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.all(5),
                       alignment: AlignmentDirectional.center,
-                      child: RichText(
-                        text: TextSpan(
-                          text: 'WordPipe',
-                          style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            color: Colors.black54,
-                            fontSize: 24,
-                            fontFamily: 'SofadiOne'
-                            ),
-                          children: <TextSpan>[
-                            TextSpan(
-                              text: '  alpha',
-                              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                                color: Colors.blue,
-                                fontSize: 12),
-                            ),
-                          ],
-                        )
-                      ),
+                      child: WordPipeLogo(context),
                     ),
                   ),
                   Divider(),
@@ -618,7 +657,7 @@ class DesktopHome extends StatelessWidget {
                   ),
                   ListTile(
                     leading: Icon(Icons.settings),
-                    title: Text('设置', style: TextStyle(fontSize: 16)),
+                    title: Text('功能设置', style: TextStyle(fontSize: 16)),
                     minLeadingWidth: 0,
                     minVerticalPadding: 0,
                     onTap: () => Get.offAll(() => Settings()),
@@ -631,7 +670,7 @@ class DesktopHome extends StatelessWidget {
                     onTap: () => Get.offAll(() => AboutUs()),
                   ),
                   FutureBuilder<String>(
-                    future: c.getMacAppVersion(),
+                    future: c.getWordPipeAppVersion(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         if (snapshot.data! == '0.0.0')
@@ -705,7 +744,7 @@ class DesktopHome extends StatelessWidget {
                       inactiveThumbColor: Colors.green[200],
                       inactiveTrackColor: Colors.green[100],
                       title: Text('连续对话模式', style: TextStyle(fontSize: 14)), 
-                      subtitle: Text('会员专享', style: TextStyle(fontSize: 12, color: Colors.blue)),
+                      // subtitle: Text('会员专享', style: TextStyle(fontSize: 12, color: Colors.blue)),
                       value: settingsController.freeChatMode.value,
                       onChanged: ((bool value) async {
                         if (value==true){
@@ -725,7 +764,7 @@ class DesktopHome extends StatelessWidget {
                               _commentFocus.requestFocus();
                             } else {
                               settingsController.freeChatMode.value = false;
-                              customSnackBar(title: "错误提示", content: "请设置自己的OpenAI API key或者升级为付费会员.");
+                              customSnackBar(title: "试用已过期", content: "请设置自己的OpenAI API key或者升级为付费会员.");
                             }
                           }
                         }else{
@@ -1018,18 +1057,6 @@ class DesktopHome extends StatelessWidget {
                       children: [
                         Obx(() {
                           final String keyString = "[VOICEINPUT]";
-                          void playVoice(String filePath) async {
-                            if (messageController.ttsPlayer.playerState.playing){
-                              await messageController.ttsPlayer.pause();
-                            }
-                            messageController.whichIsPlaying.value = keyString;                            
-                            // print("playVoice(): $filePath");
-                            messageController.ttsPlayer.setFilePath(filePath).then((duration) {
-                              // print(duration);
-                              messageController.ttsPlayer.play();
-                              messageController.setPlayerListener(purge: false);
-                            });
-                          }
                           
                           // 播放语音和暂停播放按钮的显示和控制逻辑
                           // print("whichIsPlaying: " + messageController.whichIsPlaying.value);
@@ -1041,17 +1068,16 @@ class DesktopHome extends StatelessWidget {
                                 if (messageController.whichIsPlaying.value == keyString) {
                                   if (messageController.buttonNotifier.value == ButtonState.playing) {
                                     messageController.buttonNotifier.value = ButtonState.paused;
-                                    messageController.ttsPlayer.pause();
+                                    messageController.voicePlayer.pause();
                                   } else if (messageController.buttonNotifier.value == ButtonState.paused) {
                                     messageController.buttonNotifier.value = ButtonState.playing;
-                                    messageController.ttsPlayer.play();
+                                    messageController.voicePlayer.play();
                                   }
                                 }else{
                                   // 如果是在播放其他音频，则先停止播放，重新设置正在播放的音频
                                   Directory temporaryDirectory = await getTemporaryDirectory();
                                   final String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
-                                  // _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
-                                  playVoice(filePath);
+                                  messageController.playVoice(keyString, filePath, false);
                                 }
                               },
                               icon:  Obx(() {
@@ -1099,11 +1125,11 @@ class DesktopHome extends StatelessWidget {
                                         }
                                         _isRecording.value = false;
                                         final String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
-                                        _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
+                                        _showWaveforms(_m4aFileName.value).then((_) => messageController.playVoice(keyString, filePath, false));
                                       }else{
                                         _m4aFileName.value = DateTime.now().millisecondsSinceEpoch.toString();
-                                        if (messageController.ttsPlayer.playerState.playing){
-                                          await messageController.ttsPlayer.pause();
+                                        if (messageController.voicePlayer.playerState.playing){
+                                          await messageController.voicePlayer.pause();
                                         }
                                         recorder.start(path: temporaryDirectory.path, fileName: _m4aFileName.value)
                                           .then((_) {
@@ -1117,7 +1143,7 @@ class DesktopHome extends StatelessWidget {
                                                 _isRecording.value = false;
                                                 recordProgress.value = 0;
                                                 final String filePath = temporaryDirectory.path + '/' + _m4aFileName.value + '.m4a';
-                                                _showWaveforms(_m4aFileName.value).then((_) => playVoice(filePath));
+                                                _showWaveforms(_m4aFileName.value).then((_) => messageController.playVoice(keyString, filePath, false));
                                               }
                                             });
                                           });

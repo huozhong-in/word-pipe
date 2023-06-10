@@ -51,25 +51,7 @@ class MobileSignIn extends StatelessWidget {
                     children: [
                       Container(
                         padding: EdgeInsets.symmetric(vertical: 20),
-                        child: RichText(
-                          text: TextSpan(
-                            children: <TextSpan>[
-                              TextSpan(
-                                text: 'WordPipe',
-                                style: TextStyle(
-                                  color: Colors.black54,
-                                  fontSize: 24,
-                                  fontFamily: 'SofadiOne'),
-                              ),
-                              TextSpan(
-                                text: '  alpha',
-                                style: TextStyle(
-                                  color: Colors.blue,
-                                  fontSize: 12),
-                              ),
-                            ],
-                          )
-                        ),
+                        child: WordPipeLogo(context),
                       )
                     ],
                   ),

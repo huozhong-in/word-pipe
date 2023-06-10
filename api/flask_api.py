@@ -276,6 +276,7 @@ def chat():
     if request.method != 'POST':
         return make_response('Please use POST method', 500)
     try:
+        # print(json.loads(request.data))
         data: dict = request.get_json()
         username: str = data.get('username')
         message: str = data.get('message')
@@ -288,7 +289,6 @@ def chat():
     
     # tic = time.perf_counter()
     
-    logging.info(f'[{username}]: {message}')
     if request.headers.get('X-access-token'):
         # print('X-access-token: ', request.headers['X-access-token'])
         userDB = UserDB(db_session)
@@ -301,6 +301,8 @@ def chat():
             return make_response(jsonify({"errcode":50007,"errmsg":"access_token过期"}), 401)
     else:
         return make_response('access_token缺失', 500)
+    
+    logging.info(f'[{username}]: {message}')
 
     # 将用户消息记录到数据库
     myuuid: str = userDB.get_user_by_username(username).uuid
@@ -308,7 +310,6 @@ def chat():
     cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jasmine').uuid, msgCreateTime=int(time.time()), msgContent=s, msgType=1, conversation_id=conversation_id)
     crdb = ChatRecordDB(db_session)
     crdb.insert_chat_record(cr)
-
 
     # 替用户发消息。附带好处是可以可以处理禁忌词，替换成*号
     back_data: json = {}
@@ -363,6 +364,62 @@ def chat():
     # toc = time.perf_counter()
     # print(f"[Processed in {toc - tic:0.4f} seconds]")
     return make_response({"errcode": 0}, 200)
+
+@app.route('/api/voicechat', methods = ['POST'])
+def voicechat():
+    # receive upload audio file
+    if request.method != 'POST':
+        return make_response('Please use POST method', 500)
+    try:
+        data: dict = request.form  # 获取form data
+        username: str = data.get('username')
+        message: str = data.get('message')
+        conversation_id: int = data.get('conversation_id')
+        message_key: str = data.get('message_key')
+        f = request.files['file']
+    except Exception as e:
+        logging.debug(e)
+        return make_response('data required', 500)
+    if message == '' or f == None:
+        return make_response('critical data missing!', 500)
+    
+    if request.headers.get('X-access-token'):
+        # print('X-access-token: ', request.headers['X-access-token'])
+        userDB = UserDB(db_session)
+        u: User = userDB.get_user_by_username(username)
+        if u is None:
+            return make_response('用户不存在', 500)
+        if u.access_token != request.headers['X-access-token']:
+            return make_response('access_token不正确', 500)
+        if u.access_token_expire_at < int(time.time()):
+            return make_response(jsonify({"errcode":50007,"errmsg":"access_token过期"}), 401)
+    else:
+        return make_response('access_token缺失', 500)
+    
+    logging.info(f'[{username}]: {message}')
+
+    # 将用户消息记录到数据库
+    myuuid: str = userDB.get_user_by_username(username).uuid
+    s: str = json.loads(json.dumps(message, ensure_ascii=False)) # 防止被SQLAlchemy转义双引号、回车符、制表符和斜杠
+    cr = ChatRecord(msgFrom=myuuid, msgTo=userDB.get_user_by_username('Jasmine').uuid, msgCreateTime=int(time.time()), msgContent=s, msgType=34, conversation_id=conversation_id)
+    crdb = ChatRecordDB(db_session)
+    pk_chat_record: int = crdb.insert_chat_record(cr)
+    # 保存语音文件到一个可以直接被Nginx访问的目录，以便返回文件URL给客户端
+    intermediate_path: str ='{thistime}'.format(thistime=time.strftime('%Y%m%d', time.localtime(time.time())))
+    if not os.path.exists(USER_AUDIO_PATH / intermediate_path):
+        os.makedirs(USER_AUDIO_PATH / intermediate_path)
+    audio_suffix: str = f.filename.split('.')[-1] # 提取音频文件后缀名
+    audio_file_full_path = USER_AUDIO_PATH / intermediate_path / f'{pk_chat_record}.{audio_suffix}'
+    f.save(audio_file_full_path)
+    return make_response(
+        {
+            "errcode": 0, 
+            "message_key": message_key,
+            "pk_chat_record": pk_chat_record, 
+            "relative_url": f"/{USER_AUDIO_SERVER_PATH}/{intermediate_path}/{pk_chat_record}.{audio_suffix}"
+        }, 200)
+    
+
 
 @app.route('/api/tts', methods = ['POST'])
 def tts():
@@ -533,10 +590,9 @@ def get_root_by_word(message: str) -> json:
     logging.info(f'back_data: {back_data}')
     return back_data
 
-@app.route('/api/avatar/<user_name>')
+@app.route('/api/avatar/<user_name>', methods = ['GET'])
 def get_user_avatar(user_name: str):
-    imgFilePrefix = Path(Path(__file__).parent.absolute() / 'assets/avatar')
-    pngImgFile = Path(imgFilePrefix / f'{user_name}.png')
+    pngImgFile = Path(USER_AVATAR_PATH / f'{user_name}.png')
     if pngImgFile.exists():
         return send_file(pngImgFile, mimetype='image/png')
     else:
@@ -549,6 +605,21 @@ def tts_audio(key: str):
     if not mp3File.exists():
         return make_response('', 404)
     return send_file(mp3File, 'audio/mpeg')
+
+@app.route('/api/stt/<intermediatePath>/<voiceFileName>', methods = ['GET'])
+def stt_audio(intermediatePath: str, voiceFileName: str):
+    voiceFilePrefix = Path(USER_AUDIO_PATH / intermediatePath)
+    voiceFile = Path(voiceFilePrefix / voiceFileName)
+    # print(voiceFile.as_posix())
+    if not voiceFile.exists():
+        return make_response('', 404)
+    if voiceFileName.endswith('.m4a'):
+        mimetype = 'audio/m4a'
+    elif voiceFileName.endswith('.wav'):
+        mimetype = 'audio/wav'
+    else:
+        mimetype = 'audio/mpeg'
+    return send_file(voiceFile, mimetype)
 
 @app.route('/api/contact-us')
 def contact_us():
@@ -665,8 +736,20 @@ def signin():
     response.headers['Cache-Control'] = 'no-cache'
     return make_response(jsonify(r), 200)
 
-@app.route('/api/openai/<path:path>', methods=['POST'])
-def openai_proxy(path):
+@app.route('/api/openai/<path:path>', methods=['POST', 'GET', 'PUT', 'DELETE'])
+def openai_stt_proxy(path):
+    # print(path)
+    url = f'https://api.openai.com/{path}'
+    headers = {key: value for (key, value) in request.headers if key != 'Host'}
+    if os.environ.get('DEBUG_MODE') != None:
+        resp = requests.request(request.method, url, headers=headers, data=request.get_data(), params = request.args, proxies=PROXIES)
+    else:
+        resp = requests.request(request.method, url, headers=headers, data=request.get_data(), params = request.args)
+    print(resp.text)
+    return make_response(resp.content, resp.status_code) #, resp.headers.items())
+
+@app.route('/api/openai/v1/chat/completions', methods=['POST'])
+def openai_chat_proxy(path):
     '''
     代理到OpenAI的请求，并将聊天记录存入数据库
     '''

@@ -15,12 +15,6 @@ try:
 except Exception as e:
     ip = '127.0.0.1'
 
-
-# Load config items from config.yaml.
-# Use Path.resolve() to get the absolute path of the parent directory
-# config_dir = Path(__file__).resolve().parent
-# config_path = config_dir / "config.yaml"  # Use Path / operator to join paths
-
 # ----- REDIS CONFIG -----
 REDIS_URL ="redis://localhost"
 
@@ -36,8 +30,18 @@ DB_URI = "sqlite:///" + str(SQLITE_DB_PATH / SQLITE_DB_NAME)
 
 # ----- USER CONFIG -----
 DEFAULT_AYONYMOUS_USER_ID: str = "anonymous"
+## access_token有效期
+DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS: int = 60 * 60 * 24 * 7 # 7 days
+## 新用户免费使用时长
+DEFAULT_FREE_TRIAL_TIME: int = 48 * 60 * 60 # 48 hours
+## 保存用户头像目录
+USER_AVATAR_SERVER_PATH = 'avatar'
+USER_AVATAR_PATH = Path('/Users/dio/Downloads/temp/' + USER_AVATAR_SERVER_PATH)
+## 保存语音文件目录
+USER_AUDIO_SERVER_PATH = 'stt'
+USER_AUDIO_PATH = Path('/Users/dio/Downloads/temp/' + USER_AUDIO_SERVER_PATH)
 
-# ----- PROXY CONFIG -----
+# ----- PROXY CONFIG (for local dev) -----
 PROXIES = {
     "http": "127.0.0.1:7890",
     "https": "127.0.0.1:7890",
@@ -70,4 +74,16 @@ def generate_random_avatar(user_name: str) -> bool:
     return True
 
 if __name__ == '__main__':
-    generate_random_avatar('test04')
+    # generate_random_avatar('test04')
+    if not os.path.exists(USER_AVATAR_PATH):
+        os.makedirs(USER_AVATAR_PATH)
+    if not os.path.exists(USER_AUDIO_PATH):
+        os.makedirs(USER_AUDIO_PATH)
+    # ln -s ./assets/avatar/Jasmine.png `USER_AVATAR_PATH`/Jasmine.png
+    if not os.path.exists(USER_AVATAR_PATH / 'Jasmine.png'):
+        os.symlink(Path(Path(__file__).parent.absolute() / 'assets/avatar/Jasmine.png'), USER_AVATAR_PATH / 'Jasmine.png')
+    # ln -s ./assets/avatar/Jasmine-freechat.png `USER_AVATAR_PATH`/Jasmine-freechat.png
+    if not os.path.exists(USER_AVATAR_PATH / 'Jasmine-freechat.png'):
+        os.symlink(Path(Path(__file__).parent.absolute() / 'assets/avatar/Jasmine-freechat.png'), USER_AVATAR_PATH / 'Jasmine-freechat.png')
+    
+    

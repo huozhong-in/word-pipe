@@ -53,23 +53,7 @@ class SignUp extends StatelessWidget {
                 children: [
                   Container(
                     padding: EdgeInsets.symmetric(vertical: 20),
-                    child: RichText(
-                          text: TextSpan(
-                            text: 'WordPipe',
-                            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                              color: Colors.black54,
-                              fontSize: 24,
-                              fontFamily: 'SofadiOne'),
-                            children: <TextSpan>[
-                              TextSpan(
-                                text: '  alpha',
-                                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                                  color: Colors.blue,
-                                  fontSize: 10),
-                              ),
-                            ],
-                          )
-                        ),
+                    child: WordPipeLogo(context),
                   ),
                   Container(
                     // padding: EdgeInsets.only(top: 1),

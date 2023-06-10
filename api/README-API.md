@@ -25,6 +25,11 @@
 - install dependents
 `pip install -r requirements.txt`
 
+- init assets directory
+`python config.py`
+
+复制所有用户头像和语音文件到存放目录 
+
 - develop in localhost
 `sudo gunicorn flask_api:app --workers=1 --worker-class=gevent --worker-connections=10 --bind 127.0.0.1:80 --env OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX --keep-alive 300 --env DEBUG_MODE=1`
 

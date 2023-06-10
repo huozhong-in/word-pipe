@@ -8,6 +8,7 @@ class MessageModel {
   final RxInt type; // 修改为RxInt类型
   final int createTime;
   final Key key;
+  RxBool isSent;
 
   MessageModel({
     required this.username,
@@ -16,7 +17,8 @@ class MessageModel {
     required int type, // 修改构造函数参数类型为int
     required this.createTime,
     required this.key,
-  }) : type = type.obs; // 在构造函数中将type转换为RxInt
+    required bool isSent,
+  }) : type = type.obs, isSent = isSent.obs; // 在构造函数中将type转换为RxInt
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     return MessageModel(
@@ -26,6 +28,7 @@ class MessageModel {
       dataList: RxList(json['dataList']),
       createTime: json['createTime'] as int,
       key: UniqueKey(), // 自动分配一个UniqueKey
+      isSent: true,
     );
   }
 }

@@ -2,10 +2,11 @@ import 'package:get/get.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/cache_helper.dart';
 import 'dart:async';
+import 'dart:io';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:sqflite/sqflite.dart';
-// import 'package:path_provider/path_provider.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:developer';
 
 class Controller extends GetxController{
@@ -63,6 +64,9 @@ class Controller extends GetxController{
   Future<Map<String ,dynamic>> chat(String username, String message, int conversation_id, String message_key) async{
     return await _userProvider.chat(username, message, conversation_id, message_key);
   }
+  Future<Map<String, dynamic>> voiceChat(String username, String message, String fileName, String message_key, int conversation_id) async{
+    return await _userProvider.voiceChat(username, message, fileName, message_key, conversation_id);
+  }
   Future<Map<String, dynamic>> signin(String username, String password) async{
     return await _userProvider.signin(username, password);
   }
@@ -76,7 +80,7 @@ class Controller extends GetxController{
     return true;
   }
   
-  Future<String> getMacAppVersion() async {
+  Future<String> getWordPipeAppVersion() async {
     if (GetPlatform.isMacOS == false)
       return "0.0.0";
     
@@ -190,7 +194,48 @@ class UserProvider extends GetConnect {
         return {"errcode": 3, "errmsg": response.body};
       }
   }
-
+  Future<Map<String, dynamic>> voiceChat(String username, String message, String fileName, String message_key, int conversation_id) async{
+    Uri url = Uri.parse('$HTTP_SERVER_HOST/voicechat');
+    String  access_token = "";
+    if (await CacheHelper.hasData('sessionData')){
+      if(await CacheHelper.getData('sessionData') != null){
+        Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
+        access_token = sessionData['access_token'] as String;
+      }
+    }
+    Map<String,String> hs = {};
+    if (access_token != ""){
+      hs['X-access-token'] = access_token;
+    }
+    Directory temporaryDirectory = await getTemporaryDirectory();
+    String filePath = temporaryDirectory.path + '/' + fileName+ '.m4a';
+    if (!File(filePath).existsSync()) {
+      return {"errcode": 4, "errmsg": "file not exist"};
+    }
+    MultipartFile f = MultipartFile(await File(filePath).readAsBytes(), filename: fileName+ '.m4a');
+    FormData formdata = FormData({
+      'username': username,
+      'message': message,
+      'message_key': message_key,
+      'conversation_id':conversation_id,
+      'file': f,
+    });
+    final response = await post(url.toString(), formdata, headers: hs, contentType: 'multipart/form-data', 
+      // uploadProgress: (percent) {
+      //   log(percent.toString());
+      // },
+      );
+    if (response.statusCode == 200) {
+        return Map<String, dynamic>.from(response.body);
+      } else {
+        // signout
+        if(await CacheHelper.hasData('sessionData')){
+          await CacheHelper.setData('sessionData', null);
+        }
+        log('createorder error: ${response.body}');
+        return {"errcode": 3, "errmsg": response.body};
+      }
+  }
   Future<Map<String, dynamic>> signin(String username, String password) async{
     Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signin');
     Map data = {};

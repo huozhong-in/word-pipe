@@ -302,3 +302,45 @@ class AudioWaveformPainter extends CustomPainter {
     }
   }
 }
+
+Widget WordPipeLogo(BuildContext context){
+  final Controller c = Get.find();
+  return FutureBuilder<String>(
+    future: c.getWordPipeAppVersion(), 
+    builder: (context, snapshot){
+      if (snapshot.hasData) {
+        return RichText(
+          text: TextSpan(
+            text: 'WordPipe',
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+              color: Colors.black54,
+              fontSize: 26,
+              fontFamily: 'SofadiOne'
+            ),
+            children: <TextSpan>[
+              TextSpan(
+                text: '  ' + snapshot.data!,
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: Colors.blue,
+                  fontSize: 12
+                ),
+              ),
+            ],
+          )
+        );
+      } else if (snapshot.hasError) {
+        return Text("${snapshot.error}");
+      }
+      return RichText(
+        text: TextSpan(
+          text: 'WordPipe',
+          style: Theme.of(context).textTheme.displaySmall?.copyWith(
+            color: Colors.black54,
+            fontSize: 26,
+            fontFamily: 'SofadiOne'
+          )
+        )
+      );
+    },
+  );
+}

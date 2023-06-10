@@ -38,9 +38,10 @@ class ChatRecordDB:
             result = self.session.query(ChatRecord).filter(ChatRecord.conversation_id == conversation_id).filter(or_(ChatRecord.msgFrom == user_id,  ChatRecord.msgTo == user_id), ChatRecord.pk_chat_record < last_chat_record_id).order_by(ChatRecord.pk_chat_record.desc()).limit(limit).all()
         return result
 
-    def insert_chat_record(self, chat_record: ChatRecord):
+    def insert_chat_record(self, chat_record: ChatRecord) -> int:
         self.session.add(chat_record)
         self.session.commit()
+        return chat_record.pk_chat_record
     
 
 class Conversation(Base):

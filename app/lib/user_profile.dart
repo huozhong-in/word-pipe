@@ -39,7 +39,7 @@ class UserProfile extends StatelessWidget {
             if (username != "") {
                 return Scaffold(
                   appBar: AppBar(
-                    title: const Text('我的资料', style: TextStyle(color: Colors.white, fontSize: 24)),
+                    title: const Text('我的', style: TextStyle(color: Colors.white, fontSize: 24)),
                     centerTitle: true,
                     backgroundColor: Color.fromARGB(255, 59, 214, 157),
                     automaticallyImplyLeading: false,

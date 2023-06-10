@@ -145,24 +145,7 @@ class MobileHome extends StatelessWidget {
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(0, 20, 0, 20),
-                    child: RichText(
-                      text: TextSpan(
-                        text: 'WordPipe',
-                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          color: Colors.black54,
-                          fontSize: 20,
-                          fontFamily: 'SofadiOne',
-                          fontWeight: FontWeight.w600),
-                        children: <TextSpan>[
-                          TextSpan(
-                            text: '  alpha',
-                            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                              color: Colors.blue,
-                              fontSize: 12),
-                          ),
-                        ],
-                      )
-                    ),
+                    child: WordPipeLogo(context),
                   ),
                 ),
                 ListTile(
@@ -172,7 +155,7 @@ class MobileHome extends StatelessWidget {
                 ),
                 ListTile(
                   leading: Icon(Icons.settings),
-                  title: Text('设置'),
+                  title: Text('功能设置'),
                   onTap: () => Get.offAll(() => Settings()),
                 ),
                 ListTile(
@@ -415,7 +398,7 @@ class MobileHome extends StatelessWidget {
     if (messageController.conversation_id.value == -1){
       messageController.conversation_id.value = await messageController.conversation_CUD(_username, "create", messageController.conversation_id.value);
     }
-    Map<String, dynamic>  ret = await messageController.new_chat(_username, text.trim(), messageController.conversation_id.value);
+    Map<String, dynamic>  ret = await messageController.chat(_username, text.trim(), messageController.conversation_id.value);
     if(ret['errcode'] as int == 0){
       _textController.clear();
       if (settingsController.freeChatMode.value == true){

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageController.dart';
 import 'package:wordpipe/message_bubble.dart';
+import 'package:wordpipe/voice_bubble.dart';
 
 // ignore: must_be_immutable
 class MessageView extends StatelessWidget {
@@ -54,6 +55,7 @@ class MessageView extends StatelessWidget {
                   uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
                   createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
                   key: UniqueKey(), 
+                  isSent: true,
                 )
               );
 
@@ -72,6 +74,7 @@ class MessageView extends StatelessWidget {
                   uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
                   createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
                   key: UniqueKey(), 
+                  isSent: true,
                 )
               );
             }
@@ -92,6 +95,7 @@ class MessageView extends StatelessWidget {
                   uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
                   createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
                   key: UniqueKey(), 
+                  isSent: true,
                 )
               );
             }else{
@@ -109,6 +113,7 @@ class MessageView extends StatelessWidget {
                   uuid: 'b811abd7-c0bb-4301-9664-574d0d8b11f8',
                   createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
                   key: UniqueKey(), 
+                  isSent: true,
                 )
               );
             }
@@ -137,21 +142,34 @@ class MessageView extends StatelessWidget {
         return Stack(
           children: [
             ListView.builder(
-            controller: messageController.scrollController,
-            itemCount: messageController.messages.length,
-            itemBuilder: (context, index) {
-              MessageModel message = messageController.messages[index];
-              // print("_buildListView(index ${index}): ${message.username} ${message.dataList} ${message.type}");
-              return MessageBubble(
-                key: message.key,
-                sender: message.username,
-                sender_uuid: message.uuid,
-                dataList: message.dataList,
-                type: message.type,
-              );
-            },
-            shrinkWrap: true,
-            reverse: true,
+              controller: messageController.scrollController,
+              itemCount: messageController.messages.length,
+              itemBuilder: (context, index) {
+                MessageModel message = messageController.messages[index];
+                // print("_buildListView(index ${index}): ${message.username} ${message.dataList} ${message.type}");
+                switch (message.type.value) {
+                  case WordPipeMessageType.audio:
+                    return VoiceBubble(
+                      key: message.key,
+                      sender: message.username,
+                      sender_uuid: message.uuid,
+                      dataList: message.dataList,
+                      type: message.type,
+                      isSent: message.isSent,
+                    );
+                  default:
+                    return MessageBubble(
+                      key: message.key,
+                      sender: message.username,
+                      sender_uuid: message.uuid,
+                      dataList: message.dataList,
+                      type: message.type,
+                    );
+                }
+
+              },
+              shrinkWrap: true,
+              reverse: true,
             ),
             // Visibility(
             //   visible: newMessageArrived.value,

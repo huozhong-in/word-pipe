@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dart_openai/dart_openai.dart';
@@ -31,7 +32,7 @@ class MessageController extends GetxController{
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   final ttsJobs = Map<String, String>().obs;
-  late AudioPlayer ttsPlayer;
+  late AudioPlayer voicePlayer;
   final whichIsPlaying = "".obs;
   Rx<ButtonState> buttonNotifier = ButtonState.paused.obs;
 
@@ -54,6 +55,7 @@ class MessageController extends GetxController{
       type: WordPipeMessageType.reserved,
       createTime: 0,
       key: UniqueKey(),
+      isSent: true,
     ));
   }
   
@@ -66,7 +68,7 @@ class MessageController extends GetxController{
     scrollController.addListener(_scrollListener);
 
     // 文字转语音播放器的控制，根据服务端返回数据播放
-    ttsPlayer = AudioPlayer();
+    voicePlayer = AudioPlayer();
     ttsJobs.listen((Map<String, String> jobs) {
       if (jobs.isNotEmpty) {
         // jobs.forEach((key, value) { print('$key: $value'); });
@@ -75,17 +77,43 @@ class MessageController extends GetxController{
           return;
         }else{
           final mp3Url = jobs[whichIsPlaying.value] as String;
-          ttsPlayer.setUrl(mp3Url).then((_) {
-            ttsPlayer.play();
-            setPlayerListener();
+          voicePlayer.setUrl(mp3Url).then((_) {
+            voicePlayer.play();
+            _setPlayerListener();
           });
         }
       }
     });
   }
 
-  void setPlayerListener({bool purge=true}){
-    ttsPlayer.playerStateStream.listen((playerState) {
+  void playVoice(String keyString, String filePath, bool purgePlayed) async {
+    if (voicePlayer.playerState.playing){
+      await voicePlayer.pause();
+    }
+    whichIsPlaying.value = keyString;                            
+    // print("playVoice(): $filePath");
+    // 判断filePath是本地路径还是url
+    if (filePath.startsWith('http')) {
+      voicePlayer.setUrl(filePath, preload: false).then((duration) {
+        // print(duration);
+        voicePlayer.play().then((_) {
+          // print("playVoice(): 播放结束");
+        });
+        _setPlayerListener(purgePlayed: purgePlayed);
+      });
+    } else {
+      voicePlayer.setFilePath(filePath).then((duration) {
+        // print(duration);
+        voicePlayer.play().then((_) {
+          // print("playVoice(): 播放结束");
+        });
+        _setPlayerListener(purgePlayed: purgePlayed);
+      });
+    }
+  }
+
+  void _setPlayerListener({bool purgePlayed=true}){
+    voicePlayer.playerStateStream.listen((playerState) {
       final isPlaying = playerState.playing;
       final processingState = playerState.processingState;
       if (processingState == ProcessingState.loading || processingState == ProcessingState.buffering) {
@@ -95,9 +123,9 @@ class MessageController extends GetxController{
       } else if (processingState != ProcessingState.completed) {
         buttonNotifier.value = ButtonState.playing;
       } else {
-        ttsPlayer.seek(Duration.zero);
-        ttsPlayer.pause();
-        if(purge){
+        voicePlayer.seek(Duration.zero);
+        voicePlayer.pause();
+        if(purgePlayed){
           // print("set whichIsPlaying.value = ''");
           whichIsPlaying.value = '';
         }
@@ -113,7 +141,7 @@ class MessageController extends GetxController{
     } catch (e) {
       print("onClose():" + e.toString());
     }
-    ttsPlayer.dispose();
+    voicePlayer.dispose();
     super.onClose();
   }
 
@@ -218,6 +246,7 @@ class MessageController extends GetxController{
       uuid: "b811abd7-c0bb-4301-9664-574d0d8b11f8",
       createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       key: UniqueKey(),
+      isSent: false,
     ));
     
     OpenAI.apiKey = apiKey;
@@ -331,6 +360,7 @@ class MessageController extends GetxController{
       uuid: "b811abd7-c0bb-4301-9664-574d0d8b11f8",
       createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       key: UniqueKey(),
+      isSent: false,
     ));
     
     // 使用用户自己的OpenAI API key
@@ -372,7 +402,7 @@ class MessageController extends GetxController{
       }
     });
   }
-  Future<Map<String, dynamic>> new_chat(String username, String message, int conversation_id) async{
+  Future<Map<String, dynamic>> chat(String username, String message, int conversation_id) async{
     String myuuid = await c.getUUID();
     String needUpdate = addMessage(MessageModel(
       dataList: RxList([message]),
@@ -381,10 +411,31 @@ class MessageController extends GetxController{
       uuid: myuuid,
       createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       key: UniqueKey(),
+      isSent: false,
     ));
-    return await c.chat(username, message, conversation_id, needUpdate.toString());
+    return await c.chat(username, message, conversation_id, needUpdate);
   }
-  
+  Future<Map<String, dynamic>> voiceChat(String username, String message, String fileName, int conversation_id) async{
+    String myuuid = await c.getUUID();
+    String needUpdate = addMessage(MessageModel(
+      dataList: RxList([message, fileName]),
+      type: WordPipeMessageType.audio,
+      username: username,
+      uuid: myuuid,
+      createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      key: UniqueKey(),
+      isSent: false,
+    ));
+    Map<String, dynamic> result = await c.voiceChat(username, message, fileName, needUpdate, conversation_id);
+    if (result['errcode'] as int == 0){
+      // 语音消息发送成功，更新消息状态，去掉loading效果
+      final message = findMessageByKey(needUpdate);
+      message.isSent.value = true;
+      // 将语音文件的url保存到消息中
+      message.dataList.add(result['relative_url'] as String);
+    }
+    return result;
+  }
   void handleSSE(String channel) async {
     try {
       sseClient = SSEClient.getInstance(Uri.parse(SSE_SERVER_HOST + SSE_SERVER_PATH), SSE_MSG_TYPE, channel);
@@ -404,7 +455,7 @@ class MessageController extends GetxController{
                 final message = findMessageByKey(message_key);
                 if (message.type == WordPipeMessageType.reserved){
                   // 如果在消息列表中没有找到，则新增
-                  messages.insert(0, MessageModel.fromJson(json));
+                  addMessage(MessageModel.fromJson(json));
                 }else{
                   // 如果在消息列表中找到了，则更新
                   // if (message.dataList[0] == '...'){
@@ -414,7 +465,7 @@ class MessageController extends GetxController{
                   message.dataList.add(content);
                 }
               }else{
-                messages.insert(0, MessageModel.fromJson(json));
+                addMessage(MessageModel.fromJson(json));
               }
             }
             sse_connected = true;
@@ -516,19 +567,66 @@ class MessageController extends GetxController{
     }
   }
 
-  // Future<String> convertspeechToText (String filepath) async {
-  // const apiKey = apisecretkey:
-  // var url = Uri.https("'api.openai.com”, “v1/audio/transcriptions"):
-  // var request = http.MultipartRequest(’PoST', url):
-  // request.headers.addAl1(( ("Authorizat ion": "Bearer $apikey"}));
-  // request. fields ["model"] = 'whisper-1';
-  // request. fields ["language"] ="en";
-  // request . fites.add(await http.MultipartFile. fromPath("file' , filepath));
-  // var response = await request. send();
-  // var newresponse = await http.Response. fromstream (response);
-  // final responseData = json.decode (newresponse.body)：
-  // print ( responseData);
-  // return responseData['text'];}
+  Future<String> convertSpeechToText (String filepath) async {
+    // const apiKey = apisecretkey:
+    // var url = Uri.https("'api.openai.com”, “v1/audio/transcriptions"):
+    // var request = http.MultipartRequest(’PoST', url):
+    // request.headers.addAl1(( ("Authorizat ion": "Bearer $apikey"}));
+    // request. fields ["model"] = 'whisper-1';
+    // request. fields ["language"] ="en";
+    // request . fites.add(await http.MultipartFile. fromPath("file' , filepath));
+    // var response = await request. send();
+    // var newresponse = await http.Response. fromstream (response);
+    // final responseData = json.decode (newresponse.body)：
+    // print ( responseData);
+    // return responseData['text'];
+    // 使用用户自己的OpenAI API key
+    String curr_user = "";
+    String access_token = "";
+    String apiKey = "";
+    String baseUrl = "";
+    int premium = 0;
+    Map<String, dynamic> sessionData = await c.getSessionData();
+    if (sessionData.containsKey('error') == false){
+      curr_user = sessionData['username'] as String;
+      access_token = sessionData['access_token'] as String;
+      apiKey = sessionData['apiKey'] as String;
+      baseUrl = sessionData['baseUrl'] as String;
+      premium = sessionData['premium'] as int;
+    }else{
+      return "";
+    }
+    if (curr_user == ""){
+      return "";
+    }
+    if (access_token == ""){
+      return "";
+    }
+    if (apiKey == ""){
+      return "";
+    }
+    if (baseUrl == ""){
+      return "";
+    }
+    final SettingsController settingsController = Get.find();
+    if (premium == 0 && settingsController.openAiApiKey.value != ""){
+      apiKey = settingsController.openAiApiKey.value;
+    }
+    OpenAI.apiKey = apiKey;
+    OpenAI.baseUrl = baseUrl;
+    Future<OpenAIAudioModel> transcription = OpenAI.instance.audio.createTranscription(
+      file: File(filepath),
+      model: "whisper-1",
+      responseFormat: OpenAIAudioResponseFormat.json,
+      // language: 'zh',
+    );
+    String stt_string = await transcription.then((jsonData) => jsonData.text);
+    return stt_string;
+  }
+
+
+
+
 }
 
 class TTSAudio extends GetConnect {
@@ -573,14 +671,14 @@ class TTSAudio extends GetConnect {
   }
 
   bool isEnglishAndSymbols(String text) {
-  for (int i = 0; i < text.length; i++) {
-    int codeUnit = text.codeUnitAt(i);
-    if (!((codeUnit >= 32 && codeUnit <= 126) || (codeUnit >= 9 && codeUnit <= 13) || codeUnit == 133)) {
-      return false;
+    for (int i = 0; i < text.length; i++) {
+      int codeUnit = text.codeUnitAt(i);
+      if (!((codeUnit >= 32 && codeUnit <= 126) || (codeUnit >= 9 && codeUnit <= 13) || codeUnit == 133)) {
+        return false;
+      }
     }
+    return true;
   }
-  return true;
-}
 }
 
 class ChatRecord extends GetConnect {
@@ -640,7 +738,8 @@ class ChatRecord extends GetConnect {
             createTime: msgCreateTime, 
             dataList: RxList([msgContent]), 
             type: WordPipeMessageType.raw_text, 
-            key: UniqueKey()
+            key: ValueKey(e['pk_chat_record']),
+            isSent: true,
             )
           );
       });

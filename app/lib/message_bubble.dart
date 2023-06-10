@@ -49,7 +49,7 @@ class MessageBubble extends StatelessWidget {
       }
 
       // 移动端调窄边距
-      double edge = GetPlatform.isMobile ? 8 : 80;
+      double edge = GetPlatform.isMobile ? 8 : 100;
 
       return GestureDetector(
         child: Container(
@@ -108,18 +108,18 @@ class MessageBubble extends StatelessWidget {
                                         if (messageController.whichIsPlaying.value == keyString) {
                                           if (messageController.buttonNotifier.value == ButtonState.playing) {
                                             messageController.buttonNotifier.value = ButtonState.paused;
-                                            messageController.ttsPlayer.pause();
+                                            messageController.voicePlayer.pause();
                                           } else if (messageController.buttonNotifier.value == ButtonState.paused) {
                                             messageController.buttonNotifier.value = ButtonState.playing;
-                                            messageController.ttsPlayer.play();
+                                            messageController.voicePlayer.play();
                                           }
                                           if (messageController.ttsJobs.containsKey(keyString)) {
                                             messageController.ttsJobs.remove(keyString);
                                           }
                                         }else{
                                           // 如果是在播放其他音频，则先停止播放，重新设置正在播放的音频
-                                          if (messageController.ttsPlayer.playerState.playing){
-                                            await messageController.ttsPlayer.pause();
+                                          if (messageController.voicePlayer.playerState.playing){
+                                            await messageController.voicePlayer.pause();
                                           }
                                           messageController.whichIsPlaying.value = keyString;
                                           messageController.buttonNotifier.value = ButtonState.loading;
@@ -188,6 +188,7 @@ class MessageBubble extends StatelessWidget {
         ),
       );
     }
+    
     return FutureBuilder<void>(
       future: setIsMe(),
       builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
@@ -201,65 +202,6 @@ class MessageBubble extends StatelessWidget {
       },
     );  
   }
-
-  // Widget showAvatar() {
-  //   return FutureBuilder<String>(
-  //     future: c.imageTypes("${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}"),
-  //     builder: (context, snapshot) {
-  //       if (snapshot.connectionState == ConnectionState.done) {
-  //         if (snapshot.hasError) {
-  //           return Icon(Icons.error);
-  //         }
-  //         if (snapshot.data == 'jpeg') {
-  //           return CachedNetworkImage(
-  //             imageUrl: "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}",
-  //             imageBuilder: (context, imageProvider) => Container(
-  //               width: 50,
-  //               height: 50,
-  //               margin: const EdgeInsets.only(right: 8),
-  //               decoration: BoxDecoration(
-  //                 borderRadius: BorderRadius.circular(3),
-  //                 image: DecorationImage(
-  //                   image: imageProvider,
-  //                   fit: BoxFit.cover,
-  //                 ),
-  //               ),
-  //             ),
-  //             placeholder: (context, url) => Container(
-  //               width: 50,
-  //               height: 50,
-  //               color: Colors.black12,
-  //               margin: const EdgeInsets.only(right: 8),
-  //               child: Center(child: CircularProgressIndicator()),
-  //             ),
-  //             errorWidget: (context, url, error) => Icon(Icons.error),
-  //           );
-  //         } else {
-  //           return SvgPicture.network(
-  //             "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}",
-  //             height: 40,
-  //             width: 40,
-  //             semanticsLabel: 'avatar',
-  //             placeholderBuilder: (BuildContext context) => Container(
-  //               width: 50,
-  //               height: 50,
-  //               color: Colors.black12,
-  //               margin: const EdgeInsets.only(right: 8),
-  //               child: Center(child: CircularProgressIndicator()),
-  //             ),
-  //           );
-  //         }
-  //       }
-  //       return Container(
-  //         width: 50,
-  //         height: 50,
-  //         color: Colors.black12,
-  //         margin: const EdgeInsets.only(right: 8),
-  //         child: Center(child: CircularProgressIndicator()),
-  //       );
-  //     },
-  //   );
-  // }
 
   Widget showAvatar2() {
     String imgUrl = "${HTTP_SERVER_HOST}/${AVATAR_FILE_DIR}/${sender}";
@@ -443,6 +385,7 @@ class MessageBubble extends StatelessWidget {
       spans.add(TextSpan(text: element as String));
     });
     return TextSpan(
+      // text: key.hashCode.toString(),
       style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
       children: spans,
     );

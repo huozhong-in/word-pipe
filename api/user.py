@@ -103,7 +103,14 @@ class UserDB:
             if user.password == pass_word:
                 # update access_token
                 access_token, expire_at = self.refresh_access_token(user_name)
-                r: dict = {"access_token": access_token,"expires_at": expire_at, "uuid": user.uuid, "premium": user.premium}
+                # 如果不是付费用户，检查是否过了免费试用期
+                premium: int = 0
+                if user.premium == 1:
+                    premium = 1
+                else:
+                    if int(time.time()) - user.ctime < DEFAULT_FREE_TRIAL_TIME:
+                        premium = 1
+                r: dict = {"access_token": access_token, "expires_at": expire_at, "uuid": user.uuid, "premium": premium}
                 return r
             else:
                 return {}
@@ -190,7 +197,7 @@ class UserDB:
     def generate_access_token(self, user_name) -> tuple:
         payload = {
             'user_name': user_name,
-            'exp': int(time.time()) + 3600 * 24 * 30 # 30 days
+            'exp': int(time.time()) + DEFAULT_ACCESS_TOKEN_EXPIRE_SECONDS
         }
         access_token = jwt.encode(payload, 't0uKan5h1x!aO90U', algorithm='HS256')
         return access_token, payload['exp']
@@ -198,7 +205,7 @@ class UserDB:
     # refresh access_token
     def refresh_access_token(self, user_name) -> tuple:
         access_token, expire_at = self.generate_access_token(user_name)
-        if self.update_user_by_username(user_name, access_token=access_token, access_token_expire_at=expire_at) is not None:
+        if self.update_user_by_username(user_name, access_token=access_token, access_token_expire_at=expire_at, utime=int(time.time())) is not None:
             return access_token, expire_at
         else:
             return None
