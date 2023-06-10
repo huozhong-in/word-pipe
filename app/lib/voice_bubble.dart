@@ -72,7 +72,7 @@ class VoiceBubble extends StatelessWidget {
                       child: SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 3,color: Colors.black26,)
+                        child: CircularProgressIndicator(strokeWidth: 3,color: Colors.green,)
                       )
                     );
                   else
@@ -87,10 +87,12 @@ class VoiceBubble extends StatelessWidget {
                           MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
                         child: Container(
                           padding: const EdgeInsets.all(0),
-                          // constraints: BoxConstraints(
-                          //   minWidth: 80,
-                          // ),
+                          constraints: BoxConstraints(
+                            // maxWidth: 150,
+                            minWidth: 150
+                          ),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               InkWell(
                                 onTap: () async {
@@ -108,12 +110,11 @@ class VoiceBubble extends StatelessWidget {
                                   messageController.playVoice(key.hashCode.toString(), HTTP_SERVER_HOST + filePath, true);
                                 },
                                 child: Container(
-                                  width: double.infinity,
                                   padding: EdgeInsets.fromLTRB(0, 12, 25, 12),
                                   alignment: Alignment.centerRight,
                                   child: Icon(
                                     Icons.graphic_eq_outlined,
-                                    color: Colors.black26,
+                                    color: Colors.green[700],
                                   ),
                                 ),
                               ),
