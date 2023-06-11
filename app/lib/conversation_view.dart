@@ -72,10 +72,10 @@ class ConversationView extends StatelessWidget {
                           Map<String, dynamic> item = snapshot.data![i];
                           messageController.radioListTiles.add(customRadioListTile(item));
                         }
-                        return ListView(
+                        return Obx(() => ListView(
                           shrinkWrap: true,
                           children: messageController.radioListTiles,
-                        );
+                        ));
                       } else if (snapshot.hasError) {
                         return Text("${snapshot.error}");
                       }
@@ -89,7 +89,7 @@ class ConversationView extends StatelessWidget {
         }),
         Expanded(child: 
           FutureBuilder<void>(
-            future: _getListTile().then((value) => print("MessageView first build done.")),
+            future: _getListTile().then((value) => print("MessageView built follow _getListTile()")),
             builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator(

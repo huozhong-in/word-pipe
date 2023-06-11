@@ -27,11 +27,11 @@ pod update
 - 品牌元素
   - [ ] [官网建设](https://framer.com/)，隐私协议，服务条款，开源软件列表，
 - 产品功能
-  - [x] 桌面版本能在线更新，能做到强制更新，但要么全部强制更新，要么都不强制更新。
-  - [ ] 去掉邀请码机制，改为试用一周。订阅方式，macOS微信或支付宝扫码支付；iOS应用内付费，走苹果支付通道
-  - [ ] 语音对话。[waveform](https://github.com/ryanheise/just_audio/issues/97) [和](https://github.com/ryanheise/just_audio/blob/visualizer/just_audio/example/lib/example_visualizer.dart)
+  - [x] 桌面版本能在线更新，能做到强制更新。现在的方案，只能实现要么全部强制更新，要么都不强制更新。
+  - [ ] 语音对话，携带上文，用bark生成。prompt限制max_tokens。[waveform](https://github.com/ryanheise/just_audio/issues/97) [和](https://github.com/ryanheise/just_audio/blob/visualizer/just_audio/example/lib/example_visualizer.dart)
+  - [ ] 去掉邀请码机制，改为试用48小时，或者25轮对话？订阅方式，macOS微信或支付宝扫码支付；iOS应用内付费，走苹果支付通道
   - [ ] 语音消息转文字后，帮助用户润色，然后再读出来。口语润色自带语法纠错。
-  - [ ] shift+enter换行、enter发送，或者enter换行、cmd+enter发送
+  - [ ] shift+enter换行、enter发送，或者enter换行、cmd+enter发送【hotkey_manager】
   - [ ] 词典用本地数据库。聊天记录本地缓存，减少网络查询。聊天记录还是需要放在云端，真人互聊、家庭号需要。收集信息是为了持续训练垂直领域模型
   - [ ] 优化token使用。使用LangChain或复制它的逻辑
   - [ ] 支持多个服务商的API。
@@ -47,7 +47,7 @@ pod update
     - [ ] 出题。历届雅思真题。听力练习（模拟考试）和纠错。
     - [ ] 改写扩写等，要结合界面和输入框做统一考虑。输入框随着行数增加而变高，最高10行。
   - [ ] 家庭号
-    - [ ] 家长给孩子开账号，相当于就是青少年模式。三人房间。一键切换到孩子账号，类似sudo
+    - [ ] 家长给孩子开账号，相当于就是青少年模式。三人房间，人之间的聊天要实现离线消息，类似收邮件，配合App push和grpc等直连技术达到在线（及时性）和离线（不丢消息）的平衡，服务端生成的带有时间戳的分布式全局ID就很必要。一键切换到孩子账号，类似sudo
     - [ ] 个人资料页，年龄范围，可用于优化prompt。`You are a primary school teacher who can explain complex content to a level that a 7 or 8 year old child can understand. Please rewrite the following sentences to make them easier to understand:`
   - [ ] 滚动和搜索。[ListView性能优化](https://github.com/LianjiaTech/keframe/blob/master/README-ZH.md)
   - [ ] iOS [访问开发环境API不使用https](https://stackoverflow.com/questions/31254725/transport-security-has-blocked-a-cleartext-http/32331282#32331282)

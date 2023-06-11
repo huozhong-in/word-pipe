@@ -7,6 +7,7 @@
 #include "generated_plugin_registrant.h"
 
 #include <flutter_desktop_audio_recorder/flutter_desktop_audio_recorder_plugin.h>
+#include <hotkey_manager/hotkey_manager_plugin.h>
 #include <record_windows/record_windows_plugin_c_api.h>
 #include <screen_retriever/screen_retriever_plugin.h>
 #include <url_launcher_windows/url_launcher_windows.h>
@@ -15,6 +16,8 @@
 void RegisterPlugins(flutter::PluginRegistry* registry) {
   FlutterDesktopAudioRecorderPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FlutterDesktopAudioRecorderPlugin"));
+  HotkeyManagerPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("HotkeyManagerPlugin"));
   RecordWindowsPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("RecordWindowsPluginCApi"));
   ScreenRetrieverPluginRegisterWithRegistrar(

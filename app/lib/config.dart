@@ -8,12 +8,12 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 // final bool kDebugMode = true;
 // final bool isDebug = bool.fromEnvironment('DEBUG', defaultValue: false);
 
-final String SSE_SERVER_HOST = kDebugMode ? "http://192.168.0.166" : "https://wordpipe.in";
+final String SSE_SERVER_HOST = kDebugMode ? "http://127.0.0.1" : "https://wordpipe.in";
 final String SSE_SERVER_PATH = "/api/stream";
 final String SSE_MSG_TYPE = "prod"; // prod, dev, test
 final String SSE_MSG_DEFAULT_CHANNEL = "users.social";
 
-final String HTTP_SERVER_HOST = kDebugMode ? "http://192.168.0.166/api" : "https://wordpipe.in/api";
+final String HTTP_SERVER_HOST = kDebugMode ? "http://127.0.0.1/api" : "https://wordpipe.in/api";
 
 final AVATAR_FILE_DIR = "avatar";
 final VOICE_FILE_DIR = "stt";

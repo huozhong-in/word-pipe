@@ -58,10 +58,18 @@ class DesktopHome extends StatelessWidget {
   }
 
   void _handleSubmitted(String text) async {
-    // 发送语音消息
+     if( _username == "")
+      return;
+    if(_m4aFileName.value == "" && text.trim() == "")
+      return;
+    // 如果conversation_id == -1，说明是新话题，需要先创建话题，话题ID是服务端生成返回
+    if (messageController.conversation_id.value == -1){
+      messageController.conversation_id.value = await messageController.conversation_CUD(_username, "create", messageController.conversation_id.value);
+    }
     if(_m4aFileName.value != ""){
+      // 发送语音消息
       if (stt_string.value.trim() == ''){
-        customSnackBar(title: "语音转换失败", content: "请重新录音");
+        customSnackBar(title: "语音转文字失败", content: "请重新录音");
         return;
       }
       Map<String, dynamic> ret = await
@@ -71,28 +79,20 @@ class DesktopHome extends StatelessWidget {
         deleteAllTempAudioFiles();
       }
       return;
-    }
-    // 发送文本消息
-    if(text.trim() == "")
-      return;
-    if( _username == "")
-      return;
-    // 向服务端发送消息
-    // 如果conversation_id == -1，说明是新话题，需要先创建话题，话题ID是服务端生成返回
-    if (messageController.conversation_id.value == -1){
-      messageController.conversation_id.value = await messageController.conversation_CUD(_username, "create", messageController.conversation_id.value);
-    }
-    Map<String, dynamic> ret = await messageController.chat(_username, text.trim(), messageController.conversation_id.value);
-    if(ret['errcode'] as int == 0){
-      _textController.clear();
-      _matchWords.clear();
-      _indexHighlight = 0;
-      if (settingsController.freeChatMode.value == true){
-        messageController.freeChat('gpt-3.5-turbo', messageController.conversation_id.value, text);
+    }else if (text.trim() != ""){
+      // 发送文本消息
+      Map<String, dynamic> ret = await messageController.chat(_username, text.trim(), messageController.conversation_id.value);
+      if(ret['errcode'] as int == 0){
+        _textController.clear();
+        _matchWords.clear();
+        _indexHighlight = 0;
+        if (settingsController.freeChatMode.value == true){
+          messageController.freeChat('gpt-3.5-turbo', messageController.conversation_id.value, text);
+        }
+      }else{
+        customSnackBar(title: "发生错误", content: ret['errmsg'] as String);
       }
-    }else{
-      customSnackBar(title: "发生错误", content: ret['errmsg'] as String);
-    }   
+    }
   }
   
   void _handleMatchWords(String text) {
@@ -745,7 +745,7 @@ class DesktopHome extends StatelessWidget {
                               _commentFocus.requestFocus();
                             } else {
                               settingsController.freeChatMode.value = false;
-                              customSnackBar(title: "试用已过期", content: "请设置自己的OpenAI API key或者升级为付费会员.");
+                              customSnackBar(title: "试用已结束", content: "请配置自己的OpenAI API key或升级为付费会员.");
                             }
                           }
                         }else{
@@ -797,83 +797,82 @@ class DesktopHome extends StatelessWidget {
                                             overflow: TextOverflow.ellipsis,
                                           );                                          
                                         }),
-                                        Obx(() {
-                                          return DropdownButton(
-                                            icon: Icon(Icons.more_vert),
-                                            iconDisabledColor: Colors.grey[100],
-                                            items: [
-                                              DropdownMenuItem(
-                                                enabled: messageController.conversation_id.value > 0,
-                                                value: 'edit',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(Icons.edit, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey,),
-                                                    SizedBox(width: 10),
-                                                    Text('修改名称', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
-                                                  ],
-                                                ),
-                                              ),
-                                              DropdownMenuItem(
-                                                enabled: messageController.conversation_id.value > 0,
-                                                value: 'delete',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(Icons.delete, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey,),
-                                                    SizedBox(width: 10),
-                                                    Text('删除话题', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0?Colors.black:Colors.grey)),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                            onChanged: (value) {
-                                              if (value == 'edit') {
-                                                // show a dialog for modify messageControll.seletedConversationName
-                                                conversationNameController.text = messageController.selectedConversationName.value;
-                                                Get.defaultDialog(
-                                                  title: '编辑',
-                                                  content: TextField(
-                                                    controller: conversationNameController,
-                                                    decoration: InputDecoration(
-                                                      border: OutlineInputBorder(),
-                                                      labelText: '话题名称',
-                                                    ),
-                                                    maxLength: 50,
+                                        PopupMenuButton(
+                                          icon: Icon(Icons.more_vert),
+                                          iconSize: 24,
+                                          tooltip: '当前话题',
+                                          onSelected: (value) async {
+                                            if (value == 'edit') {
+                                              // show a dialog for modify messageControll.seletedConversationName
+                                              conversationNameController.text = messageController.selectedConversationName.value;
+                                              Get.defaultDialog(
+                                                title: '编辑',
+                                                content: TextField(
+                                                  controller: conversationNameController,
+                                                  decoration: InputDecoration(
+                                                    border: OutlineInputBorder(),
+                                                    labelText: '话题名称',
                                                   ),
-                                                  textConfirm: '保存',
-                                                  textCancel: '取消',
-                                                  confirmTextColor: Colors.white,
-                                                  buttonColor: Colors.green,
-                                                  onConfirm: () async {
-                                                    // update conversation name
-                                                    if (await messageController.updateConversationName(messageController.conversation_id.value, conversationNameController.text)){
-                                                      Get.back();
-                                                    }else{
-                                                      print('update error');
-                                                    }
-                                                  },
-                                                );
-                                              } else if (value == 'delete') {
-                                                // show a dialog for delete messageControll.radioListTile current item
-                                                Get.defaultDialog(
-                                                  title: '删除话题',
-                                                  content: Text('你确定要删除当前话题记录吗?'),
-                                                  textConfirm: '删除',
-                                                  textCancel: '取消',
-                                                  confirmTextColor: Colors.white,
-                                                  buttonColor: Colors.red,
-                                                  onConfirm: () async {
-                                                    // delete conversation
-                                                    if (await messageController.deleteConversation(messageController.conversation_id.value)){
-                                                      Get.back();
-                                                    }else{
-                                                      print('delete error');
-                                                    }
-                                                  },
-                                                );
-                                              }
-                                            },
-                                          );
-                                        },)
+                                                  maxLength: 50,
+                                                ),
+                                                textConfirm: '保存',
+                                                textCancel: '取消',
+                                                confirmTextColor: Colors.white,
+                                                buttonColor: Colors.green,
+                                                onConfirm: () async {
+                                                  // update conversation name
+                                                  if (await messageController.updateConversationName(messageController.conversation_id.value, conversationNameController.text)){
+                                                    Get.back();
+                                                  }else{
+                                                    print('update error');
+                                                  }
+                                                },
+                                              );
+                                            } else if (value == 'delete') {
+                                              // show a dialog for delete messageControll.radioListTile current item
+                                              Get.defaultDialog(
+                                                title: '删除话题',
+                                                content: Text('你确定要删除当前话题记录吗?'),
+                                                textConfirm: '删除',
+                                                textCancel: '取消',
+                                                confirmTextColor: Colors.white,
+                                                buttonColor: Colors.red,
+                                                onConfirm: () async {
+                                                  // delete conversation
+                                                  if (await messageController.deleteConversation(messageController.conversation_id.value)){
+                                                    Get.back();
+                                                  }else{
+                                                    print('delete error');
+                                                  }
+                                                },
+                                              );
+                                            }
+                                          },
+                                          itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                                            PopupMenuItem(
+                                              enabled: messageController.conversation_id.value > 0,
+                                              value: 'edit',
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.edit, color: messageController.conversation_id.value > 0 ?Colors.black:Colors.grey,),
+                                                  SizedBox(width: 10),
+                                                  Text('修改名称', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0 ?Colors.black:Colors.grey)),
+                                                ],
+                                              ),
+                                            ),
+                                            PopupMenuItem(
+                                              enabled: messageController.conversation_id.value > 0,
+                                              value: 'delete',
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.delete, color: messageController.conversation_id.value > 0 ?Colors.black:Colors.grey,),
+                                                  SizedBox(width: 10),
+                                                  Text('删除话题', style: TextStyle(fontSize: 14, color: messageController.conversation_id.value > 0 ?Colors.black:Colors.grey)),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        )
                                       ],
                                     ),
                                   ),

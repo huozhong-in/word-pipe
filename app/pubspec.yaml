@@ -53,6 +53,7 @@ dependencies:
   flutter_desktop_audio_recorder: ^0.0.1
   just_waveform: ^0.0.5
   flutter_spinkit: ^5.2.0
+  hotkey_manager: ^0.1.8
 
 dev_dependencies:
   flutter_test:

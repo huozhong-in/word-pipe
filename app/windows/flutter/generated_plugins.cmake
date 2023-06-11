@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   flutter_desktop_audio_recorder
+  hotkey_manager
   record_windows
   screen_retriever
   url_launcher_windows

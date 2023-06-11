@@ -411,6 +411,46 @@ def voicechat():
     audio_suffix: str = f.filename.split('.')[-1] # 提取音频文件后缀名
     audio_file_full_path = USER_AUDIO_PATH / intermediate_path / f'{pk_chat_record}.{audio_suffix}'
     f.save(audio_file_full_path)
+
+    # # 获得回复并转成语音，推送回客户端
+    # api_key: str = data.get('api_key')
+    # if api_key is not None and api_key != '':
+    #     openai.api_key = api_key
+        
+    #     if os.environ.get('DEBUG_MODE') != None:
+    #         openai.proxy = PROXIES['https']
+
+    #     response = openai.ChatCompletion.create(
+    #         model='gpt-3.5-turbo',
+    #         messages=[
+    #             {
+    #                 'role': 'system', 
+    #                 'content': 'Your are my English conversation teacher. If I don\'t get my word right, you\'ll ask questions to clarify my intentions and reply to move the conversation forward. After I say "let\'s take a break", you will conduct a stage summary, and explain and correct any mistakes I made in the conversation just now, including words, grammar, colloquialism, etc.',
+    #                 'role': 'user', 
+    #                 'content': '',
+    #                 'role': 'assistant', 
+    #                 'content': '',
+    #                 'role': 'user', 
+    #                 'content': '',
+    #                 'role': 'assistant', 
+    #                 'content': '',
+    #                 'role': 'user', 
+    #                 'content': '',
+    #                 'role': 'assistant', 
+    #                 'content': '',
+    #                 'role': 'user', 
+    #                 'content': 'let\'s take a break',
+    #                 'role': 'assistant', 
+    #                 'content': '',
+    #                 'role': 'user', 
+    #                 'content': '',
+    #             }
+    #         ],
+    #         temperature=0.3,
+    #         max_tokens=200,
+    #     )
+    #     print(response['choices'][0]['message']['content'])
+
     return make_response(
         {
             "errcode": 0, 
@@ -531,7 +571,7 @@ def chat_root():
         back_data: json = {}
         back_data = get_root_by_word(message)
         id = generate_time_based_client_id(prefix=username)
-        logging.info("chat() /root publish id:", id)
+        logging.info("chat-root() /root publish id:", id)
         # 须publish两次，一次替用户说话，一次返回结果
         sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
 
@@ -737,7 +777,7 @@ def signin():
     return make_response(jsonify(r), 200)
 
 @app.route('/api/openai/<path:path>', methods=['POST', 'GET', 'PUT', 'DELETE'])
-def openai_stt_proxy(path):
+def openai_general_proxy(path):
     # logging.debug(path)
     url = f'https://api.openai.com/{path}'
     headers = {key: value for (key, value) in request.headers if key != 'Host'}

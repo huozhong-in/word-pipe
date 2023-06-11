@@ -7,6 +7,10 @@ PODS:
   - FMDB (2.7.5):
     - FMDB/standard (= 2.7.5)
   - FMDB/standard (2.7.5)
+  - HotKey (0.2.0)
+  - hotkey_manager (0.0.1):
+    - FlutterMacOS
+    - HotKey
   - just_audio (0.0.1):
     - FlutterMacOS
   - just_waveform (0.0.1):
@@ -35,6 +39,7 @@ DEPENDENCIES:
   - audio_session (from `Flutter/ephemeral/.symlinks/plugins/audio_session/macos`)
   - flutter_desktop_audio_recorder (from `Flutter/ephemeral/.symlinks/plugins/flutter_desktop_audio_recorder/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
+  - hotkey_manager (from `Flutter/ephemeral/.symlinks/plugins/hotkey_manager/macos`)
   - just_audio (from `Flutter/ephemeral/.symlinks/plugins/just_audio/macos`)
   - just_waveform (from `Flutter/ephemeral/.symlinks/plugins/just_waveform/macos`)
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
@@ -49,6 +54,7 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - FMDB
+    - HotKey
 
 EXTERNAL SOURCES:
   audio_session:
@@ -57,6 +63,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_desktop_audio_recorder/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
+  hotkey_manager:
+    :path: Flutter/ephemeral/.symlinks/plugins/hotkey_manager/macos
   just_audio:
     :path: Flutter/ephemeral/.symlinks/plugins/just_audio/macos
   just_waveform:
@@ -83,6 +91,8 @@ SPEC CHECKSUMS:
   flutter_desktop_audio_recorder: 508312da1e1033e5a6365dc473d4142d1dc18da0
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
+  HotKey: e96d8a2ddbf4591131e2bb3f54e69554d90cdca6
+  hotkey_manager: c32bf0bfe8f934b7bc17ab4ad5c4c142960b023c
   just_audio: 9b67ca7b97c61cfc9784ea23cd8cc55eb226d489
   just_waveform: 1ab8cecd081342f77c51392910db0162720f0cba
   package_info_plus: 02d7a575e80f194102bef286361c6c326e4c29ce

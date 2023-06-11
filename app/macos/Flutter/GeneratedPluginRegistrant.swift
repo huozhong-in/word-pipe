@@ -7,6 +7,7 @@ import Foundation
 
 import audio_session
 import flutter_desktop_audio_recorder
+import hotkey_manager
 import just_audio
 import just_waveform
 import package_info_plus
@@ -21,6 +22,7 @@ import window_manager
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   AudioSessionPlugin.register(with: registry.registrar(forPlugin: "AudioSessionPlugin"))
   FlutterDesktopAudioRecorderPlugin.register(with: registry.registrar(forPlugin: "FlutterDesktopAudioRecorderPlugin"))
+  HotkeyManagerPlugin.register(with: registry.registrar(forPlugin: "HotkeyManagerPlugin"))
   JustAudioPlugin.register(with: registry.registrar(forPlugin: "JustAudioPlugin"))
   JustWaveformPlugin.register(with: registry.registrar(forPlugin: "JustWaveformPlugin"))
   FLTPackageInfoPlusPlugin.register(with: registry.registrar(forPlugin: "FLTPackageInfoPlusPlugin"))
