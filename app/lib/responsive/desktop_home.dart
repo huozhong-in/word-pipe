@@ -378,8 +378,8 @@ class DesktopHome extends StatelessWidget {
 
           return KeyEventResult.ignored;
         },
-      child: 
-        TextField(
+      child: Obx(() {
+        return TextField(
           focusNode: _commentFocus,
           autofocus: true,
           controller: _textController,
@@ -387,11 +387,11 @@ class DesktopHome extends StatelessWidget {
             _handleMatchWords(_textController.text);
           },
           textInputAction: TextInputAction.newline,
-          style: TextStyle(fontSize: 16, color: Colors.black),
+          style: TextStyle(fontSize: settingsController.fontSizeConfig.value, color: Colors.black),
           maxLines: 3,
           minLines: 3,
           decoration: InputDecoration(
-            hintText: '跟Jasmine说点什么吧' ,
+            hintText: '跟Jasmine聊点什么呢' ,
             hintStyle: TextStyle(color: Colors.grey),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(10),),
@@ -407,21 +407,9 @@ class DesktopHome extends StatelessWidget {
                 width: 1,
               ),
             ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10),),
-              borderSide: BorderSide(
-                color: Colors.redAccent,
-                width: 1,
-              ),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: Colors.redAccent,
-                width: 1,
-              ),
-            ),
           ),
-        )
+        );
+      },)
       );
   }
 
@@ -431,6 +419,7 @@ class DesktopHome extends StatelessWidget {
       final File audioFile = File(p.join((await getTemporaryDirectory()).path, '$fileName.bak.m4a'));
       audioFile.writeAsBytesSync(audioData);
       final waveFile = File(p.join((await getTemporaryDirectory()).path, '$fileName.wave'));
+      // 学习一下这篇文章，随语音录入实时显示波形 https://coldstone.fun/post/2020/04/13/flutter-stream/
       progressStream.value = JustWaveform.extract(
         audioInFile: audioFile, 
         waveOutFile: waveFile,
@@ -1095,13 +1084,13 @@ class DesktopHome extends StatelessWidget {
                               Positioned.fill(
                                 child: CircularProgressIndicator(
                                   value: _isRecording.value? 1 - recordProgress.value / 60 : 0,
-                                  valueColor: AlwaysStoppedAnimation(Colors.redAccent),
+                                  valueColor: AlwaysStoppedAnimation(Colors.redAccent[100]),
                                   strokeWidth: 5,
                                 ),
                               ),
                               Center(
                                 child: IconButton(
-                                  hoverColor: Colors.redAccent[100],
+                                  hoverColor: Colors.greenAccent[100],
                                   tooltip: '录制语音',
                                   iconSize: 35,
                                   onPressed: () async {
@@ -1145,7 +1134,7 @@ class DesktopHome extends StatelessWidget {
                                       recorder.requestMicPermission();
                                     }
                                   }, 
-                                  icon: Icon(Icons.mic_rounded, color: _isRecording.value? Colors.redAccent : Colors.grey)
+                                  icon: Icon(Icons.mic_rounded, color: _isRecording.value? Colors.redAccent[100] : Colors.grey)
                                 ),
                               )   
                             ],

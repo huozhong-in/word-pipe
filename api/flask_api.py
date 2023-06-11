@@ -738,22 +738,22 @@ def signin():
 
 @app.route('/api/openai/<path:path>', methods=['POST', 'GET', 'PUT', 'DELETE'])
 def openai_stt_proxy(path):
-    # print(path)
+    # logging.debug(path)
     url = f'https://api.openai.com/{path}'
     headers = {key: value for (key, value) in request.headers if key != 'Host'}
     if os.environ.get('DEBUG_MODE') != None:
         resp = requests.request(request.method, url, headers=headers, data=request.get_data(), params = request.args, proxies=PROXIES)
     else:
         resp = requests.request(request.method, url, headers=headers, data=request.get_data(), params = request.args)
-    print(resp.text)
-    return make_response(resp.content, resp.status_code) #, resp.headers.items())
+    logging.info(resp.text)
+    return make_response(resp.content, resp.status_code)
 
 @app.route('/api/openai/v1/chat/completions', methods=['POST'])
-def openai_chat_proxy(path):
+def openai_chat_proxy():
     '''
     代理到OpenAI的请求，并将聊天记录存入数据库
     '''
-    api_url = f'https://api.openai.com/{path}'
+    api_url = f'https://api.openai.com/v1/chat/completions'
     headers = {key: value for (key, value) in request.headers if key != 'Host'}
     data = request.get_data()
     params = request.args

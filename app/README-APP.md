@@ -29,26 +29,26 @@ pod update
 - 产品功能
   - [x] 桌面版本能在线更新，能做到强制更新，但要么全部强制更新，要么都不强制更新。
   - [ ] 去掉邀请码机制，改为试用一周。订阅方式，macOS微信或支付宝扫码支付；iOS应用内付费，走苹果支付通道
-  - [ ] 语音对话。[waveform](https://github.com/ryanheise/just_audio/issues/97)
+  - [ ] 语音对话。[waveform](https://github.com/ryanheise/just_audio/issues/97) [和](https://github.com/ryanheise/just_audio/blob/visualizer/just_audio/example/lib/example_visualizer.dart)
   - [ ] 语音消息转文字后，帮助用户润色，然后再读出来。口语润色自带语法纠错。
   - [ ] shift+enter换行、enter发送，或者enter换行、cmd+enter发送
   - [ ] 词典用本地数据库。聊天记录本地缓存，减少网络查询。聊天记录还是需要放在云端，真人互聊、家庭号需要。收集信息是为了持续训练垂直领域模型
   - [ ] 优化token使用。使用LangChain或复制它的逻辑
   - [ ] 支持多个服务商的API。
-  - [ ] 支持本地部署大模型
+  - [ ] 支持本地部署大模型，为这种体验服务。开发者，开放性，扩展性，用户人群定位
   - [ ] 什么时候开CoT? 通识教育中需要逻辑和推导的领域。 `Let's work this out in a step by step way to be sure we have the right answer.`
   - [ ] “直接告诉我答案”后，提示用户”打开英语输入助手，咱们做个造句练习吧！“，另外从生词本中每天找出一个单词来，进行练习。“不学习就不跟你聊！”
-  - [ ] 更多prompt转制产品功能，到屏幕右侧。提供prompt template，在界面右侧提供一些常用的模板（最佳实践），用户可以选择，点击将文本框变成表单？
+  - [ ] 更多prompt转至产品功能，到屏幕右侧。提供prompt template，在界面右侧提供一些常用的模板（最佳实践），用户可以选择，点击将文本框变成表单？
   - [ ] 多语言支持（界面翻译/多语种学习）
-  - [ ] 单词本/生词本
+  - [ ] 单词本/生词本，可以看作是本地知识库，另外就是PDF等文档，可以直接做问答功能。将英语语法，或历届真题放到社区里去？
     - [ ] 查过的词加入生词本。将ECDict的单词表放进来，让用户选。
     - [ ] 导入。开放平台从哪些地方体现？比如将百词斩中总也背不下来的词导入进来，不是替代其他成熟软件，而是AIGC特性做补充和发挥。利用ChatGPT背单词。提供界面方式+开放插件方式让用户导入生词本，标注每个生词的。怎么借助ChatGPT把生词本玩出花来？挖掘生词本潜力
-    - [ ] 造句。将“熟练金字塔”画出来。
-    - [ ] 出题。历届雅思真题
+    - [ ] 造句。和写作练习。“熟练金字塔”。
+    - [ ] 出题。历届雅思真题。听力练习（模拟考试）和纠错。
+    - [ ] 改写扩写等，要结合界面和输入框做统一考虑。输入框随着行数增加而变高，最高10行。
   - [ ] 家庭号
     - [ ] 家长给孩子开账号，相当于就是青少年模式。三人房间。一键切换到孩子账号，类似sudo
     - [ ] 个人资料页，年龄范围，可用于优化prompt。`You are a primary school teacher who can explain complex content to a level that a 7 or 8 year old child can understand. Please rewrite the following sentences to make them easier to understand:`
-    - [ ] 改写扩写等，要结合界面和输入框做统一考虑。输入框随着行数增加而变高，最高10行。
   - [ ] 滚动和搜索。[ListView性能优化](https://github.com/LianjiaTech/keframe/blob/master/README-ZH.md)
   - [ ] iOS [访问开发环境API不使用https](https://stackoverflow.com/questions/31254725/transport-security-has-blocked-a-cleartext-http/32331282#32331282)
   - [ ] 帮助和反馈渠道。使用企业微信群和电子邮件。稍后用ChatGPT学习产品说明书。

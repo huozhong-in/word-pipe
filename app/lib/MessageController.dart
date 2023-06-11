@@ -738,11 +738,7 @@ class ChatRecord extends GetConnect {
             dataList.add(e['pk_chat_record']);
             String audio_suffix = FlutterDesktopAudioRecorder().macosFileExtension;
             // intermediate_path是从msgCreateTime(timestamp格式)中提取的年月日, 例如20210101
-            int msgCreateTime =  DateTime.now().millisecondsSinceEpoch;
-            String intermediate_path = DateTime.fromMillisecondsSinceEpoch(msgCreateTime)
-                .toString()
-                .substring(0, 10)
-                .replaceAll('-', '');
+            String intermediate_path = formatTime(msgCreateTime);
             String relative_url = '/$VOICE_FILE_DIR/$intermediate_path/${e['pk_chat_record']}.$audio_suffix';
             dataList.add(relative_url);
             break;
@@ -767,6 +763,12 @@ class ChatRecord extends GetConnect {
       ret = -2; // 表示http code 500，access_token无效
     }
     return ret;
+  }
+
+  String formatTime(int msgCreateTime) {
+    DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(msgCreateTime * 1000);
+    String formatted = '${dateTime.year}${dateTime.month.toString().padLeft(2, '0')}${dateTime.day.toString().padLeft(2, '0')}';
+    return formatted; 
   }
 
   Future<int> conversation_CUD(String username, String actionType, int conversation_id, {String conversation_name=''}) async {

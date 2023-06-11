@@ -35,9 +35,8 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Future<void> setIsMe() async {
-      c.getUUID().then((_uuid) {
-        isMe = _uuid == sender_uuid;
-      });
+      final String _uuid = await c.getUUID();
+      isMe = _uuid == sender_uuid;
     }
     
     Widget _buildItem(){
@@ -51,138 +50,136 @@ class MessageBubble extends StatelessWidget {
       // 移动端调窄边距
       double edge = GetPlatform.isMobile ? 8 : 100;
 
-      return GestureDetector(
-        child: Container(
-          margin: isMe
-              ? EdgeInsets.fromLTRB(edge, 8, 8, 8)
-              : EdgeInsets.fromLTRB(8, 8, edge, 8),
-          child: Align(
-            alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-            child: SizedBox(
-              width: double.infinity,
-              child: Row(
-                mainAxisAlignment:
-                    isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!isMe) ...[
-                    // Left avatar
-                    showAvatar2()
-                  ],
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        CustomPaint(
-                          painter:
-                            MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            // constraints: BoxConstraints(
-                            //   minWidth: 320,
-                            // ),
-                            child: Obx(() => SelectableText.rich(
-                              templateDispatcher(context),
-                              minLines: 1,
-                            )),
-                          ),
+      return Container(
+        margin: isMe
+            ? EdgeInsets.fromLTRB(edge, 8, 8, 8)
+            : EdgeInsets.fromLTRB(8, 8, edge, 8),
+        child: Align(
+          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+          child: SizedBox(
+            width: double.infinity,
+            child: Row(
+              mainAxisAlignment:
+                  isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!isMe) ...[
+                  // Left avatar
+                  showAvatar2()
+                ],
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      CustomPaint(
+                        painter:
+                          MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          // constraints: BoxConstraints(
+                          //   minWidth: 320,
+                          // ),
+                          child: Obx(() => SelectableText.rich(
+                            templateDispatcher(context),
+                            minLines: 1,
+                          )),
                         ),
-                        Visibility(
-                          visible: type != WordPipeMessageType.autoreply,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Visibility(
-                                visible: isMe == false,
-                                child: Tooltip(
-                                  message: "播放音频",
-                                  child: Container(
-                                    width: 30,
-                                    height: 30,
-                                    margin: const EdgeInsets.all(1),
-                                    child: IconButton(
-                                      onPressed: () async {
-                                        String keyString = key.hashCode.toString();
-                                        // 判断已经是当前音频的播放状态，则点击暂停
-                                        if (messageController.whichIsPlaying.value == keyString) {
-                                          if (messageController.buttonNotifier.value == ButtonState.playing) {
-                                            messageController.buttonNotifier.value = ButtonState.paused;
-                                            messageController.voicePlayer.pause();
-                                          } else if (messageController.buttonNotifier.value == ButtonState.paused) {
-                                            messageController.buttonNotifier.value = ButtonState.playing;
-                                            messageController.voicePlayer.play();
-                                          }
-                                          if (messageController.ttsJobs.containsKey(keyString)) {
-                                            messageController.ttsJobs.remove(keyString);
-                                          }
-                                        }else{
-                                          // 如果是在播放其他音频，则先停止播放，重新设置正在播放的音频
-                                          if (messageController.voicePlayer.playerState.playing){
-                                            await messageController.voicePlayer.pause();
-                                          }
-                                          messageController.whichIsPlaying.value = keyString;
-                                          messageController.buttonNotifier.value = ButtonState.loading;
-                                          messageController.addToTTSJobs(keyString, dataList.join('').split('[W0RDP1PE]')[0]);
-                                        }
-                                      },
-                                      icon: Obx(() {
-                                        if (messageController.whichIsPlaying.value == key.hashCode.toString()) {
-                                          switch (messageController.buttonNotifier.value) {
-                                            case ButtonState.loading:
-                                              return CircularProgressIndicator(strokeWidth: 2,color: Colors.black26,);
-                                            case ButtonState.paused:
-                                              return Icon(Icons.play_arrow, size: 15, color: Colors.black26);
-                                            case ButtonState.playing:
-                                              return Icon(Icons.pause, size: 15, color: Colors.black26);
-                                            default:
-                                              return Icon(Icons.play_arrow, size: 15, color: Colors.black26);
-                                          }
-                                        } else {
-                                          return Icon(Icons.play_arrow, size: 15, color: Colors.black26);
-                                        }
-                                      }),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Tooltip(
-                                message: "复制到剪贴板",
+                      ),
+                      Visibility(
+                        visible: type != WordPipeMessageType.autoreply,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Visibility(
+                              visible: isMe == false,
+                              child: Tooltip(
+                                message: "播放音频",
                                 child: Container(
                                   width: 30,
                                   height: 30,
-                                  // color: Colors.black12,
                                   margin: const EdgeInsets.all(1),
                                   child: IconButton(
-                                    onPressed: () {
-                                      if (dataList.length > 0){
-                                        String total_text = "";
-                                        for (var i = 0; i < dataList.length; i++) {
-                                          // if dataList[i] is String, join them
-                                          if (dataList[i] is String)
-                                            total_text += dataList[i];
+                                    onPressed: () async {
+                                      String keyString = key.hashCode.toString();
+                                      // 判断已经是当前音频的播放状态，则点击暂停
+                                      if (messageController.whichIsPlaying.value == keyString) {
+                                        if (messageController.buttonNotifier.value == ButtonState.playing) {
+                                          messageController.buttonNotifier.value = ButtonState.paused;
+                                          messageController.voicePlayer.pause();
+                                        } else if (messageController.buttonNotifier.value == ButtonState.paused) {
+                                          messageController.buttonNotifier.value = ButtonState.playing;
+                                          messageController.voicePlayer.play();
                                         }
-                                        Clipboard.setData(ClipboardData(text: total_text));
-                                        if (total_text.length > 0)
-                                          customSnackBar(title: "操作成功", content: "已复制到剪贴板");
-                                      }                              
+                                        if (messageController.ttsJobs.containsKey(keyString)) {
+                                          messageController.ttsJobs.remove(keyString);
+                                        }
+                                      }else{
+                                        // 如果是在播放其他音频，则先停止播放，重新设置正在播放的音频
+                                        if (messageController.voicePlayer.playerState.playing){
+                                          await messageController.voicePlayer.pause();
+                                        }
+                                        messageController.whichIsPlaying.value = keyString;
+                                        messageController.buttonNotifier.value = ButtonState.loading;
+                                        messageController.addToTTSJobs(keyString, dataList.join('').split('[W0RDP1PE]')[0]);
+                                      }
                                     },
-                                    icon: Icon(Icons.copy, size: 15, color: Colors.black26)
-                                    ),
+                                    icon: Obx(() {
+                                      if (messageController.whichIsPlaying.value == key.hashCode.toString()) {
+                                        switch (messageController.buttonNotifier.value) {
+                                          case ButtonState.loading:
+                                            return CircularProgressIndicator(strokeWidth: 2,color: Colors.black26,);
+                                          case ButtonState.paused:
+                                            return Icon(Icons.play_arrow, size: 15, color: Colors.black26);
+                                          case ButtonState.playing:
+                                            return Icon(Icons.pause, size: 15, color: Colors.black26);
+                                          default:
+                                            return Icon(Icons.play_arrow, size: 15, color: Colors.black26);
+                                        }
+                                      } else {
+                                        return Icon(Icons.play_arrow, size: 15, color: Colors.black26);
+                                      }
+                                    }),
+                                  ),
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                            Tooltip(
+                              message: "复制到剪贴板",
+                              child: Container(
+                                width: 30,
+                                height: 30,
+                                // color: Colors.black12,
+                                margin: const EdgeInsets.all(1),
+                                child: IconButton(
+                                  onPressed: () {
+                                    if (dataList.length > 0){
+                                      String total_text = "";
+                                      for (var i = 0; i < dataList.length; i++) {
+                                        // if dataList[i] is String, join them
+                                        if (dataList[i] is String)
+                                          total_text += dataList[i];
+                                      }
+                                      Clipboard.setData(ClipboardData(text: total_text));
+                                      if (total_text.length > 0)
+                                        customSnackBar(title: "操作成功", content: "已复制到剪贴板");
+                                    }                              
+                                  },
+                                  icon: Icon(Icons.copy, size: 15, color: Colors.black26)
+                                  ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  if (isMe) ...[
-                    // Right avatar
-                    showAvatar2()
-                  ],
+                ),
+                if (isMe) ...[
+                  // Right avatar
+                  showAvatar2()
                 ],
-              ),
+              ],
             ),
           ),
         ),
@@ -492,7 +489,7 @@ class MessageBubble extends StatelessWidget {
               style: ButtonStyle(
                 // minimumSize: MaterialStateProperty.all<Size>(Size(8, 8)),
                 // padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(1)),
-                backgroundColor: MaterialStateProperty.all<Color>(Colors.white24),
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.white12),
                 overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
                 // shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                 //   RoundedRectangleBorder(
