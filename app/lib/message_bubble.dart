@@ -15,6 +15,7 @@ class MessageBubble extends StatelessWidget {
   final String sender_uuid;
   final List<dynamic> dataList;
   final RxInt type;
+  final int createTime;
 
   MessageBubble({
     super.key,
@@ -22,6 +23,7 @@ class MessageBubble extends StatelessWidget {
     required this.sender_uuid,
     required this.dataList,
     required RxInt type,
+    required this.createTime,
   }) : this.type = type;
   // }) : this.dataList = dataList.map((e) => e.toString()).toList(),
   //      this.type = type;
@@ -71,14 +73,21 @@ class MessageBubble extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
+                      SizedBox(
+                        height: 15,
+                        child: Text(
+                          messageController.formatTime(createTime),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
                       CustomPaint(
                         painter:
                           MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
                         child: Container(
                           padding: const EdgeInsets.all(12),
-                          // constraints: BoxConstraints(
-                          //   minWidth: 320,
-                          // ),
                           child: Obx(() => SelectableText.rich(
                             templateDispatcher(context),
                             minLines: 1,
@@ -101,7 +110,7 @@ class MessageBubble extends StatelessWidget {
                                   margin: const EdgeInsets.all(1),
                                   child: IconButton(
                                     onPressed: () async {
-                                      String keyString = key.hashCode.toString();
+                                      String keyString = key.toString();
                                       // 判断已经是当前音频的播放状态，则点击暂停
                                       if (messageController.whichIsPlaying.value == keyString) {
                                         if (messageController.buttonNotifier.value == ButtonState.playing) {
@@ -121,11 +130,11 @@ class MessageBubble extends StatelessWidget {
                                         }
                                         messageController.whichIsPlaying.value = keyString;
                                         messageController.buttonNotifier.value = ButtonState.loading;
-                                        messageController.addToTTSJobs(keyString, dataList.join('').split('[W0RDP1PE]')[0]);
+                                        messageController.addToTTSJobs(keyString, dataList.join('').split('[W0RDP1PE]')[0], messageController.formatTime2Day(createTime));
                                       }
                                     },
                                     icon: Obx(() {
-                                      if (messageController.whichIsPlaying.value == key.hashCode.toString()) {
+                                      if (messageController.whichIsPlaying.value == key.toString()) {
                                         switch (messageController.buttonNotifier.value) {
                                           case ButtonState.loading:
                                             return CircularProgressIndicator(strokeWidth: 2,color: Colors.black26,);
@@ -397,7 +406,7 @@ class MessageBubble extends StatelessWidget {
       spans.add(TextSpan(text: element as String));
     });
     return TextSpan(
-      // text: key.hashCode.toString(),
+      // text: key.toString(),
       style: TextStyle(fontSize: settingsController.fontSizeConfig.value),
       children: spans,
     );

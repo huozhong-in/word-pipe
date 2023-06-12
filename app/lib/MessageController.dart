@@ -272,23 +272,29 @@ class MessageController extends GetxController{
     }else{
       return;
     }
+    Map<String, String> sticker = {
+      "type": "[NORMAL-CHAT]",
+      "user": curr_user,
+      "conversation_id": "0",
+      "message_key": needUpdate
+    };
     Stream<OpenAIStreamChatCompletionModel> chatStream = OpenAI.instance.chat.createStream(
       model: model,
       messages: msg,
-      user: curr_user,
+      user: jsonEncode(sticker),
       temperature: temperature,
     );
 
     List<String> collected_messages = [];
     String lastPackage = "";
     String answer = "";
+    final message = findMessageByKey(needUpdate);
     chatStream.listen((chatStreamEvent) {
       // print(chatStreamEvent);
       OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];
       final content = choice.delta.content;
       if(content != null){
         // print(content);
-        final message = findMessageByKey(needUpdate);
         if (message.dataList[0] == '...'){
           message.dataList.removeAt(0);
         }
@@ -309,7 +315,6 @@ class MessageController extends GetxController{
         split_messages = split_messages.map((e) => e + '\n').toList();
         
         // 重新画ListView的指定item，解决屏幕会闪一下的问题
-        final message = findMessageByKey(needUpdate);
         message.dataList.insert(0, "...");
         message.dataList.removeRange(1, message.dataList.length);
         message.dataList.addAll(split_messages);
@@ -375,20 +380,26 @@ class MessageController extends GetxController{
     msg = prompt_template_freechat(prompt.trim());
     temperature = 0.2;
     // 拼接发回给服务端，以便保存AI的回复到聊天记录表
+    Map<String, String> sticker = {
+      "type": "[FREE-CHAT]",
+      "user": curr_user,
+      "conversation_id": c_id.toString(),
+      "message_key": needUpdate
+    };
     Stream<OpenAIStreamChatCompletionModel> chatStream = OpenAI.instance.chat.createStream(
       model: model,
       messages: msg,
-      user: c_id.toString() + "[FREECHAT]" + curr_user,
+      user: jsonEncode(sticker),
       temperature: temperature,
     );
     // TODO 如果返回错误说明用户提供的key无效，需要提示用户
+    final message = findMessageByKey(needUpdate);
     chatStream.listen((chatStreamEvent) {
       // print(chatStreamEvent);
       OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];
       final content = choice.delta.content;
       if(content != null){
         // print(content);
-        final message = findMessageByKey(needUpdate);
         if (message.dataList[0] == '...'){
           message.dataList.removeAt(0);
         }
@@ -446,27 +457,23 @@ class MessageController extends GetxController{
             Map<String, dynamic> json = Map<String, dynamic>.from(jsonDecode(message));
             int type = json['type'];
             if (type == WordPipeMessageType.tts_audio){
-              // print(HTTP_SERVER_HOST + json['mp3_url']);
-              ttsJobs[json['key']] = HTTP_SERVER_HOST + json['mp3_url'];
+              ttsJobs[json['message_key']] = HTTP_SERVER_HOST + json['mp3_url'];
             }else{
               String message_key = json['message_key'];
               // print("message_key: $message_key");
-              if (message_key != ""){
-                final message = findMessageByKey(message_key);
-                if (message.type == WordPipeMessageType.reserved){
-                  // 如果在消息列表中没有找到，则新增
-                  addMessage(MessageModel.fromJson(json));
-                }else{
-                  // 如果在消息列表中找到了，则更新
-                  // if (message.dataList[0] == '...'){
-                    message.dataList.removeAt(0);
-                  // }
-                  String content = List<String>.from(json['dataList']).join('');
-                  message.dataList.add(content);
-                }
-              }else{
+              final message = findMessageByKey(message_key);
+              if (message.type == WordPipeMessageType.reserved){
+                // 如果在消息列表中没有找到，则新增
                 addMessage(MessageModel.fromJson(json));
+              }else{
+                // 如果在消息列表中找到了，则更新
+                // if (message.dataList[0] == '...'){
+                  message.dataList.removeAt(0);
+                // }
+                String content = List<String>.from(json['dataList']).join('');
+                message.dataList.add(content);
               }
+              
             }
             sse_connected = true;
           } catch (e) {
@@ -490,11 +497,11 @@ class MessageController extends GetxController{
     }
   }
 
-  void addToTTSJobs(String key, String text){
+  void addToTTSJobs(String key, String text, String messageCreateTime){
     // 请求服务器端生成TTS语音
     if (ttsJobs[key] == null){
       final ttsAudio = TTSAudio();
-      ttsAudio.query_for_tts(key, text).then((value) {
+      ttsAudio.query_for_tts(key, text, messageCreateTime).then((value) {
         if (value == true){
           // print('ttsJobs send to server: $key');
         }
@@ -624,7 +631,19 @@ class MessageController extends GetxController{
     return stt_string;
   }
 
+   String formatTime2Day(int msgCreateTime) {
+    // 从msgCreateTime(timestamp格式)中提取的年月日, 例如20210101
+    DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(msgCreateTime * 1000);
+    String formatted = '${dateTime.year}${dateTime.month.toString().padLeft(2, '0')}${dateTime.day.toString().padLeft(2, '0')}';
+    return formatted; 
+  }
 
+  String formatTime(int msgCreateTime) {
+    // 从msgCreateTime(timestamp格式)中提取的年月日, 例如20210101
+    DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(msgCreateTime * 1000);
+    String formatted = '${dateTime.year}-${dateTime.month}-${dateTime.day} ${dateTime.hour}:${dateTime.minute}:${dateTime.second}';
+    return formatted; 
+  }
 
 
 }
@@ -638,12 +657,13 @@ class TTSAudio extends GetConnect {
     
   }
 
-  Future<bool> query_for_tts(String key, String text) async {
+  Future<bool> query_for_tts(String message_key, String text, String messageCreateTime) async {
     bool ret = false;
     Uri url = Uri.parse('$HTTP_SERVER_HOST/tts');
     Map data = {};
-    data['key'] = key;
+    data['message_key'] = message_key;
     data['text'] = text;
+    data['messageCreateTime'] = messageCreateTime;
     // 如果是纯英文字符串，则用外国人语音，否则用中国人语音
     if (isEnglishAndSymbols(text)){
       data['voice'] = settingsController.aiAssistantTtsVoice.value;
@@ -737,8 +757,7 @@ class ChatRecord extends GetConnect {
             dataList.add(msgContent);
             dataList.add(e['pk_chat_record']);
             String audio_suffix = FlutterDesktopAudioRecorder().macosFileExtension;
-            // intermediate_path是从msgCreateTime(timestamp格式)中提取的年月日, 例如20210101
-            String intermediate_path = formatTime(msgCreateTime);
+            String intermediate_path = messageController.formatTime2Day(msgCreateTime);
             String relative_url = '/$VOICE_FILE_DIR/$intermediate_path/${e['pk_chat_record']}.$audio_suffix';
             dataList.add(relative_url);
             break;
@@ -765,11 +784,6 @@ class ChatRecord extends GetConnect {
     return ret;
   }
 
-  String formatTime(int msgCreateTime) {
-    DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(msgCreateTime * 1000);
-    String formatted = '${dateTime.year}${dateTime.month.toString().padLeft(2, '0')}${dateTime.day.toString().padLeft(2, '0')}';
-    return formatted; 
-  }
 
   Future<int> conversation_CUD(String username, String actionType, int conversation_id, {String conversation_name=''}) async {
     int ret = 0;

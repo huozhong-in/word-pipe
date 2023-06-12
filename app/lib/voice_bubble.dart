@@ -99,12 +99,12 @@ class VoiceBubble extends StatelessWidget {
                                   String fileName = dataList[1] as String;
                                   String filePath = temporaryDirectory.path + '/' + fileName + '.m4a';
                                   if (File(filePath).existsSync()) {
-                                    messageController.playVoice(key.hashCode.toString(), filePath, false);
+                                    messageController.playVoice(key.toString(), filePath, false);
                                     return;
                                   }
                                 }
                                 String filePath = dataList[2] as String;
-                                messageController.playVoice(key.hashCode.toString(), HTTP_SERVER_HOST + filePath, true);
+                                messageController.playVoice(key.toString(), HTTP_SERVER_HOST + filePath, true);
                               },
                               child: Container(
                                 padding: EdgeInsets.fromLTRB(0, 12, 25, 12),

@@ -31,6 +31,7 @@ class WordPipeMessageType{
   static const int reply_for_answer_question = 106;
   static const int flask_reply_for_sentence_zh_en = 107;
   static const int reply_for_translate_sentence_zh_en = 108;
+  static const int change_message_key = 111;
   static const int image = 3;
   static const int audio = 34;
   static const int tts_audio = 35;
@@ -42,7 +43,6 @@ class WordPipeMessageType{
   static const int autoreply = 10001;
   static const int stream = 10002;
   static const int raw_text = 10003;
-  // static const int name_a_conversation = 10004;
 }
 
 class PremiumType {

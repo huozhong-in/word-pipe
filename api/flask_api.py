@@ -131,9 +131,9 @@ def generate_time_based_client_id(prefix='client_'):
     hashed_client_id = hashlib.sha256(raw_client_id).hexdigest()
     return hashed_client_id
 
-@app.route('/api/test', methods = ['GET'])
-def test() -> Response:    
-    return make_response(jsonify(), 200)
+# @app.route('/api/test', methods = ['GET'])
+# def test() -> Response:    
+#     return make_response(jsonify(), 200)
 
 @app.route('/api/s', methods = ['GET'])
 def prefix_search() -> Response:
@@ -192,44 +192,44 @@ def point_search():
     # print(f"[Processed in {toc - tic:0.4f} seconds]")
     return make_response(jsonify(x), 200)
 
-@app.route('/api/m', methods = ['GET'])
-def match_words():
-    """
-    通过sw精确匹配单词，返回多个结果
-    """
-    if not request.args.get('k'):
-        return make_response(jsonify({}), 200)
-    k: str = request.args.get('k')
-    if k == '':
-        return make_response(jsonify({}), 200)
-    tic = time.perf_counter()
-    sd = StarDict(Path(Path(__file__).parent.absolute() / 'db/stardict.db'), False)
-    r: list = sd.match2(prefix=k)
-    sd.close()
-    toc = time.perf_counter()
-    logging.info(f"match_words() word: {k}")
-    logging.info(f"[Processed in {toc - tic:0.4f} seconds]")
-    return make_response(jsonify(r), 200)
+# @app.route('/api/m', methods = ['GET'])
+# def match_words():
+#     """
+#     通过sw精确匹配单词，返回多个结果
+#     """
+#     if not request.args.get('k'):
+#         return make_response(jsonify({}), 200)
+#     k: str = request.args.get('k')
+#     if k == '':
+#         return make_response(jsonify({}), 200)
+#     tic = time.perf_counter()
+#     sd = StarDict(Path(Path(__file__).parent.absolute() / 'db/stardict.db'), False)
+#     r: list = sd.match2(prefix=k)
+#     sd.close()
+#     toc = time.perf_counter()
+#     logging.info(f"match_words() word: {k}")
+#     logging.info(f"[Processed in {toc - tic:0.4f} seconds]")
+#     return make_response(jsonify(r), 200)
 
-@app.route('/api/qb', methods = ['POST'])
-def query_batch():
-    """
-    批量查询单词的意思，传入多个单词（不是sw）返回结果包括全部字段
-    """
-    if request.method != 'POST':
-        return make_response('Please use POST method', 500)
-    try:
-        json_list: list = request.get_json()
-    except:
-        return make_response('JSON data required', 500)
-    tic = time.perf_counter()
-    sd = StarDict(Path(Path(__file__).parent.absolute() / 'db/stardict.db'), False)
-    r: list = sd.query_batch(json_list)
-    sd.close()
-    toc = time.perf_counter()
-    logging.info(f"query_batch() word: {r}")
-    logging.info(f"[Processed in {toc - tic:0.4f} seconds]")
-    return make_response(jsonify(r), 200)
+# @app.route('/api/qb', methods = ['POST'])
+# def query_batch():
+#     """
+#     批量查询单词的意思，传入多个单词（不是sw）返回结果包括全部字段
+#     """
+#     if request.method != 'POST':
+#         return make_response('Please use POST method', 500)
+#     try:
+#         json_list: list = request.get_json()
+#     except:
+#         return make_response('JSON data required', 500)
+#     tic = time.perf_counter()
+#     sd = StarDict(Path(Path(__file__).parent.absolute() / 'db/stardict.db'), False)
+#     r: list = sd.query_batch(json_list)
+#     sd.close()
+#     toc = time.perf_counter()
+#     logging.info(f"query_batch() word: {r}")
+#     logging.info(f"[Processed in {toc - tic:0.4f} seconds]")
+#     return make_response(jsonify(r), 200)
     
 @app.route('/favicon.ico')
 def favicon():
@@ -237,35 +237,35 @@ def favicon():
     r.mimetype = "image/x-icon"
     return r
 
-@app.route('/api/sse-test.html')
-def sse_test():
-    """
-    渲染SSE测试页面
-    """
-    sse_url = url_for('sse.stream', channel=SSE_MSG_DEFAULT_CHANNEL, _external=False)
-    return render_template('sse-test.html', sse_url=sse_url)
+# @app.route('/api/sse-test.html')
+# def sse_test():
+#     """
+#     渲染SSE测试页面
+#     """
+#     sse_url = url_for('sse.stream', channel=SSE_MSG_DEFAULT_CHANNEL, _external=False)
+#     return render_template('sse-test.html', sse_url=sse_url)
 
-@app.route('/api/pub-test', methods = ['POST'])
-def publish_test():
-    """
-    SSE测试页面的发布测试
-    """
-    if request.method != 'POST':
-        return make_response('Please use POST method', 500)
-    try:
-        json: dict = request.get_json()
-        message: str = json.get('message')
-    except:
-        return make_response('JSON data required', 500)
-    r: list = list()
-    id: str = generate_time_based_client_id()
-    back_data: json = {}
-    back_data['username'] = "Jasmine"
-    back_data['type'] = 1
-    r.append(message)
-    back_data['dataList'] = r
-    sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=SSE_MSG_DEFAULT_CHANNEL)
-    return jsonify({"success": True, "message": f"Server response:{message}"})
+# @app.route('/api/pub-test', methods = ['POST'])
+# def publish_test():
+#     """
+#     SSE测试页面的发布测试
+#     """
+#     if request.method != 'POST':
+#         return make_response('Please use POST method', 500)
+#     try:
+#         json: dict = request.get_json()
+#         message: str = json.get('message')
+#     except:
+#         return make_response('JSON data required', 500)
+#     r: list = list()
+#     id: str = generate_time_based_client_id()
+#     back_data: json = {}
+#     back_data['username'] = "Jasmine"
+#     back_data['type'] = 1
+#     r.append(message)
+#     back_data['dataList'] = r
+#     sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=SSE_MSG_DEFAULT_CHANNEL)
+#     return jsonify({"success": True, "message": f"Server response:{message}"})
 
 @app.route('/api/chat', methods = ['POST'])
 def chat():
@@ -311,7 +311,7 @@ def chat():
     crdb = ChatRecordDB(db_session)
     crdb.insert_chat_record(cr)
 
-    # 替用户发消息。附带好处是可以可以处理禁忌词，替换成*号
+    # 替用户发消息。其好处是可以可以处理禁忌词，替换成*号
     back_data: json = {}
     back_data['username'] = username
     back_data['uuid'] = myuuid
@@ -334,7 +334,7 @@ def chat():
     # print(result)
     # 根据用户消息中不同的单词数量，让客户端出现不同的选择界面
     ai_back_data: json = {}
-    ai_back_data['message_key'] = ""
+    ai_back_data['message_key'] = str(int(time.time()))
     ai_back_data['username'] = "Jasmine"
     ai_back_data['uuid'] = userDB.get_user_by_username('Jasmine').uuid
     
@@ -412,44 +412,67 @@ def voicechat():
     audio_file_full_path = USER_AUDIO_PATH / intermediate_path / f'{pk_chat_record}.{audio_suffix}'
     f.save(audio_file_full_path)
 
-    # # 获得回复并转成语音，推送回客户端
-    # api_key: str = data.get('api_key')
-    # if api_key is not None and api_key != '':
-    #     openai.api_key = api_key
+    # 获得回复并转成语音，推送回客户端
+    api_key: str = data.get('api_key')
+    if api_key is not None and api_key != '':
+        openai.api_key = api_key
+        if os.environ.get('DEBUG_MODE') != None:
+            openai.proxy = PROXIES['https']
+        response = openai.ChatCompletion.create(
+            model='gpt-3.5-turbo',
+            messages=[
+                {
+                    # 'role': 'system', 
+                    # 'content': 'Your are my English conversation teacher. If I don\'t get my word right, you\'ll ask questions to clarify my intentions and reply to move the conversation forward. After I say "let\'s take a break", you will conduct a stage summary, and explain and correct any mistakes I made in the conversation just now, including words, grammar, colloquialism, etc.',
+                    # 'role': 'user', 
+                    # 'content': '',
+                    # 'role': 'assistant', 
+                    # 'content': '',
+                    'role': 'user', 
+                    'content': message,
+                }
+            ],
+            temperature=0.3,
+            max_tokens=200,
+        )
+        text:str = response['choices'][0]['message']['content']
+        # 将AI回复的消息存到数据库
+        cr = ChatRecord(msgFrom=userDB.get_user_by_username('Jasmine').uuid, msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=text, msgType=34, conversation_id=conversation_id)
+        crdb = ChatRecordDB(db_session)
+        pk_chat_record: int = crdb.insert_chat_record(cr)
+        import asyncio
+        import edge_tts
+        if not os.path.exists(USER_TTS_PATH / intermediate_path):
+            os.makedirs(USER_TTS_PATH / intermediate_path)
+        voice: str = data.get('voice')
+        rate: str = data.get('rate')
+        async def _main(key: str, text: str) -> None:
+            with app.app_context():
+                back_data: json = {}
+                back_data['type'] = 34 # WordPipeMessageType.audio See: config.dart
+                mp3File = Path(USER_TTS_PATH / intermediate_path / f'{key}.mp3')
+                if not mp3File.exists():
+                    if int(rate) == 0:
+                        communicate = edge_tts.Communicate(text=text, voice=voice)
+                    else:
+                        rate_str = f'{rate}%'
+                        if rate > 0:
+                            rate_str = f'+{rate_str}'
+                        communicate = edge_tts.Communicate(text=text, voice=voice, rate=rate_str)
+                    
+                    await communicate.save(mp3File)
+                back_data['message_key'] = key
+                back_data['mp3_url'] = '/' + USER_TTS_SERVER_PATH + '/' + intermediate_path + '/' + f'{key}.mp3'
+                id = generate_time_based_client_id(prefix=username)
+                sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
         
-    #     if os.environ.get('DEBUG_MODE') != None:
-    #         openai.proxy = PROXIES['https']
-
-    #     response = openai.ChatCompletion.create(
-    #         model='gpt-3.5-turbo',
-    #         messages=[
-    #             {
-    #                 'role': 'system', 
-    #                 'content': 'Your are my English conversation teacher. If I don\'t get my word right, you\'ll ask questions to clarify my intentions and reply to move the conversation forward. After I say "let\'s take a break", you will conduct a stage summary, and explain and correct any mistakes I made in the conversation just now, including words, grammar, colloquialism, etc.',
-    #                 'role': 'user', 
-    #                 'content': '',
-    #                 'role': 'assistant', 
-    #                 'content': '',
-    #                 'role': 'user', 
-    #                 'content': '',
-    #                 'role': 'assistant', 
-    #                 'content': '',
-    #                 'role': 'user', 
-    #                 'content': '',
-    #                 'role': 'assistant', 
-    #                 'content': '',
-    #                 'role': 'user', 
-    #                 'content': 'let\'s take a break',
-    #                 'role': 'assistant', 
-    #                 'content': '',
-    #                 'role': 'user', 
-    #                 'content': '',
-    #             }
-    #         ],
-    #         temperature=0.3,
-    #         max_tokens=200,
-    #     )
-    #     print(response['choices'][0]['message']['content'])
+        def fn_thread(key: str, text: str):
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(_main(key=key, text=text))
+        
+        thread = threading.Thread(target=fn_thread, args=(pk_chat_record, text))
+        thread.start()
 
     return make_response(
         {
@@ -472,7 +495,8 @@ def tts():
         data: dict = request.get_json()
         username: str = data.get('username')
         text: str = data.get('text')
-        key: str = data.get('key')
+        message_key: str = data.get('message_key')
+        message_key.replace('#', '') # mp3_url中出现井号会导致客户端无法打开mp3播放
         voice: str = data.get('voice')
         rate: str = data.get('rate')
     except:
@@ -480,8 +504,6 @@ def tts():
     if text == '':
         return make_response('text required', 500)
     
-    # 每个登录用户都分配到一个channel，用于SSE推送，取得这个channel字符串
-    channel: str = ''
     if request.headers.get('X-access-token'):
         # print('X-access-token: ', request.headers['X-access-token'])
         userDB = UserDB(db_session)
@@ -492,18 +514,19 @@ def tts():
             return make_response('', 500)
         if u.access_token_expire_at < int(time.time()):
             return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
-        channel = username
     else:
         return make_response('access_token required', 500)
 
     import asyncio
     import edge_tts
+    intermediate_path: str = data.get('messageCreateTime')
+    if not os.path.exists(USER_TTS_PATH / intermediate_path):
+        os.makedirs(USER_TTS_PATH / intermediate_path)
     async def _main(key: str, text: str) -> None:
         with app.app_context():
             back_data: json = {}
             back_data['type'] = 35 # WordPipeMessageType.tts_audio format. See: config.dart
-            mp3FilePrefix = Path(Path(__file__).parent.absolute() / 'assets/tts')
-            mp3File = Path(mp3FilePrefix / f'{key}.mp3')
+            mp3File = Path(USER_TTS_PATH / intermediate_path / f'{key}.mp3')
             if not mp3File.exists():
                 if int(rate) == 0:
                     communicate = edge_tts.Communicate(text=text, voice=voice)
@@ -514,121 +537,121 @@ def tts():
                     communicate = edge_tts.Communicate(text=text, voice=voice, rate=rate_str)
                 
                 await communicate.save(mp3File)
-            back_data['key'] = key
-            back_data['mp3_url'] = '/tts/' + f'{key}.mp3'
+            back_data['message_key'] = key
+            back_data['mp3_url'] = '/' + USER_TTS_SERVER_PATH + '/' + intermediate_path + '/' + f'{key}.mp3'
             id = generate_time_based_client_id(prefix=username)
-            sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
+            sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
     
     def fn_thread(key: str, text: str):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(_main(key=key, text=text))
     
-    thread = threading.Thread(target=fn_thread, args=(key, text))
+    thread = threading.Thread(target=fn_thread, args=(message_key, text))
     thread.start()
 
     return make_response('', 200)
 
-@app.route('/api/chat-root', methods = ['POST'])
-def chat_root():
-    '''
-    通过对话的方式，将用户查询的字符串拆分成单个单词，分别查找词根词缀。
-    - 可能命中多个词根词缀，所以要有list结构
-    - TODO 单词是动词的话只有原型，将lemma.en.txt的内容实现转成键值对，拼接到结果中，供前端显示
-    - 给出相同词根的其他单词。TODO 按频次倒序。 TODO 只出现在选定范围（四六雅思）内的词
-    '''
+# @app.route('/api/chat-root', methods = ['POST'])
+# def chat_root():
+#     '''
+#     通过对话的方式，将用户查询的字符串拆分成单个单词，分别查找词根词缀。
+#     - 可能命中多个词根词缀，所以要有list结构
+#     - TODO 单词是动词的话只有原型，将lemma.en.txt的内容实现转成键值对，拼接到结果中，供前端显示
+#     - 给出相同词根的其他单词。TODO 按频次倒序。 TODO 只出现在选定范围（四六雅思）内的词
+#     '''
     
-    if request.method != 'POST':
-        return make_response('Please use POST method', 500)
-    try:
-        data: dict = request.get_json()
-        username: str = data.get('username')
-        message: str = data.get('message')
-    except:
-        return make_response('JSON data required', 500)
+#     if request.method != 'POST':
+#         return make_response('Please use POST method', 500)
+#     try:
+#         data: dict = request.get_json()
+#         username: str = data.get('username')
+#         message: str = data.get('message')
+#     except:
+#         return make_response('JSON data required', 500)
     
-    tic = time.perf_counter()
+#     tic = time.perf_counter()
 
-    logging.info(f'[{username}]: {message}')
-    # 给每一个登录用户分配一个channel，用于SSE推送
-    channel: str = SSE_MSG_DEFAULT_CHANNEL
-    if request.headers.get('X-access-token'):
-        # print('X-access-token: ', request.headers['X-access-token'])
-        try:
-            userDB = UserDB(db_session)
-            u: User = userDB.get_user_by_username(username)
-        finally:
-            db_session.close()
-        if u is None:
-            return make_response('', 500)
-        if u.access_token != request.headers['X-access-token']:
-            return make_response('', 500)
-        if u.access_token_expire_at < int(time.time()):
-            return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
-        channel = username
+#     logging.info(f'[{username}]: {message}')
+#     # 给每一个登录用户分配一个channel，用于SSE推送
+#     channel: str = SSE_MSG_DEFAULT_CHANNEL
+#     if request.headers.get('X-access-token'):
+#         # print('X-access-token: ', request.headers['X-access-token'])
+#         try:
+#             userDB = UserDB(db_session)
+#             u: User = userDB.get_user_by_username(username)
+#         finally:
+#             db_session.close()
+#         if u is None:
+#             return make_response('', 500)
+#         if u.access_token != request.headers['X-access-token']:
+#             return make_response('', 500)
+#         if u.access_token_expire_at < int(time.time()):
+#             return make_response(jsonify({"errcode":50007,"errmsg":"access_token expired"}), 401)
+#         channel = username
     
-    if message.startswith('/root '):
-        back_data: json = {}
-        back_data = get_root_by_word(message)
-        id = generate_time_based_client_id(prefix=username)
-        logging.info("chat-root() /root publish id:", id)
-        # 须publish两次，一次替用户说话，一次返回结果
-        sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
+#     if message.startswith('/root '):
+#         back_data: json = {}
+#         back_data = get_root_by_word(message)
+#         id = generate_time_based_client_id(prefix=username)
+#         logging.info("chat-root() /root publish id:", id)
+#         # 须publish两次，一次替用户说话，一次返回结果
+#         sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=channel)
 
-    elif message.startswith('/config '):
-        pass
+#     elif message.startswith('/config '):
+#         pass
 
-    toc = time.perf_counter()
-    logging.info(f"[Processed in {toc - tic:0.4f} seconds]")
+#     toc = time.perf_counter()
+#     logging.info(f"[Processed in {toc - tic:0.4f} seconds]")
 
-    return make_response('', 200)
+#     return make_response('', 200)
 
 
-def get_root_by_word(message: str) -> json:
-    '''
-    根据单词查找词根词缀
-    print(word2root['tactful']) # 输出 ["-ful1","tact, tang, ting, tig"]
-    TODO example里单词可能有大写或带空格的情况，如"-ite2"
-    '''
+# def get_root_by_word(message: str) -> json:
+#     '''
+#     根据单词查找词根词缀
+#     print(word2root['tactful']) # 输出 ["-ful1","tact, tang, ting, tig"]
+#     TODO example里单词可能有大写或带空格的情况，如"-ite2"
+#     '''
     
-    message = message.split('/root ')[1]
-    dataList: list = list()
-    import re
-    # message= 'This is a long-time example with hyphenated-words, including some non-alpha character...'
-    exp = r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b'
-    matches = re.finditer(exp, message)
-    for match in matches:
-        word = match.group(0)
-        rootlist: list = list(word2root.get(word)) if word2root.get(word) != None else list()
-        if len(rootlist) != 0:
-            a_word: list = list()
-            for root in rootlist:
-                a_root: list = list()
-                if wordroot[root].get('meaning') != None:
-                    a_root.append({'meaning': wordroot[root]['meaning']})
-                if wordroot[root].get('class') != None:
-                    a_root.append({'class':  wordroot[root]['class']})
-                if wordroot[root].get('origin') != None:
-                    a_root.append({'origin': wordroot[root]['origin']})
-                if wordroot[root].get('function') != None:
-                    a_root.append({'function': wordroot[root]['function']})
-                if wordroot[root].get('example') != None:
-                    a_root.append({'example': wordroot[root]['example']})
-                a_word.append({root: a_root}) 
-            dataList.append({word: a_word})
+#     message = message.split('/root ')[1]
+#     dataList: list = list()
+#     import re
+#     # message= 'This is a long-time example with hyphenated-words, including some non-alpha character...'
+#     exp = r'\b[a-zA-Z]+(?:-[a-zA-Z]+)*\b'
+#     matches = re.finditer(exp, message)
+#     for match in matches:
+#         word = match.group(0)
+#         rootlist: list = list(word2root.get(word)) if word2root.get(word) != None else list()
+#         if len(rootlist) != 0:
+#             a_word: list = list()
+#             for root in rootlist:
+#                 a_root: list = list()
+#                 if wordroot[root].get('meaning') != None:
+#                     a_root.append({'meaning': wordroot[root]['meaning']})
+#                 if wordroot[root].get('class') != None:
+#                     a_root.append({'class':  wordroot[root]['class']})
+#                 if wordroot[root].get('origin') != None:
+#                     a_root.append({'origin': wordroot[root]['origin']})
+#                 if wordroot[root].get('function') != None:
+#                     a_root.append({'function': wordroot[root]['function']})
+#                 if wordroot[root].get('example') != None:
+#                     a_root.append({'example': wordroot[root]['example']})
+#                 a_word.append({root: a_root}) 
+#             dataList.append({word: a_word})
             
-    back_data: json = {}
-    back_data['username'] = "Jasmine"
-    try:
-        userDB = UserDB(db_session)
-        back_data['uuid'] = userDB.get_user_by_username("Jasmine").uuid
-    finally:
-        db_session.close()
-    back_data['type'] = 101
-    back_data['dataList'] = dataList
-    back_data['createTime'] = int(time.time())
-    logging.info(f'back_data: {back_data}')
-    return back_data
+#     back_data: json = {}
+#     back_data['username'] = "Jasmine"
+#     try:
+#         userDB = UserDB(db_session)
+#         back_data['uuid'] = userDB.get_user_by_username("Jasmine").uuid
+#     finally:
+#         db_session.close()
+#     back_data['type'] = 101
+#     back_data['dataList'] = dataList
+#     back_data['createTime'] = int(time.time())
+#     logging.info(f'back_data: {back_data}')
+#     return back_data
 
 @app.route('/api/avatar/<user_name>', methods = ['GET'])
 def get_user_avatar(user_name: str):
@@ -638,10 +661,9 @@ def get_user_avatar(user_name: str):
     else:
         return make_response('', 404)
 
-@app.route('/api/tts/<key>.mp3', methods = ['GET'])
-def audio_tts(key: str):
-    mp3FilePrefix = Path(Path(__file__).parent.absolute() / 'assets/tts')
-    mp3File = Path(mp3FilePrefix / f'{key}.mp3')
+@app.route('/api/tts/<intermediatePath>/<mp3FileName>.mp3', methods = ['GET'])
+def audio_tts(intermediatePath: str, mp3FileName: str):
+    mp3File = Path(USER_TTS_PATH / intermediatePath / f'{mp3FileName}.mp3')
     if not mp3File.exists():
         return make_response('', 404)
     return send_file(mp3File, 'audio/mpeg')
@@ -791,13 +813,13 @@ def openai_general_proxy(path):
 @app.route('/api/openai/v1/chat/completions', methods=['POST'])
 def openai_chat_proxy():
     '''
-    代理到OpenAI的请求，并将聊天记录存入数据库
+    代理到OpenAI chat API的请求，并将聊天记录存入数据库
     '''
     api_url = f'https://api.openai.com/v1/chat/completions'
     headers = {key: value for (key, value) in request.headers if key != 'Host'}
     data = request.get_data()
     params = request.args
-    username = request.json['user']
+    tmp_username = request.json['user']
     messages = request.json['messages']
     
     # 检查消息是否为空
@@ -807,32 +829,33 @@ def openai_chat_proxy():
     
     # TODO 检查消息的类型是否是查询单词，是的话记录到数据库，进入用户生词本。一种方法是检查message，另一种方法是在按钮上再发起一次请求，走另外接口。
     #  携带上文在对话中
-    if "[FREECHAT]" in username:
-        orig_username = username
-        username = orig_username.split('[FREECHAT]')[1]
-        conversation_id = orig_username.split('[FREECHAT]')[0]
-        # 从数据库中取出此用户最近的20条记录，按顺序拼接到messages前面
-        userDB = UserDB(db_session)
-        myuuid: str = userDB.get_user_by_username(username).uuid
-        data_json = json.loads(data.decode('utf-8'))
-        try:
-            crdb = ChatRecordDB(db_session)
-            l: list = crdb.get_chat_record(user_id=myuuid, last_chat_record_id=0, limit=20, conversation_id=int(conversation_id))
-        except Exception as e:
-            l: list = []
-            logging.debug(e)
-        for cr in l:
-            # 优化token用量，给question保留三分之二的token，给answer保留三分之一
-            if num_tokens_from_messages(data_json['messages']) > 4096/3*2:
-                break
-            data_json['messages'][-1]['content'] = cr.msgContent + '\n' + data_json['messages'][-1]['content']
-        data_json['max_tokens'] = 4096 - num_tokens_from_messages(data_json['messages'])
-        data = json.dumps(data_json).encode('utf-8')
+    try:
+        # username本身是一个独立的json文件，需要解析一下
+        sticker: json = json.loads(tmp_username)
+        username = sticker['user']
+        conversation_id = sticker['conversation_id']
+        message_key = sticker['message_key']
+        if sticker['type'] == '[FREE-CHAT]':
+            # 从数据库中取出此用户最近的20条记录，按顺序拼接到messages前面
+            userDB = UserDB(db_session)
+            myuuid: str = userDB.get_user_by_username(username).uuid
+            data_json = json.loads(data.decode('utf-8'))
+            try:
+                crdb = ChatRecordDB(db_session)
+                l: list = crdb.get_chat_record(user_id=myuuid, last_chat_record_id=0, limit=20, conversation_id=int(conversation_id))
+            except Exception as e:
+                l: list = []
+                logging.debug(e)
+            for cr in l:
+                # 优化token用量，给question保留三分之二的token，给answer保留三分之一
+                if num_tokens_from_messages(data_json['messages']) > 4096/3*2:
+                    break
+                data_json['messages'][-1]['content'] = cr.msgContent + '\n' + data_json['messages'][-1]['content']
+            data_json['max_tokens'] = 4096 - num_tokens_from_messages(data_json['messages'])
+            data = json.dumps(data_json).encode('utf-8')
 
-        # 记录用户使用的token数量到数据库
-        # summary可能不需要存库和在客户端展示
-    else:
-        conversation_id = 0
+    except Exception as e:
+        logging.error(e)
 
     # 开发环境需要走本地代理服务器才能访问到openai API
     if os.environ.get('DEBUG_MODE') != None:
@@ -878,9 +901,25 @@ def openai_chat_proxy():
         try:
             userDB = UserDB(db_session)
             myuuid: str = userDB.get_user_by_username(username).uuid
-            cr = ChatRecord(msgFrom=userDB.get_user_by_username('Jasmine').uuid, msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=completion_text, msgType=1, conversation_id=conversation_id)
+            cr = ChatRecord(
+                msgFrom=userDB.get_user_by_username('Jasmine').uuid, 
+                msgTo=myuuid, 
+                msgCreateTime=int(time.time()), 
+                msgContent=completion_text, 
+                msgType=1, 
+                conversation_id=conversation_id
+                )
             crdb = ChatRecordDB(db_session)
-            crdb.insert_chat_record(cr)
+            pk_chat_record: int = crdb.insert_chat_record(cr)
+            # 在客户端重新从数据库读取聊天记录之前，通知客户端更新message_key为数据记录主键pk_chat_record，以便点击tts按钮时服务端生成正确的mp3文件名
+            # with app.app_context():
+            #     back_data: json = {}
+            #     back_data['type'] = 111 # WordPipeMessageType.change_message_key See: config.dart
+            #     back_data['createTime'] = int(time.time())
+            #     back_data['old_message_key'] = message_key
+            #     back_data['new_message_key'] = pk_chat_record
+            #     id = generate_time_based_client_id(prefix=username)
+            #     sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
         finally:
             db_session.close()
 

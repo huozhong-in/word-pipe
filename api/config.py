@@ -5,16 +5,6 @@ import os
 # import logging
 
 
-try:
-    import socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    ip = s.getsockname()[0]
-    s.close()
-    # print(ip)
-except Exception as e:
-    ip = '127.0.0.1'
-
 # ----- REDIS CONFIG -----
 REDIS_URL ="redis://localhost"
 
@@ -37,9 +27,12 @@ DEFAULT_FREE_TRIAL_TIME: int = 48 * 60 * 60 # 48 hours
 ## 保存用户头像目录
 USER_AVATAR_SERVER_PATH = 'avatar'
 USER_AVATAR_PATH = Path('/Users/dio/Downloads/temp/' + USER_AVATAR_SERVER_PATH)
-## 保存语音文件目录
+## 保存录音语音文件目录
 USER_AUDIO_SERVER_PATH = 'stt'
 USER_AUDIO_PATH = Path('/Users/dio/Downloads/temp/' + USER_AUDIO_SERVER_PATH)
+## 保存TTS语音文件目录
+USER_TTS_SERVER_PATH = 'tts'
+USER_TTS_PATH = Path('/Users/dio/Downloads/temp/' + USER_TTS_SERVER_PATH)
 
 # ----- PROXY CONFIG (for local dev) -----
 PROXIES = {
@@ -58,6 +51,15 @@ MYSQL_CONFIG = {
   'raise_on_warnings': True,
 }
 # ----- OPENAI CONFIG  -----
+try:
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    # print(ip)
+except Exception as e:
+    ip = '127.0.0.1'
 OPENAI_PROXY_BASEURL = {
     "dev": f"http://{ip}/api/openai", # for intranet Mobile Web testing
     "prod": "https://wordpipe.in/api/openai",
@@ -65,20 +67,18 @@ OPENAI_PROXY_BASEURL = {
 
 def generate_random_avatar(user_name: str) -> bool:
     random_avatar = pa.Avatar.random()
-    avatar_save_path = Path(Path(__file__).parent.absolute() / 'assets/avatar/')
-    random_avatar.render(avatar_save_path / f'{user_name}.svg')
-    with open(avatar_save_path / f'{user_name}.svg', 'r') as f:
+    random_avatar.render(USER_AVATAR_PATH / f'{user_name}.svg')
+    with open(USER_AVATAR_PATH / f'{user_name}.svg', 'r') as f:
         svg = f.read()
-        cairosvg.svg2png(bytestring=svg.encode('utf-8'), write_to=Path(avatar_save_path / f'{user_name}.png').as_posix())
-        os.remove(avatar_save_path / f'{user_name}.svg')
+        cairosvg.svg2png(bytestring=svg.encode('utf-8'), write_to=Path(USER_AVATAR_PATH / f'{user_name}.png').as_posix())
+        os.remove(USER_AVATAR_PATH / f'{user_name}.svg')
     return True
 
 if __name__ == '__main__':
     # generate_random_avatar('test04')
+
     if not os.path.exists(USER_AVATAR_PATH):
-        os.makedirs(USER_AVATAR_PATH)
-    if not os.path.exists(USER_AUDIO_PATH):
-        os.makedirs(USER_AUDIO_PATH)
+        os.makedirs(USER_AVATAR_PATH)  
     # ln -s ./assets/avatar/Jasmine.png `USER_AVATAR_PATH`/Jasmine.png
     if not os.path.exists(USER_AVATAR_PATH / 'Jasmine.png'):
         os.symlink(Path(Path(__file__).parent.absolute() / 'assets/avatar/Jasmine.png'), USER_AVATAR_PATH / 'Jasmine.png')
@@ -86,4 +86,10 @@ if __name__ == '__main__':
     if not os.path.exists(USER_AVATAR_PATH / 'Jasmine-freechat.png'):
         os.symlink(Path(Path(__file__).parent.absolute() / 'assets/avatar/Jasmine-freechat.png'), USER_AVATAR_PATH / 'Jasmine-freechat.png')
     
+    if not os.path.exists(USER_AUDIO_PATH):
+        os.makedirs(USER_AUDIO_PATH)
+    
+    if not os.path.exists(USER_TTS_PATH):
+        os.makedirs(USER_TTS_PATH)
+
     

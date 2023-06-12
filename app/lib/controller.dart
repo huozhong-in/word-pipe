@@ -213,12 +213,15 @@ class UserProvider extends GetConnect {
       return {"errcode": 4, "errmsg": "file not exist"};
     }
     MultipartFile f = MultipartFile(await File(filePath).readAsBytes(), filename: fileName+ '.m4a');
+    final SettingsController settingsController = Get.find();
     FormData formdata = FormData({
       'username': username,
       'message': message,
       'message_key': message_key,
       'conversation_id':conversation_id,
       'file': f,
+      'voice': settingsController.aiAssistantTtsVoiceZhEn.value,
+      'rate': settingsController.aiAssistantTtsRate.value,
     });
     final response = await post(url.toString(), formdata, headers: hs, contentType: 'multipart/form-data', 
       // uploadProgress: (percent) {

@@ -27,7 +27,7 @@ class MessageModel {
       type: json['type'] as int,
       dataList: RxList(json['dataList']),
       createTime: json['createTime'] as int,
-      key: UniqueKey(), // 自动分配一个UniqueKey
+      key: ValueKey(json['message_key'] as String),
       isSent: true,
     );
   }
