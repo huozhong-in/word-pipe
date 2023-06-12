@@ -462,7 +462,10 @@ def voicechat():
                     
                     await communicate.save(mp3File)
                 back_data['message_key'] = key
-                back_data['mp3_url'] = '/' + USER_TTS_SERVER_PATH + '/' + intermediate_path + '/' + f'{key}.mp3'
+                dataList: list = list()
+                dataList.append(pk_chat_record)
+                dataList.append('/' + USER_TTS_SERVER_PATH + '/' + intermediate_path + '/' + f'{key}.mp3')
+                back_data['dataList'] = dataList
                 id = generate_time_based_client_id(prefix=username)
                 sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
         

@@ -94,7 +94,7 @@ class VoiceBubble extends StatelessWidget {
                             InkWell(
                               onTap: () async {
                                 // 根据isSent判断，成功发送到服务器之前从本地播放，之后从服务器`dataList[2]`播放
-                                if(isSent.value == false){
+                                if(isMe && isSent.value == false){
                                   Directory temporaryDirectory = await getTemporaryDirectory();
                                   String fileName = dataList[1] as String;
                                   String filePath = temporaryDirectory.path + '/' + fileName + '.m4a';

@@ -246,7 +246,7 @@ class MessageController extends GetxController{
       uuid: "b811abd7-c0bb-4301-9664-574d0d8b11f8",
       createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       key: UniqueKey(),
-      isSent: false,
+      isSent: true,
     ));
     
     OpenAI.apiKey = apiKey;
@@ -365,7 +365,7 @@ class MessageController extends GetxController{
       uuid: "b811abd7-c0bb-4301-9664-574d0d8b11f8",
       createTime: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       key: UniqueKey(),
-      isSent: false,
+      isSent: true,
     ));
     
     // 使用用户自己的OpenAI API key
@@ -429,7 +429,7 @@ class MessageController extends GetxController{
   Future<Map<String, dynamic>> voiceChat(String username, String message, String fileName, int conversation_id) async{
     String myuuid = await c.getUUID();
     String needUpdate = addMessage(MessageModel(
-      dataList: RxList([message, fileName]),
+      dataList: RxList([message, fileName]), // 额外存放本地文件名
       type: WordPipeMessageType.audio,
       username: username,
       uuid: myuuid,
@@ -443,7 +443,7 @@ class MessageController extends GetxController{
       final message = findMessageByKey(needUpdate);
       message.isSent.value = true;
       // 将语音文件的url保存到消息中
-      message.dataList.add(result['relative_url'] as String);
+      message.dataList.add(result['relative_url'] as String); // 额外存放服务器上相对路径
     }
     return result;
   }
