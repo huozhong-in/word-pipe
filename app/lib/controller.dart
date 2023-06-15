@@ -171,7 +171,7 @@ class UserProvider extends GetConnect {
     data['message'] = message;
     data['conversation_id'] = conversation_id;
     data['message_key'] = message_key;
-    String  access_token = "";
+    String access_token = "";
     if (await CacheHelper.hasData('sessionData')){
       if(await CacheHelper.getData('sessionData') != null){
         Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
@@ -194,13 +194,16 @@ class UserProvider extends GetConnect {
         return {"errcode": 3, "errmsg": response.body};
       }
   }
+
   Future<Map<String, dynamic>> voiceChat(String username, String message, String fileName, String message_key, int conversation_id) async{
     Uri url = Uri.parse('$HTTP_SERVER_HOST/voicechat');
-    String  access_token = "";
+    String access_token = "";
+    String apiKey = '';
     if (await CacheHelper.hasData('sessionData')){
       if(await CacheHelper.getData('sessionData') != null){
         Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
         access_token = sessionData['access_token'] as String;
+        apiKey = sessionData['apiKey'] as String;
       }
     }
     Map<String,String> hs = {};
@@ -222,6 +225,7 @@ class UserProvider extends GetConnect {
       'file': f,
       'voice': settingsController.aiAssistantTtsVoiceZhEn.value,
       'rate': settingsController.aiAssistantTtsRate.value,
+      'api_key': apiKey,
     });
     final response = await post(url.toString(), formdata, headers: hs, contentType: 'multipart/form-data', 
       // uploadProgress: (percent) {
@@ -239,6 +243,7 @@ class UserProvider extends GetConnect {
         return {"errcode": 3, "errmsg": response.body};
       }
   }
+
   Future<Map<String, dynamic>> signin(String username, String password) async{
     Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signin');
     Map data = {};
@@ -251,6 +256,7 @@ class UserProvider extends GetConnect {
     }
     return rsp;
   }
+
   Future<Map<String, dynamic>> signup(String username, String password) async{
     Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signup');
     Map data = {};
@@ -265,6 +271,7 @@ class UserProvider extends GetConnect {
       return {"errcode": 2, "errmsg": response.body};
     }
   }
+
   Future<void> setLocalStorge(String username, Map<String, dynamic> rsp) async {
     // 将登录后的数据保存在本地
     Map<String, dynamic> sessionData = {};

@@ -73,16 +73,16 @@ class MessageBubble extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      SizedBox(
-                        height: 15,
-                        child: Text(
-                          messageController.formatTime(createTime),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ),
+                      // SizedBox(
+                      //   height: 15,
+                      //   child: Text(
+                      //     messageController.formatTime(createTime),
+                      //     style: TextStyle(
+                      //       fontSize: 12,
+                      //       color: Colors.grey,
+                      //     ),
+                      //   ),
+                      // ),
                       CustomPaint(
                         painter:
                           MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),

@@ -155,6 +155,7 @@ class MessageView extends StatelessWidget {
                       sender_uuid: message.uuid,
                       dataList: message.dataList,
                       type: message.type,
+                      createTime: message.createTime,
                       isSent: message.isSent,
                     );
                   default:

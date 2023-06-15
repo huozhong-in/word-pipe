@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:get/get.dart';
+import 'package:flutter_desktop_audio_recorder/flutter_desktop_audio_recorder.dart';
 
 // ignore: must_be_immutable
 class VoiceBubble extends StatelessWidget {
@@ -14,6 +15,7 @@ class VoiceBubble extends StatelessWidget {
   final String sender_uuid;
   final List<dynamic> dataList;
   final RxInt type;
+  final int createTime;
   RxBool isSent;
 
   VoiceBubble({
@@ -22,6 +24,7 @@ class VoiceBubble extends StatelessWidget {
     required this.sender_uuid,
     required this.dataList,
     required RxInt type,
+    required this.createTime,
     required RxBool isSent,
   }) : this.type = type, this.isSent = isSent;
 
@@ -56,14 +59,13 @@ class VoiceBubble extends StatelessWidget {
         child: Align(
           alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
           child: Row(
-            mainAxisAlignment:
-                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (!isMe)
                 showAvatar2(),
-              Obx(() {
-                if (isMe)
+              if(isMe)
+                Obx(() {                
                   return Visibility(
                     visible: isSent.value==false, 
                     child: SizedBox(
@@ -71,14 +73,25 @@ class VoiceBubble extends StatelessWidget {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 3,color: Colors.green,)
                     )
-                  );
-                else
-                  return SizedBox(width: 0, height: 0);
-              },),
+                  );                  
+                },)
+              else
+                SizedBox(width: 0)
+              ,
               Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
+                    //  SizedBox(
+                    //     height: 15,
+                    //     child: Text(
+                    //       key.toString() +  messageController.formatTime(createTime),
+                    //       style: TextStyle(
+                    //         fontSize: 12,
+                    //         color: Colors.grey,
+                    //       ),
+                    //     ),
+                    //   ),
                     CustomPaint(
                       painter:
                         MessageBubblePainter(isMe: isMe, bubbleColor: bubbleColor),
@@ -97,18 +110,24 @@ class VoiceBubble extends StatelessWidget {
                                 if(isMe && isSent.value == false){
                                   Directory temporaryDirectory = await getTemporaryDirectory();
                                   String fileName = dataList[1] as String;
-                                  String filePath = temporaryDirectory.path + '/' + fileName + '.m4a';
+                                  String audio_suffix = "mp3";
+                                  if (GetPlatform.isMacOS)
+                                    audio_suffix = isMe ? FlutterDesktopAudioRecorder().macosFileExtension : "mp3";
+                                  else if (GetPlatform.isWindows)
+                                    audio_suffix = isMe ? FlutterDesktopAudioRecorder().windowsFileExtension : "mp3";
+                                  String filePath = temporaryDirectory.path + '/' + fileName + '.' + audio_suffix;
                                   if (File(filePath).existsSync()) {
                                     messageController.playVoice(key.toString(), filePath, false);
                                     return;
                                   }
                                 }
                                 String filePath = dataList[2] as String;
+                                // print(HTTP_SERVER_HOST + filePath);
                                 messageController.playVoice(key.toString(), HTTP_SERVER_HOST + filePath, true);
                               },
                               child: Container(
-                                padding: EdgeInsets.fromLTRB(0, 12, 25, 12),
-                                alignment: Alignment.centerRight,
+                                padding: EdgeInsets.fromLTRB(25, 12, 25, 12),
+                                alignment: isMe ? Alignment.centerRight: Alignment.centerLeft,
                                 child: Icon(
                                   Icons.graphic_eq_outlined,
                                   color: Colors.green[700],
@@ -130,7 +149,7 @@ class VoiceBubble extends StatelessWidget {
                 ),
               ),
               if (isMe)
-                showAvatar2()                  
+                showAvatar2()
             ],
           ),
         ),

@@ -28,11 +28,9 @@ DEFAULT_FREE_TRIAL_TIME: int = 48 * 60 * 60 # 48 hours
 USER_AVATAR_SERVER_PATH = 'avatar'
 USER_AVATAR_PATH = Path('/Users/dio/Downloads/temp/' + USER_AVATAR_SERVER_PATH)
 ## 保存录音语音文件目录
-USER_AUDIO_SERVER_PATH = 'stt'
-USER_AUDIO_PATH = Path('/Users/dio/Downloads/temp/' + USER_AUDIO_SERVER_PATH)
-## 保存TTS语音文件目录
-USER_TTS_SERVER_PATH = 'tts'
-USER_TTS_PATH = Path('/Users/dio/Downloads/temp/' + USER_TTS_SERVER_PATH)
+AUDIO_SERVER_PATH = 'voice'
+AUDIO_FILE_PATH = Path('/Users/dio/Downloads/temp/' + AUDIO_SERVER_PATH)
+
 
 # ----- PROXY CONFIG (for local dev) -----
 PROXIES = {
@@ -86,10 +84,7 @@ if __name__ == '__main__':
     if not os.path.exists(USER_AVATAR_PATH / 'Jasmine-freechat.png'):
         os.symlink(Path(Path(__file__).parent.absolute() / 'assets/avatar/Jasmine-freechat.png'), USER_AVATAR_PATH / 'Jasmine-freechat.png')
     
-    if not os.path.exists(USER_AUDIO_PATH):
-        os.makedirs(USER_AUDIO_PATH)
+    if not os.path.exists(AUDIO_FILE_PATH):
+        os.makedirs(AUDIO_FILE_PATH)
     
-    if not os.path.exists(USER_TTS_PATH):
-        os.makedirs(USER_TTS_PATH)
-
     

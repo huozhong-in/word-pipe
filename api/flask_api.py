@@ -406,10 +406,10 @@ def voicechat():
     pk_chat_record: int = crdb.insert_chat_record(cr)
     # 保存语音文件到一个可以直接被Nginx访问的目录，以便返回文件URL给客户端
     intermediate_path: str ='{thistime}'.format(thistime=time.strftime('%Y%m%d', time.localtime(time.time())))
-    if not os.path.exists(USER_AUDIO_PATH / intermediate_path):
-        os.makedirs(USER_AUDIO_PATH / intermediate_path)
+    if not os.path.exists(AUDIO_FILE_PATH / intermediate_path):
+        os.makedirs(AUDIO_FILE_PATH / intermediate_path)
     audio_suffix: str = f.filename.split('.')[-1] # 提取音频文件后缀名
-    audio_file_full_path = USER_AUDIO_PATH / intermediate_path / f'{pk_chat_record}.{audio_suffix}'
+    audio_file_full_path = AUDIO_FILE_PATH / intermediate_path / f'{pk_chat_record}.{audio_suffix}'
     f.save(audio_file_full_path)
 
     # 获得回复并转成语音，推送回客户端
@@ -418,6 +418,19 @@ def voicechat():
         openai.api_key = api_key
         if os.environ.get('DEBUG_MODE') != None:
             openai.proxy = PROXIES['https']
+        # 携带上文
+        userDB = UserDB(db_session)
+        myuuid: str = userDB.get_user_by_username(username).uuid
+        ## 从数据库中取出此用户最近的20条记录，按顺序拼接到messages前面
+        crdb = ChatRecordDB(db_session)
+        l: list = crdb.get_chat_record(user_id=myuuid, last_chat_record_id=0, limit=20, conversation_id=int(conversation_id))
+        new_msgs: list = [{"role": "user", "content": message}]
+        for cr in l:
+            ## 优化token用量，给question保留三分之二的token，给answer保留三分之一
+            if num_tokens_from_messages(new_msgs) > 4096/3*2:
+                break
+            new_msgs[-1]['content'] = cr.msgContent + '\n' + new_msgs[-1]['content']
+        max_tokens:int = 4096 - num_tokens_from_messages(new_msgs)
         response = openai.ChatCompletion.create(
             model='gpt-3.5-turbo',
             messages=[
@@ -429,28 +442,29 @@ def voicechat():
                     # 'role': 'assistant', 
                     # 'content': '',
                     'role': 'user', 
-                    'content': message,
+                    'content': new_msgs[-1]['content'],
                 }
             ],
             temperature=0.3,
-            max_tokens=200,
+            max_tokens=max_tokens,
         )
         text:str = response['choices'][0]['message']['content']
         # 将AI回复的消息存到数据库
         cr = ChatRecord(msgFrom=userDB.get_user_by_username('Jasmine').uuid, msgTo=myuuid, msgCreateTime=int(time.time()), msgContent=text, msgType=34, conversation_id=conversation_id)
         crdb = ChatRecordDB(db_session)
+        # 生成音频推送给客户端
         pk_chat_record: int = crdb.insert_chat_record(cr)
         import asyncio
         import edge_tts
-        if not os.path.exists(USER_TTS_PATH / intermediate_path):
-            os.makedirs(USER_TTS_PATH / intermediate_path)
+        if not os.path.exists(AUDIO_FILE_PATH / intermediate_path):
+            os.makedirs(AUDIO_FILE_PATH / intermediate_path)
         voice: str = data.get('voice')
         rate: str = data.get('rate')
         async def _main(key: str, text: str) -> None:
             with app.app_context():
                 back_data: json = {}
                 back_data['type'] = 34 # WordPipeMessageType.audio See: config.dart
-                mp3File = Path(USER_TTS_PATH / intermediate_path / f'{key}.mp3')
+                mp3File = Path(AUDIO_FILE_PATH / intermediate_path / f'{key}.mp3')
                 if not mp3File.exists():
                     if int(rate) == 0:
                         communicate = edge_tts.Communicate(text=text, voice=voice)
@@ -464,7 +478,7 @@ def voicechat():
                 back_data['message_key'] = key
                 dataList: list = list()
                 dataList.append(pk_chat_record)
-                dataList.append('/' + USER_TTS_SERVER_PATH + '/' + intermediate_path + '/' + f'{key}.mp3')
+                dataList.append('/' + AUDIO_SERVER_PATH + '/' + intermediate_path + '/' + f'{key}.mp3')
                 back_data['dataList'] = dataList
                 id = generate_time_based_client_id(prefix=username)
                 sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
@@ -482,7 +496,7 @@ def voicechat():
             "errcode": 0, 
             "message_key": message_key,
             "pk_chat_record": pk_chat_record, 
-            "relative_url": f"/{USER_AUDIO_SERVER_PATH}/{intermediate_path}/{pk_chat_record}.{audio_suffix}"
+            "relative_url": f"/{AUDIO_SERVER_PATH}/{intermediate_path}/{pk_chat_record}.{audio_suffix}"
         }, 200)
     
 
@@ -523,13 +537,13 @@ def tts():
     import asyncio
     import edge_tts
     intermediate_path: str = data.get('messageCreateTime')
-    if not os.path.exists(USER_TTS_PATH / intermediate_path):
-        os.makedirs(USER_TTS_PATH / intermediate_path)
+    if not os.path.exists(AUDIO_FILE_PATH / intermediate_path):
+        os.makedirs(AUDIO_FILE_PATH / intermediate_path)
     async def _main(key: str, text: str) -> None:
         with app.app_context():
             back_data: json = {}
             back_data['type'] = 35 # WordPipeMessageType.tts_audio format. See: config.dart
-            mp3File = Path(USER_TTS_PATH / intermediate_path / f'{key}.mp3')
+            mp3File = Path(AUDIO_FILE_PATH / intermediate_path / f'{key}.mp3')
             if not mp3File.exists():
                 if int(rate) == 0:
                     communicate = edge_tts.Communicate(text=text, voice=voice)
@@ -541,7 +555,7 @@ def tts():
                 
                 await communicate.save(mp3File)
             back_data['message_key'] = key
-            back_data['mp3_url'] = '/' + USER_TTS_SERVER_PATH + '/' + intermediate_path + '/' + f'{key}.mp3'
+            back_data['mp3_url'] = '/' + AUDIO_SERVER_PATH + '/' + intermediate_path + '/' + f'{key}.mp3'
             id = generate_time_based_client_id(prefix=username)
             sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
     
@@ -664,16 +678,9 @@ def get_user_avatar(user_name: str):
     else:
         return make_response('', 404)
 
-@app.route('/api/tts/<intermediatePath>/<mp3FileName>.mp3', methods = ['GET'])
-def audio_tts(intermediatePath: str, mp3FileName: str):
-    mp3File = Path(USER_TTS_PATH / intermediatePath / f'{mp3FileName}.mp3')
-    if not mp3File.exists():
-        return make_response('', 404)
-    return send_file(mp3File, 'audio/mpeg')
-
-@app.route('/api/stt/<intermediatePath>/<voiceFileName>', methods = ['GET'])
+@app.route('/api/voice/<intermediatePath>/<voiceFileName>', methods = ['GET'])
 def audio_stt(intermediatePath: str, voiceFileName: str):
-    voiceFilePrefix = Path(USER_AUDIO_PATH / intermediatePath)
+    voiceFilePrefix = Path(AUDIO_FILE_PATH / intermediatePath)
     voiceFile = Path(voiceFilePrefix / voiceFileName)
     # print(voiceFile.as_posix())
     if not voiceFile.exists():
@@ -683,6 +690,7 @@ def audio_stt(intermediatePath: str, voiceFileName: str):
     elif voiceFileName.endswith('.wav'):
         mimetype = 'audio/wav'
     else:
+        # for mp3
         mimetype = 'audio/mpeg'
     return send_file(voiceFile, mimetype)
 
@@ -822,7 +830,7 @@ def openai_chat_proxy():
     headers = {key: value for (key, value) in request.headers if key != 'Host'}
     data = request.get_data()
     params = request.args
-    tmp_username = request.json['user']
+    tmp_user = request.json['user']
     messages = request.json['messages']
     
     # 检查消息是否为空
@@ -834,28 +842,13 @@ def openai_chat_proxy():
     #  携带上文在对话中
     try:
         # username本身是一个独立的json文件，需要解析一下
-        sticker: json = json.loads(tmp_username)
+        sticker: json = json.loads(tmp_user)
         username = sticker['user']
         conversation_id = sticker['conversation_id']
         message_key = sticker['message_key']
-        if sticker['type'] == '[FREE-CHAT]':
-            # 从数据库中取出此用户最近的20条记录，按顺序拼接到messages前面
-            userDB = UserDB(db_session)
-            myuuid: str = userDB.get_user_by_username(username).uuid
-            data_json = json.loads(data.decode('utf-8'))
-            try:
-                crdb = ChatRecordDB(db_session)
-                l: list = crdb.get_chat_record(user_id=myuuid, last_chat_record_id=0, limit=20, conversation_id=int(conversation_id))
-            except Exception as e:
-                l: list = []
-                logging.debug(e)
-            for cr in l:
-                # 优化token用量，给question保留三分之二的token，给answer保留三分之一
-                if num_tokens_from_messages(data_json['messages']) > 4096/3*2:
-                    break
-                data_json['messages'][-1]['content'] = cr.msgContent + '\n' + data_json['messages'][-1]['content']
-            data_json['max_tokens'] = 4096 - num_tokens_from_messages(data_json['messages'])
-            data = json.dumps(data_json).encode('utf-8')
+        if sticker['type'] == '[FREECHAT]':
+            # 携带上文信息，并优化token使用
+            data: bytes = conversation_memory(data=data, username=username, conversation_id=conversation_id)
 
     except Exception as e:
         logging.error(e)
@@ -936,13 +929,13 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301") -> int:
     try:
         encoding = tiktoken.encoding_for_model(model)
     except KeyError:
-        print("Warning: model not found. Using cl100k_base encoding.")
+        logging.info("Warning: model not found. Using cl100k_base encoding.")
         encoding = tiktoken.get_encoding("cl100k_base")
     if model == "gpt-3.5-turbo":
-        print("Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.")
+        logging.info("Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.")
         return num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301")
     elif model == "gpt-4":
-        print("Warning: gpt-4 may change over time. Returning num tokens assuming gpt-4-0314.")
+        logging.info("Warning: gpt-4 may change over time. Returning num tokens assuming gpt-4-0314.")
         return num_tokens_from_messages(messages, model="gpt-4-0314")
     elif model == "gpt-3.5-turbo-0301":
         tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
@@ -962,6 +955,25 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301") -> int:
     num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
 
+def conversation_memory(data:bytes, username:str, conversation_id:int) -> bytes:
+    userDB = UserDB(db_session)
+    myuuid: str = userDB.get_user_by_username(username).uuid
+    data_json = json.loads(data.decode('utf-8'))
+    try:
+        # 从数据库中取出此用户最近的20条记录，按顺序拼接到messages前面
+        crdb = ChatRecordDB(db_session)
+        l: list = crdb.get_chat_record(user_id=myuuid, last_chat_record_id=0, limit=20, conversation_id=int(conversation_id))
+    except Exception as e:
+        l: list = []
+        logging.debug(e)
+    for cr in l:
+        # 优化token用量，给question保留三分之二的token，给answer保留三分之一
+        if num_tokens_from_messages(data_json['messages']) > 4096/3*2:
+            break
+        data_json['messages'][-1]['content'] = cr.msgContent + '\n' + data_json['messages'][-1]['content']
+    data_json['max_tokens'] = 4096 - num_tokens_from_messages(data_json['messages'])
+    data = json.dumps(data_json).encode('utf-8')
+    return data
 
 def get_openai_apikey() -> dict:
     '''
@@ -1067,7 +1079,7 @@ def conversation_crud():
                         # 'conversation_create_time': j.conversation_create_time
                     })
             except Exception as e:
-                print(e)
+                logging.error(e)
                 return make_response('get conversation list failed', 500)
             
             rsp = make_response(jsonify(back_data), 200)

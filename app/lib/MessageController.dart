@@ -161,7 +161,6 @@ class MessageController extends GetxController{
     }
   }
 
-
   Future<int> chatHistory(String username, int last_id) async {
     ChatRecord chatRecord = ChatRecord();
     // 通过这个标志位实现只有第一次打开页面时才有欢迎词
@@ -273,7 +272,7 @@ class MessageController extends GetxController{
       return;
     }
     Map<String, String> sticker = {
-      "type": "[NORMAL-CHAT]",
+      "type": "[NORMALCHAT]",
       "user": curr_user,
       "conversation_id": "0",
       "message_key": needUpdate
@@ -381,7 +380,7 @@ class MessageController extends GetxController{
     temperature = 0.2;
     // 拼接发回给服务端，以便保存AI的回复到聊天记录表
     Map<String, String> sticker = {
-      "type": "[FREE-CHAT]",
+      "type": "[FREECHAT]",
       "user": curr_user,
       "conversation_id": c_id.toString(),
       "message_key": needUpdate
@@ -413,6 +412,7 @@ class MessageController extends GetxController{
       }
     });
   }
+
   Future<Map<String, dynamic>> chat(String username, String message, int conversation_id) async{
     String myuuid = await c.getUUID();
     String needUpdate = addMessage(MessageModel(
@@ -426,6 +426,7 @@ class MessageController extends GetxController{
     ));
     return await c.chat(username, message, conversation_id, needUpdate);
   }
+
   Future<Map<String, dynamic>> voiceChat(String username, String message, String fileName, int conversation_id) async{
     String myuuid = await c.getUUID();
     String needUpdate = addMessage(MessageModel(
@@ -447,6 +448,7 @@ class MessageController extends GetxController{
     }
     return result;
   }
+
   void handleSSE(String channel) async {
     try {
       sseClient = SSEClient.getInstance(Uri.parse(SSE_SERVER_HOST + SSE_SERVER_PATH), SSE_MSG_TYPE, channel);
@@ -458,6 +460,9 @@ class MessageController extends GetxController{
             int type = json['type'];
             if (type == WordPipeMessageType.tts_audio){
               ttsJobs[json['message_key']] = HTTP_SERVER_HOST + json['mp3_url'];
+            
+            // }else if (type == WordPipeMessageType.audio){
+
             }else{
               String message_key = json['message_key'];
               // print("message_key: $message_key");
@@ -756,7 +761,12 @@ class ChatRecord extends GetConnect {
           case WordPipeMessageType.audio:
             dataList.add(msgContent);
             dataList.add(e['pk_chat_record']);
-            String audio_suffix = FlutterDesktopAudioRecorder().macosFileExtension;
+            bool isMe = msgFrom == username;
+            String audio_suffix = "mp3";
+            if (GetPlatform.isMacOS)
+              audio_suffix = isMe ? FlutterDesktopAudioRecorder().macosFileExtension : "mp3";
+            else if (GetPlatform.isWindows)
+              audio_suffix = isMe ? FlutterDesktopAudioRecorder().windowsFileExtension : "mp3";
             String intermediate_path = messageController.formatTime2Day(msgCreateTime);
             String relative_url = '/$VOICE_FILE_DIR/$intermediate_path/${e['pk_chat_record']}.$audio_suffix';
             dataList.add(relative_url);
