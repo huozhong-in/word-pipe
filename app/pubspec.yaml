@@ -52,9 +52,9 @@ dependencies:
   record: ^4.4.4
   flutter_desktop_audio_recorder: ^0.0.1
   just_waveform: ^0.0.5
-  flutter_spinkit: ^5.2.0
   hotkey_manager: ^0.1.8
   introduction_screen: ^3.1.8
+  lottie: ^2.4.0
 
 dev_dependencies:
   flutter_test:
@@ -73,8 +73,8 @@ flutter_launcher_icons:
     # theme_color: "#hexcode"
   windows:
     generate: true
-    # image_path: "path/to/image.png"
-    icon_size: 48 # min:48, max:256, default: 48
+    image_path: assets/icon/2x/apple-touch-icon.png"
+    icon_size: 128 # min:48, max:256, default: 48
   macos:
     generate: true
     image_path: "assets/icon/3x/apple-touch-icon.png"

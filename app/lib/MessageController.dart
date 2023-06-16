@@ -766,7 +766,7 @@ class ChatRecord extends GetConnect {
             dataList.add(e['pk_chat_record']);
             bool isMe = msgFrom == username;
             String audio_suffix = "mp3";
-            if (GetPlatform.isMacOS)
+            if (GetPlatform.isMacOS || GetPlatform.isIOS)
               audio_suffix = isMe ? FlutterDesktopAudioRecorder().macosFileExtension : "mp3";
             else if (GetPlatform.isWindows)
               audio_suffix = isMe ? FlutterDesktopAudioRecorder().windowsFileExtension : "mp3";

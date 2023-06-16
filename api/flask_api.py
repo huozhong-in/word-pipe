@@ -416,8 +416,8 @@ def voicechat():
     audio_file_full_path = AUDIO_FILE_PATH / intermediate_path / f'{pk_chat_record}.{audio_suffix}'
     f.save(audio_file_full_path)
 
-    toc = time.perf_counter()
-    logging.info(f"[Processed in {toc - tic:0.4f} seconds]")
+    toc1 = time.perf_counter()
+    logging.info(f"[语音文件上传耗时: {toc1 - tic:0.4f} seconds]")
 
     # 获得回复并转成语音，推送回客户端
     openai.api_key = data.get('api_key')
@@ -452,6 +452,10 @@ def voicechat():
         max_tokens=max_tokens,
     )
     text: str = response['choices'][0]['message']['content']
+    
+    toc2 = time.perf_counter()
+    logging.info(f"[取回回复文字耗时: {toc2 - tic:0.4f} seconds]")
+    
     # 将AI回复的消息存到数据库
     cr = ChatRecord(msgFrom=jasmine_uuid, msgTo=myuuid, msgCreateTime=int(thistime), msgContent=text, msgType=34, conversation_id=conversation_id)
     crdb = ChatRecordDB(db_session)
@@ -504,6 +508,8 @@ def voicechat():
             "pk_chat_record": pk_chat_record, 
             "relative_url": f"/{AUDIO_SERVER_PATH}/{intermediate_path}/{pk_chat_record}.{audio_suffix}"
         }
+    toc3 = time.perf_counter()
+    logging.info(f"[返回给客户端耗时: {toc3 - tic:0.4f} seconds]")
     return  make_response(jsonify(r), 200)
     
 

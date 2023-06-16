@@ -2,12 +2,14 @@ PODS:
   - audio_session (0.0.1):
     - Flutter
   - Flutter (1.0.0)
+  - flutter_keyboard_visibility (0.0.1):
+    - Flutter
   - FMDB (2.7.5):
     - FMDB/standard (= 2.7.5)
   - FMDB/standard (2.7.5)
   - just_audio (0.0.1):
     - Flutter
-  - keyboard_utils (0.0.1):
+  - just_waveform (0.0.1):
     - Flutter
   - package_info_plus (0.4.5):
     - Flutter
@@ -28,8 +30,9 @@ PODS:
 DEPENDENCIES:
   - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - Flutter (from `Flutter`)
+  - flutter_keyboard_visibility (from `.symlinks/plugins/flutter_keyboard_visibility/ios`)
   - just_audio (from `.symlinks/plugins/just_audio/ios`)
-  - keyboard_utils (from `.symlinks/plugins/keyboard_utils/ios`)
+  - just_waveform (from `.symlinks/plugins/just_waveform/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - record (from `.symlinks/plugins/record/ios`)
@@ -46,10 +49,12 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/audio_session/ios"
   Flutter:
     :path: Flutter
+  flutter_keyboard_visibility:
+    :path: ".symlinks/plugins/flutter_keyboard_visibility/ios"
   just_audio:
     :path: ".symlinks/plugins/just_audio/ios"
-  keyboard_utils:
-    :path: ".symlinks/plugins/keyboard_utils/ios"
+  just_waveform:
+    :path: ".symlinks/plugins/just_waveform/ios"
   package_info_plus:
     :path: ".symlinks/plugins/package_info_plus/ios"
   path_provider_foundation:
@@ -66,9 +71,10 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   audio_session: 4f3e461722055d21515cf3261b64c973c062f345
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  flutter_keyboard_visibility: 0339d06371254c3eb25eeb90ba8d17dca8f9c069
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   just_audio: baa7252489dbcf47a4c7cc9ca663e9661c99aafa
-  keyboard_utils: ab24bc711be9e91a5937c20489056b8dd650fecc
+  just_waveform: e03174d1eadf4b096b01715a3e3ccbf940a05d25
   package_info_plus: fd030dabf36271f146f1f3beacd48f564b0f17f7
   path_provider_foundation: eaf5b3e458fc0e5fbb9940fb09980e853fe058b8
   record: cae05d8dd3cdb1dea3511b20e5a5811a1ae00d0d

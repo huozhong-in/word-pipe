@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:wordpipe/config.dart';
 import 'package:wordpipe/custom_widgets.dart';
 import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/MessageView.dart';
@@ -9,7 +10,6 @@ import 'package:wordpipe/settings.dart';
 import 'package:wordpipe/about_us.dart';
 import 'package:record/record.dart';
 import 'dart:async';
-import '../config.dart';
 
 // ignore: must_be_immutable
 class MobileHome extends StatelessWidget {
@@ -171,7 +171,7 @@ class MobileHome extends StatelessWidget {
                     inactiveThumbColor: Colors.green[200],
                     inactiveTrackColor: Colors.green[100],
                     title: Text('连续对话模式', style: TextStyle(fontSize: 14)), 
-                    subtitle: Text('会员专享', style: TextStyle(fontSize: 12, color: Colors.blue)),
+                    // subtitle: Text('会员专享', style: TextStyle(fontSize: 12, color: Colors.blue)),
                     value: settingsController.freeChatMode.value,
                     onChanged: ((bool value) async {
                       if (value==true){
@@ -335,7 +335,7 @@ class MobileHome extends StatelessWidget {
       maxLines: 1,
       minLines: 1,
       decoration: InputDecoration(
-        hintText: '输入单词或句子',
+        hintText: '跟Jasmine聊点什么呢',
         hintStyle: TextStyle(color: Colors.grey),
         prefixIcon: IconButton(
             color: Colors.grey,

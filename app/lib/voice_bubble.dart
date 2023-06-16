@@ -111,7 +111,7 @@ class VoiceBubble extends StatelessWidget {
                                   Directory temporaryDirectory = await getTemporaryDirectory();
                                   String fileName = dataList[1] as String;
                                   String audio_suffix = "mp3";
-                                  if (GetPlatform.isMacOS)
+                                  if (GetPlatform.isMacOS || GetPlatform.isIOS)
                                     audio_suffix = isMe ? FlutterDesktopAudioRecorder().macosFileExtension : "mp3";
                                   else if (GetPlatform.isWindows)
                                     audio_suffix = isMe ? FlutterDesktopAudioRecorder().windowsFileExtension : "mp3";

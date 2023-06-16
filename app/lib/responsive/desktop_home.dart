@@ -21,7 +21,7 @@ import 'package:wordpipe/custom_widgets.dart';
 import 'package:updat/updat.dart';
 import 'package:updat/theme/chips/default.dart';
 import 'package:flutter_desktop_audio_recorder/flutter_desktop_audio_recorder.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:lottie/lottie.dart';
 import 'dart:developer';
 
 // ignore: must_be_immutable
@@ -477,7 +477,10 @@ class DesktopHome extends StatelessWidget {
                         final waveform = snapshot.data?.waveform;
                         if (waveform == null) {
                           return Center(
-                            child: SpinKitWave(color: Colors.blue, type: SpinKitWaveType.start),
+                            child: Lottie.asset(
+                              'assets/93172-voice-visualization.json',
+                              fit: BoxFit.fill,
+                            ),
                             // child: Text(
                             //   '${(100 * progress).toInt()}%',
                             //   style: Theme.of(context).textTheme.titleLarge,
