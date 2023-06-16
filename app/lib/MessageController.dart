@@ -444,7 +444,7 @@ class MessageController extends GetxController{
       final message = findMessageByKey(needUpdate);
       message.isSent.value = true;
       // 将语音文件的url保存到消息中
-      message.dataList.add(result['relative_url'] as String); // 额外存放服务器上相对路径
+      message.dataList.add(result['relative_url'] as String);
     }
     return result;
   }
@@ -452,45 +452,48 @@ class MessageController extends GetxController{
   void handleSSE(String channel) async {
     try {
       sseClient = SSEClient.getInstance(Uri.parse(SSE_SERVER_HOST + SSE_SERVER_PATH), SSE_MSG_TYPE, channel);
-      if (sse_connected == false){
-        sseClient.messages.listen((message) {
-          log('from SSE Server: $message');
-          try {
-            Map<String, dynamic> json = Map<String, dynamic>.from(jsonDecode(message));
-            int type = json['type'];
-            if (type == WordPipeMessageType.tts_audio){
-              ttsJobs[json['message_key']] = HTTP_SERVER_HOST + json['mp3_url'];
-            
-            // }else if (type == WordPipeMessageType.audio){
-
-            }else{
-              String message_key = json['message_key'];
-              // print("message_key: $message_key");
-              final message = findMessageByKey(message_key);
-              if (message.type == WordPipeMessageType.reserved){
-                // 如果在消息列表中没有找到，则新增
-                addMessage(MessageModel.fromJson(json));
-              }else{
-                // 如果在消息列表中找到了，则更新
-                // if (message.dataList[0] == '...'){
-                  message.dataList.removeAt(0);
-                // }
-                String content = List<String>.from(json['dataList']).join('');
-                message.dataList.add(content);
-              }
-              
-            }
-            sse_connected = true;
-          } catch (e) {
-            log('sse message error: $e');
-            // sse_connected = false;
-          }
-        });  
-      }
     } catch (e) {
       log('handleSSE error: $e');
       sse_connected = false;
+    } 
+    if (sse_connected == false){
+      sseClient.messages.listen((message) {
+        sse_connected = true;
+        log('SSE message: $message');
+        try {
+          Map<String, dynamic> json = Map<String, dynamic>.from(jsonDecode(message));
+          int type = json['type'];
+          if (type == WordPipeMessageType.tts_audio){
+            ttsJobs[json['message_key']] = HTTP_SERVER_HOST + json['mp3_url'];
+          
+          }else if (type == WordPipeMessageType.audio){
+            String needUpdate = addMessage(MessageModel.fromJson(json));
+            MessageModel message = findMessageByKey(needUpdate);
+            String filePath = message.dataList[2] as String;
+            playVoice(needUpdate, HTTP_SERVER_HOST + filePath, true);
+            
+          }else{
+            String message_key = json['message_key'];
+            // print("message_key: $message_key");
+            final message = findMessageByKey(message_key);
+            if (message.type == WordPipeMessageType.reserved){
+              // 如果在消息列表中没有找到，则新增
+              addMessage(MessageModel.fromJson(json));
+            }else{
+              // 如果在消息列表中找到了，则更新
+              // if (message.dataList[0] == '...'){
+                message.dataList.removeAt(0);
+              // }
+              String content = List<String>.from(json['dataList']).join('');
+              message.dataList.add(content);
+            } 
+          }   
+        } catch (e) {
+          log('SSE message parse error: $e');
+        }
+      });  
     }
+    
   }
 
   // 关闭 SSE 连接，以便可以重新订阅其他频道

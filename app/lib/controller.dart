@@ -13,6 +13,12 @@ class Controller extends GetxController{
   final WordsProvider _wordsProvider = WordsProvider();
   final UserProvider _userProvider = UserProvider();
   
+  @override
+  void onInit() async{
+    super.onInit();
+    _userProvider.timeout = Duration(seconds: 45);
+  }
+  
   Future<Map<String, dynamic>> getSessionData() async{
     return await _userProvider.getLocalStorge();
   }
@@ -186,11 +192,7 @@ class UserProvider extends GetConnect {
     if (response.statusCode == 200) {
         return Map<String, dynamic>.from(response.body);
       } else {
-        // signout
-        if(await CacheHelper.hasData('sessionData')){
-          await CacheHelper.setData('sessionData', null);
-        }
-        log('createorder error: ${response.body}');
+        log('in controller chat(), response.statusCode !=200 : ${response.body}');
         return {"errcode": 3, "errmsg": response.body};
       }
   }
@@ -227,19 +229,11 @@ class UserProvider extends GetConnect {
       'rate': settingsController.aiAssistantTtsRate.value,
       'api_key': apiKey,
     });
-    final response = await post(url.toString(), formdata, headers: hs, contentType: 'multipart/form-data', 
-      // uploadProgress: (percent) {
-      //   log(percent.toString());
-      // },
-      );
+    final response = await post(url.toString(), formdata, headers: hs, contentType: 'multipart/form-data');
     if (response.statusCode == 200) {
         return Map<String, dynamic>.from(response.body);
       } else {
-        // signout
-        if(await CacheHelper.hasData('sessionData')){
-          await CacheHelper.setData('sessionData', null);
-        }
-        log('createorder error: ${response.body}');
+        log('in controller voicechat(), response.statusCode != 200: ${response.body}');
         return {"errcode": 3, "errmsg": response.body};
       }
   }

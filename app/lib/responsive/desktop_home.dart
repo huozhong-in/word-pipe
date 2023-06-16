@@ -75,7 +75,6 @@ class DesktopHome extends StatelessWidget {
       Map<String, dynamic> ret = await
         messageController.voiceChat(_username, stt_string.value.trim(), _m4aFileName.value, messageController.conversation_id.value);
       if(ret['errcode'] as int == 0){
-        _m4aFileName.value = "";
         deleteAllTempAudioFiles();
       }
       return;
@@ -457,7 +456,7 @@ class DesktopHome extends StatelessWidget {
             children: [
               Expanded(
                 child: Container(
-                  height: 80,
+                  height: 50,
                   child: Obx(() {
                     return StreamBuilder<WaveformProgress>(
                       stream: progressStream.value,
@@ -486,7 +485,6 @@ class DesktopHome extends StatelessWidget {
                           );
                         }
                         return AudioWaveformWidget(
-                          scale: 0.8,
                           waveform: waveform,
                           start: Duration.zero,
                           duration: waveform.duration,
@@ -512,10 +510,13 @@ class DesktopHome extends StatelessWidget {
             ],
           ),          
           Container(
-            height: 70,
+            height: 50,
+            width: double.infinity,
+            margin: EdgeInsets.all(0),
+            padding: EdgeInsets.all(0),
             child: SingleChildScrollView(
               scrollDirection: Axis.vertical,
-              child: Flexible(child: Obx(() => Text(stt_string.value , style: TextStyle(fontSize: 16), softWrap: true,))),
+              child: Obx(() => Text(stt_string.value , style: TextStyle(fontSize: 16), softWrap: true,)),
             ),
           ),
         ],
@@ -542,6 +543,7 @@ class DesktopHome extends StatelessWidget {
     } finally {
       _m4aFileName.value = '';
       messageController.whichIsPlaying.value = '';
+      stt_string.value = '';
       return result;
     }
   }

@@ -76,7 +76,7 @@ class MessageBubble extends StatelessWidget {
                       // SizedBox(
                       //   height: 15,
                       //   child: Text(
-                      //     messageController.formatTime(createTime),
+                      //     key.toString() +  messageController.formatTime(createTime),
                       //     style: TextStyle(
                       //       fontSize: 12,
                       //       color: Colors.grey,
@@ -496,8 +496,8 @@ class MessageBubble extends StatelessWidget {
             alignment: PlaceholderAlignment.middle,
             child: TextButton(
               style: ButtonStyle(
-                // minimumSize: MaterialStateProperty.all<Size>(Size(8, 8)),
-                // padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(1)),
+                minimumSize: MaterialStateProperty.all<Size>(Size(8, 8)),
+                padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(1)),
                 backgroundColor: MaterialStateProperty.all<Color>(Colors.white12),
                 overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
                 // shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -514,7 +514,6 @@ class MessageBubble extends StatelessWidget {
                 style: TextStyle(
                   fontSize: settingsController.fontSizeConfig.value,
                   color: Colors.black87,
-                  // textBaseline: TextBaseline.alphabetic,
                   fontWeight: FontWeight.normal
                 )
               )
@@ -583,24 +582,16 @@ class MessageBubble extends StatelessWidget {
     spans.add(
       WidgetSpan(  
         alignment: PlaceholderAlignment.middle,
-        child: TextButton(
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
-            overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
-            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              )
-            )
-          ),
+        child: ElevatedButton(
           onPressed: () async {
             messageController.getChatCompletion('gpt-3.5-turbo', dataList[0] as String, WordPipeMessageType.reply_for_translate_sentence);
           }, 
           child: Text(
             "帮我翻译这个句子",
             style: TextStyle(
-              color: Color.fromARGB(255, 11, 66, 93),
-              // decoration: TextDecoration.underline
+              fontSize: settingsController.fontSizeConfig.value,
+              color: Colors.blue[900],
+              fontWeight: FontWeight.normal
             )
           )
         )
@@ -610,23 +601,16 @@ class MessageBubble extends StatelessWidget {
     spans.add(
       WidgetSpan(  
         alignment: PlaceholderAlignment.middle,
-        child: TextButton(
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
-            overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
-            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              )
-            )
-          ),
+        child: ElevatedButton(
           onPressed: () async {
             messageController.getChatCompletion('gpt-3.5-turbo', dataList[0] as String, WordPipeMessageType.reply_for_answer_question);
           }, 
           child: Text(
             "回答这个问题",
             style: TextStyle(
-              color: Color.fromARGB(255, 11, 66, 93),
+              fontSize: settingsController.fontSizeConfig.value,
+              color: Colors.blue[900],
+              fontWeight: FontWeight.normal
             )
           )
         )
@@ -652,24 +636,16 @@ class MessageBubble extends StatelessWidget {
     spans.add(
       WidgetSpan(  
         alignment: PlaceholderAlignment.middle,
-        child: TextButton(
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
-            overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
-            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              )
-            )
-          ),
+        child: ElevatedButton(
           onPressed: () async {
             messageController.getChatCompletion('gpt-3.5-turbo', dataList[0] as String, WordPipeMessageType.reply_for_translate_sentence_zh_en);
           }, 
           child: Text(
             "帮我翻译这个句子",
             style: TextStyle(
-              color: Color.fromARGB(255, 11, 66, 93),
-              // decoration: TextDecoration.underline
+              fontSize: settingsController.fontSizeConfig.value,
+              color: Colors.blue[900],
+              fontWeight: FontWeight.normal
             )
           )
         )
@@ -679,23 +655,16 @@ class MessageBubble extends StatelessWidget {
     spans.add(
       WidgetSpan(  
         alignment: PlaceholderAlignment.middle,
-        child: TextButton(
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all<Color>(Colors.yellow[100]!),
-            overlayColor: MaterialStateProperty.all<Color>(Colors.green[200]!),
-            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              )
-            )
-          ),
+        child: ElevatedButton(
           onPressed: () async {
             messageController.getChatCompletion('gpt-3.5-turbo', dataList[0] as String, WordPipeMessageType.reply_for_answer_question);
           }, 
           child: Text(
             "回答这个问题",
             style: TextStyle(
-              color: Color.fromARGB(255, 11, 66, 93),
+              fontSize: settingsController.fontSizeConfig.value,
+              color: Colors.blue[900],
+              fontWeight: FontWeight.normal
             )
           )
         )

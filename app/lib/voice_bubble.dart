@@ -76,7 +76,7 @@ class VoiceBubble extends StatelessWidget {
                   );                  
                 },)
               else
-                SizedBox(width: 0)
+                SizedBox.shrink()
               ,
               Flexible(
                 child: Column(

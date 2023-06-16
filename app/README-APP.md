@@ -14,7 +14,7 @@
 
 ## macOS build memo
 
-build with macos 14.0
+build with macos 15.0
 ```
 rm -rf ~/Library/Developer/Xcode/DerivedData/
 rm -rf ~/Library/Caches/CocoaPods/
@@ -28,12 +28,13 @@ pod update
   - [ ] [官网建设](https://framer.com/)，隐私协议，服务条款，开源软件列表，
 - 产品功能
   - [x] 桌面版本能在线更新，能做到强制更新。现在的方案，只能实现要么全部强制更新，要么都不强制更新。
+    - [ ] Windows版本的问题。版本号取得；字体；录音格式；
   - [ ] 语音对话，携带上文，用bark生成。prompt限制max_tokens。[waveform](https://github.com/ryanheise/just_audio/issues/97) [和](https://github.com/ryanheise/just_audio/blob/visualizer/just_audio/example/lib/example_visualizer.dart)
   - [ ] 去掉邀请码机制，改为试用48小时，或者25轮对话？订阅方式，macOS微信或支付宝扫码支付；iOS应用内付费，走苹果支付通道
   - [ ] 语音消息转文字后，帮助用户润色，然后再读出来。口语润色自带语法纠错。
   - [ ] shift+enter换行、enter发送，或者enter换行、cmd+enter发送【hotkey_manager】
   - [ ] 词典用本地数据库。聊天记录本地缓存，减少网络查询。聊天记录还是需要放在云端，真人互聊、家庭号需要。收集信息是为了持续训练垂直领域模型
-  - [ ] 优化token使用。使用LangChain或复制它的逻辑
+  - [ ] 优化token使用。使用LangChain或复制它的逻辑，或使用gpt_index框架
   - [ ] 支持多个服务商的API。
   - [ ] 支持本地部署大模型，为这种体验服务。开发者，开放性，扩展性，用户人群定位
   - [ ] 什么时候开CoT? 通识教育中需要逻辑和推导的领域。 `Let's work this out in a step by step way to be sure we have the right answer.`
@@ -56,7 +57,7 @@ pod update
   - [ ] Markdown支持
   - [ ] Emoji支持
   - [ ] 高亮机器人文字里的生词。出题，造句
-  - [ ] 机器人发送卡片
+  - [ ] 机器人发送视频、卡片等其他类型内容，可以说卡片是一种最简单的交互界面，复杂一些的及时交互组件，“选择题”
   - [ ] 支持在界面上按上下键（文本框无焦点时）
   - [ ] wordmatch里按下Tab键，可选lemma
 - 运维工作

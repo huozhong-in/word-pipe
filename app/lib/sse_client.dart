@@ -46,20 +46,26 @@ class SSEClient {
     _eventSource!.onOpen.listen((event) {
       log('Connected to SSE server.');
       _retryInterval = 1000; // Reset retry interval
-      // 如果存在 lastEventId，则在连接之前发送一个HTTP POST请求，通知服务器客户端已连接
-      if (_eventSource!.readyState != html.EventSource.CONNECTING) {
-        // String lastEventId = (event as html.MessageEvent).lastEventId;
-        // log(lastEventId);
-        // c.reConnect('username', lastEventId);
-      }
+      // if (_eventSource!.readyState != html.EventSource.CONNECTING) {
+      // }
+      // if (_eventSource!.readyState == html.EventSource.OPEN) {
+      // }
     });
 
     _eventSource!.addEventListener(eventType, (event) {
+      // print(eventType); // `prod`
       html.MessageEvent messageEvent = event as html.MessageEvent;
       // log('Received message: ${messageEvent.data}');
       log('lastEventId: ${messageEvent.lastEventId}');
       _messageController.add(messageEvent.data); // 向StreamController添加消息
     });
+
+    // _eventSource!.onMessage.listen((event) {
+    //   html.MessageEvent messageEvent = event;
+    //   log('Received message: ${messageEvent.data}');
+    //   log('lastEventId: ${messageEvent.lastEventId}');
+    //   _messageController.add(messageEvent.data); // 向StreamController添加消息
+    // });
 
     _eventSource!.onError.listen((event) {
       if (_isReconnecting) {
@@ -105,6 +111,6 @@ void main() {
   });
 
   // 当需要停止监听时，可以调用 `sseClient.close()` 方法。
-  // sseClient.close();
+  sseClient.close();
 }
 
