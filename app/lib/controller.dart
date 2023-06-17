@@ -1,3 +1,4 @@
+import 'package:flutter_desktop_audio_recorder/flutter_desktop_audio_recorder.dart';
 import 'package:get/get.dart';
 import 'package:wordpipe/config.dart';
 import 'package:wordpipe/cache_helper.dart';
@@ -34,24 +35,24 @@ class Controller extends GetxController{
         return sessionData['uuid'] as String;
     return "";
   }
-  Future<String> getAccessToken() async{
-    Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
-    if (sessionData.containsKey('error') == false)
-        return sessionData['access_token'] as String;
-    return "";
-  }
-  Future<String> getApiKey() async{
-    Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
-    if (sessionData.containsKey('error') == false)
-        return sessionData['apiKey'] as String;
-    return "";
-  }
-  Future<String> getBaseUrl() async{
-    Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
-    if (sessionData.containsKey('error') == false)
-        return sessionData['baseUrl'] as String;
-    return "";
-  }
+  // Future<String> getAccessToken() async{
+  //   Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
+  //   if (sessionData.containsKey('error') == false)
+  //       return sessionData['access_token'] as String;
+  //   return "";
+  // }
+  // Future<String> getApiKey() async{
+  //   Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
+  //   if (sessionData.containsKey('error') == false)
+  //       return sessionData['apiKey'] as String;
+  //   return "";
+  // }
+  // Future<String> getBaseUrl() async{
+  //   Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
+  //   if (sessionData.containsKey('error') == false)
+  //       return sessionData['baseUrl'] as String;
+  //   return "";
+  // }
   Future<int> getPremium() async{
     Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
     if (sessionData.containsKey('error') == false)
@@ -212,12 +213,18 @@ class UserProvider extends GetConnect {
     if (access_token != ""){
       hs['X-access-token'] = access_token;
     }
+
     Directory temporaryDirectory = await getTemporaryDirectory();
-    String filePath = temporaryDirectory.path + '/' + fileName+ '.m4a';
+    String audio_suffix = "mp3";
+    if (GetPlatform.isMacOS || GetPlatform.isIOS)
+      audio_suffix = FlutterDesktopAudioRecorder().macosFileExtension;
+    else if (GetPlatform.isWindows)
+      audio_suffix = FlutterDesktopAudioRecorder().windowsFileExtension;
+    String filePath = temporaryDirectory.path + '/' + fileName + '.' + audio_suffix;
     if (!File(filePath).existsSync()) {
       return {"errcode": 4, "errmsg": "file not exist"};
     }
-    MultipartFile f = MultipartFile(await File(filePath).readAsBytes(), filename: fileName+ '.m4a');
+    MultipartFile f = MultipartFile(await File(filePath).readAsBytes(), filename: fileName+ audio_suffix);
     final SettingsController settingsController = Get.find();
     FormData formdata = FormData({
       'username': username,
@@ -275,6 +282,8 @@ class UserProvider extends GetConnect {
     sessionData['uuid'] = rsp['uuid'] as String;
     sessionData['apiKey'] = decrypt(rsp['apiKey']);
     sessionData['baseUrl'] = rsp['baseUrl'] as String;
+    sessionData['azureApiKey'] = decrypt(rsp['azureApiKey']);
+    sessionData['azureBaseUrl'] = rsp['azureBaseUrl'] as String;
     sessionData['premium'] = rsp['premium'] as int;
     await CacheHelper.setData('sessionData', sessionData);
   }

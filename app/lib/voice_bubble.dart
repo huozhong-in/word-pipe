@@ -107,14 +107,14 @@ class VoiceBubble extends StatelessWidget {
                             InkWell(
                               onTap: () async {
                                 // 根据isSent判断，成功发送到服务器之前从本地播放，之后从服务器`dataList[2]`播放
-                                if(isMe && isSent.value == false){
+                                if (isMe && isSent.value == false){
                                   Directory temporaryDirectory = await getTemporaryDirectory();
                                   String fileName = dataList[1] as String;
                                   String audio_suffix = "mp3";
                                   if (GetPlatform.isMacOS || GetPlatform.isIOS)
-                                    audio_suffix = isMe ? FlutterDesktopAudioRecorder().macosFileExtension : "mp3";
+                                    audio_suffix = FlutterDesktopAudioRecorder().macosFileExtension;
                                   else if (GetPlatform.isWindows)
-                                    audio_suffix = isMe ? FlutterDesktopAudioRecorder().windowsFileExtension : "mp3";
+                                    audio_suffix = FlutterDesktopAudioRecorder().windowsFileExtension;
                                   String filePath = temporaryDirectory.path + '/' + fileName + '.' + audio_suffix;
                                   if (File(filePath).existsSync()) {
                                     messageController.playVoice(key.toString(), filePath, false);

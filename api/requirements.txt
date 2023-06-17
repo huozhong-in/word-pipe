@@ -15,3 +15,5 @@ openai
 pycryptodome
 tiktoken
 edge-tts
+ffmpeg-python
+azure-cognitiveservices-speech

@@ -6,6 +6,7 @@ import threading
 import time
 import hashlib
 from pathlib import Path
+import ffmpeg
 import marisa_trie
 from flask import (
     Flask, 
@@ -415,6 +416,15 @@ def voicechat():
     audio_suffix: str = f.filename.split('.')[-1] # 提取音频文件后缀名
     audio_file_full_path = AUDIO_FILE_PATH / intermediate_path / f'{pk_chat_record}.{audio_suffix}'
     f.save(audio_file_full_path)
+    # 将音频文件转成mp3格式
+    if audio_suffix != 'mp3':
+        mp3_file_full_path = AUDIO_FILE_PATH / intermediate_path / f'{pk_chat_record}.mp3'
+        (ffmpeg
+            .input(audio_file_full_path.as_posix())
+            .output(mp3_file_full_path.as_posix())
+            .run()
+        )
+        os.remove(audio_file_full_path.as_posix())
 
     toc1 = time.perf_counter()
     logging.info(f"[语音文件上传耗时: {toc1 - tic:0.4f} seconds]")
@@ -489,7 +499,7 @@ def voicechat():
             dataList: list = list()
             dataList.append(text)
             dataList.append(key)
-            dataList.append('/' + AUDIO_SERVER_PATH + '/' + intermediate_path + '/' + f'{key}.mp3')
+            dataList.append(f'/{AUDIO_SERVER_PATH}/{intermediate_path}/{key}.mp3')
             back_data['dataList'] = dataList
             id = generate_time_based_client_id(prefix=username)
             sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
@@ -506,7 +516,7 @@ def voicechat():
             "errcode": 0, 
             "message_key": message_key,
             "pk_chat_record": pk_chat_record, 
-            "relative_url": f"/{AUDIO_SERVER_PATH}/{intermediate_path}/{pk_chat_record}.{audio_suffix}"
+            "relative_url": f"/{AUDIO_SERVER_PATH}/{intermediate_path}/{pk_chat_record}.mp3"
         }
     toc3 = time.perf_counter()
     logging.info(f"[返回给客户端耗时: {toc3 - tic:0.4f} seconds]")
@@ -987,7 +997,9 @@ def get_openai_apikey() -> dict:
     else:
         return {
             "apiKey": encrypt(os.environ['OPENAI_API_KEY']),
-            "baseUrl": OPENAI_PROXY_BASEURL['dev'] if os.environ.get('DEBUG_MODE') != None else OPENAI_PROXY_BASEURL['prod']
+            "baseUrl": OPENAI_PROXY_BASEURL['dev'] if os.environ.get('DEBUG_MODE') != None else OPENAI_PROXY_BASEURL['prod'],
+            "azureApiKey": encrypt(os.environ['AZURE_API_KEY']),
+            "azureBaseUrl": AZURE_OPENAI_PROXY_BASEURL['dev'] if os.environ.get('DEBUG_MODE') != None else AZURE_OPENAI_PROXY_BASEURL['prod'],
             }
 
 def encrypt(text):

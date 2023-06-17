@@ -10,6 +10,7 @@ class SSEClient {
   html.EventSource? _eventSource;
   int _retryInterval;
   bool _isReconnecting;
+  String lastLastEventId = '';
 
   // 创建一个StreamController，用于广播特定事件类型的消息
   final StreamController<String> _messageController = StreamController<String>.broadcast();
@@ -57,6 +58,11 @@ class SSEClient {
       html.MessageEvent messageEvent = event as html.MessageEvent;
       // log('Received message: ${messageEvent.data}');
       log('lastEventId: ${messageEvent.lastEventId}');
+      // 过滤掉重复的消息
+      if (messageEvent.lastEventId == lastLastEventId) {
+        return;
+      }
+      lastLastEventId = messageEvent.lastEventId;
       _messageController.add(messageEvent.data); // 向StreamController添加消息
     });
 

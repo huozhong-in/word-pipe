@@ -12,7 +12,6 @@ import 'package:wordpipe/controller.dart';
 import 'package:wordpipe/prompts/template_vocab.dart';
 import 'package:wordpipe/prompts/template_freechat.dart';
 import 'package:wordpipe/custom_widgets.dart';
-import 'package:flutter_desktop_audio_recorder/flutter_desktop_audio_recorder.dart';
 import 'package:just_audio/just_audio.dart';
 import 'dart:developer';
 
@@ -220,8 +219,8 @@ class MessageController extends GetxController{
     if (sessionData.containsKey('error') == false){
       curr_user = sessionData['username'] as String;
       access_token = sessionData['access_token'] as String;
-      apiKey = sessionData['apiKey'] as String;
-      baseUrl = sessionData['baseUrl'] as String;
+      apiKey = sessionData['azureApiKey'] as String;
+      baseUrl = sessionData['azureBaseUrl'] as String;
     }else{
       return;
     }
@@ -338,8 +337,8 @@ class MessageController extends GetxController{
     if (sessionData.containsKey('error') == false){
       curr_user = sessionData['username'] as String;
       access_token = sessionData['access_token'] as String;
-      apiKey = sessionData['apiKey'] as String;
-      baseUrl = sessionData['baseUrl'] as String;
+      apiKey = sessionData['azureApiKey'] as String;
+      baseUrl = sessionData['azureBaseUrl'] as String;
       premium = sessionData['premium'] as int;
     }else{
       return;
@@ -385,32 +384,37 @@ class MessageController extends GetxController{
       "conversation_id": c_id.toString(),
       "message_key": needUpdate
     };
-    Stream<OpenAIStreamChatCompletionModel> chatStream = OpenAI.instance.chat.createStream(
-      model: model,
-      messages: msg,
-      user: jsonEncode(sticker),
-      temperature: temperature,
-    );
-    // TODO 如果返回错误说明用户提供的key无效，需要提示用户
-    final message = findMessageByKey(needUpdate);
-    chatStream.listen((chatStreamEvent) {
-      // print(chatStreamEvent);
-      OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];
-      final content = choice.delta.content;
-      if(content != null){
-        // print(content);
-        if (message.dataList[0] == '...'){
-          message.dataList.removeAt(0);
+    try{
+      Stream<OpenAIStreamChatCompletionModel> chatStream = OpenAI.instance.chat.createStream(
+        model: model,
+        messages: msg,
+        user: jsonEncode(sticker),
+        temperature: temperature,
+      );
+      final message = findMessageByKey(needUpdate);
+      chatStream.listen((chatStreamEvent) {
+        // print(chatStreamEvent);
+        OpenAIStreamChatCompletionChoiceModel choice = chatStreamEvent.choices[0];
+        final content = choice.delta.content;
+        if(content != null){
+          // print(content);
+          if (message.dataList[0] == '...'){
+            message.dataList.removeAt(0);
+          }
+          message.dataList.add(content);
         }
-        message.dataList.add(content);
-      }
-      if (choice.finishReason != null && choice.finishReason == 'stop'){
-        // 自动给新话题命名
-        if (messages.length == 3 || messages.length == 2){
-          name_a_conversation(curr_user, c_id, messages[1].dataList.join(''), messages[0].dataList.join(''), apiKey);
+        if (choice.finishReason != null && choice.finishReason == 'stop'){
+          // 自动给新话题命名
+          if (messages.length == 3 || messages.length == 2){
+            name_a_conversation(curr_user, c_id, messages[1].dataList.join(''), messages[0].dataList.join(''), apiKey);
+          }
         }
-      }
-    });
+      });
+    }on RequestFailedException catch(e) {
+      // 如果返回错误说明用户提供的key无效，需要提示用户
+      log(e.message);
+      log(e.statusCode.toString());
+    }
   }
 
   Future<Map<String, dynamic>> chat(String username, String message, int conversation_id) async{
@@ -585,14 +589,14 @@ class MessageController extends GetxController{
   Future<String> convertSpeechToText (String filepath) async {
     // const apiKey = apisecretkey:
     // var url = Uri.https("'api.openai.com”, “v1/audio/transcriptions"):
-    // var request = http.MultipartRequest(’PoST', url):
-    // request.headers.addAl1(( ("Authorizat ion": "Bearer $apikey"}));
-    // request. fields ["model"] = 'whisper-1';
-    // request. fields ["language"] ="en";
-    // request . fites.add(await http.MultipartFile. fromPath("file' , filepath));
-    // var response = await request. send();
-    // var newresponse = await http.Response. fromstream (response);
-    // final responseData = json.decode (newresponse.body)：
+    // var request = http.MultipartRequest(’POST', url):
+    // request.headers.addAll({"Authorizat ion": "Bearer $apikey"});
+    // request.fields ["model"] = 'whisper-1';
+    // request.fields ["language"] ="en";
+    // request.fields.add(await http.MultipartFile.fromPath("file' , filepath));
+    // var response = await request.send();
+    // var newresponse = await http.Response.fromstream(response);
+    // final responseData = json.decode(newresponse.body)：
     // print ( responseData);
     // return responseData['text'];
     // 使用用户自己的OpenAI API key
@@ -764,14 +768,8 @@ class ChatRecord extends GetConnect {
           case WordPipeMessageType.audio:
             dataList.add(msgContent);
             dataList.add(e['pk_chat_record']);
-            bool isMe = msgFrom == username;
-            String audio_suffix = "mp3";
-            if (GetPlatform.isMacOS || GetPlatform.isIOS)
-              audio_suffix = isMe ? FlutterDesktopAudioRecorder().macosFileExtension : "mp3";
-            else if (GetPlatform.isWindows)
-              audio_suffix = isMe ? FlutterDesktopAudioRecorder().windowsFileExtension : "mp3";
             String intermediate_path = messageController.formatTime2Day(msgCreateTime);
-            String relative_url = '/$VOICE_FILE_DIR/$intermediate_path/${e['pk_chat_record']}.$audio_suffix';
+            String relative_url = '/$VOICE_FILE_DIR/$intermediate_path/${e['pk_chat_record']}.mp3';
             dataList.add(relative_url);
             break;
           default:
