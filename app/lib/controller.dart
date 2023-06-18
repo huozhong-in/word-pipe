@@ -224,7 +224,7 @@ class UserProvider extends GetConnect {
     if (!File(filePath).existsSync()) {
       return {"errcode": 4, "errmsg": "file not exist"};
     }
-    MultipartFile f = MultipartFile(await File(filePath).readAsBytes(), filename: fileName+ audio_suffix);
+    MultipartFile f = MultipartFile(await File(filePath).readAsBytes(), filename: fileName + '.' + audio_suffix);
     final SettingsController settingsController = Get.find();
     FormData formdata = FormData({
       'username': username,
@@ -282,8 +282,6 @@ class UserProvider extends GetConnect {
     sessionData['uuid'] = rsp['uuid'] as String;
     sessionData['apiKey'] = decrypt(rsp['apiKey']);
     sessionData['baseUrl'] = rsp['baseUrl'] as String;
-    sessionData['azureApiKey'] = decrypt(rsp['azureApiKey']);
-    sessionData['azureBaseUrl'] = rsp['azureBaseUrl'] as String;
     sessionData['premium'] = rsp['premium'] as int;
     await CacheHelper.setData('sessionData', sessionData);
   }

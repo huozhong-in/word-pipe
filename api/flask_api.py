@@ -416,6 +416,8 @@ def voicechat():
     audio_suffix: str = f.filename.split('.')[-1] # 提取音频文件后缀名
     audio_file_full_path = AUDIO_FILE_PATH / intermediate_path / f'{pk_chat_record}.{audio_suffix}'
     f.save(audio_file_full_path)
+    
+    # TODO 将以下代码改成异步执行
     # 将音频文件转成mp3格式
     if audio_suffix != 'mp3':
         mp3_file_full_path = AUDIO_FILE_PATH / intermediate_path / f'{pk_chat_record}.mp3'
@@ -651,7 +653,7 @@ def tts():
 #     '''
 #     根据单词查找词根词缀
 #     print(word2root['tactful']) # 输出 ["-ful1","tact, tang, ting, tig"]
-#     TODO example里单词可能有大写或带空格的情况，如"-ite2"
+#     需要考虑example里单词可能有大写或带空格的情况，如"-ite2"
 #     '''
     
 #     message = message.split('/root ')[1]
@@ -834,7 +836,7 @@ def signin():
 
 @app.route('/api/openai/<path:path>', methods=['POST', 'GET', 'PUT', 'DELETE'])
 def openai_general_proxy(path):
-    # logging.debug(path)
+    logging.debug(path)
     url = f'https://api.openai.com/{path}'
     headers = {key: value for (key, value) in request.headers if key != 'Host'}
     if os.environ.get('DEBUG_MODE') != None:
@@ -849,12 +851,17 @@ def openai_chat_proxy():
     '''
     代理到OpenAI chat API的请求，并将聊天记录存入数据库
     '''
+    if os.environ['AZURE_API_KEY'] == '':
+        pass
     api_url = 'https://api.openai.com/v1/chat/completions'
     headers = {key: value for (key, value) in request.headers if key != 'Host'}
     data = request.get_data()
     params = request.args
     tmp_user = request.json['user']
     messages = request.json['messages']
+    # stream = request.json['stream']
+    print(data)
+    print(request.headers)
     
     # 检查消息是否为空
     last_message: dict  = messages[-1]
@@ -902,7 +909,7 @@ def openai_chat_proxy():
                         completion_text_queue.put(delta.get('content'))
                         # print(delta.get('content'))
                     elif delta is not None and delta.get('finish_reason') is not None and delta.get('finish_reason') == 'stop':
-                        logging.debug('finish_reason: stop')
+                        logging.info('finish_reason: stop')
                         completion_text_queue.put("[DONE]")
             yield chunk
 
@@ -929,8 +936,9 @@ def openai_chat_proxy():
                 )
             crdb = ChatRecordDB(db_session)
             pk_chat_record: int = crdb.insert_chat_record(cr)
-        finally:
-            db_session.close()
+            logging.debug(pk_chat_record)
+        except Exception as e:
+            logging.error(e)
 
     
     thread = threading.Thread(target=fn_thread, args=(completion_text_queue, username))
@@ -998,8 +1006,6 @@ def get_openai_apikey() -> dict:
         return {
             "apiKey": encrypt(os.environ['OPENAI_API_KEY']),
             "baseUrl": OPENAI_PROXY_BASEURL['dev'] if os.environ.get('DEBUG_MODE') != None else OPENAI_PROXY_BASEURL['prod'],
-            "azureApiKey": encrypt(os.environ['AZURE_API_KEY']),
-            "azureBaseUrl": AZURE_OPENAI_PROXY_BASEURL['dev'] if os.environ.get('DEBUG_MODE') != None else AZURE_OPENAI_PROXY_BASEURL['prod'],
             }
 
 def encrypt(text):

@@ -219,8 +219,8 @@ class MessageController extends GetxController{
     if (sessionData.containsKey('error') == false){
       curr_user = sessionData['username'] as String;
       access_token = sessionData['access_token'] as String;
-      apiKey = sessionData['azureApiKey'] as String;
-      baseUrl = sessionData['azureBaseUrl'] as String;
+      apiKey = sessionData['apiKey'] as String;
+      baseUrl = sessionData['baseUrl'] as String;
     }else{
       return;
     }
@@ -337,8 +337,8 @@ class MessageController extends GetxController{
     if (sessionData.containsKey('error') == false){
       curr_user = sessionData['username'] as String;
       access_token = sessionData['access_token'] as String;
-      apiKey = sessionData['azureApiKey'] as String;
-      baseUrl = sessionData['azureBaseUrl'] as String;
+      apiKey = sessionData['apiKey'] as String;
+      baseUrl = sessionData['baseUrl'] as String;
       premium = sessionData['premium'] as int;
     }else{
       return;
