@@ -10,31 +10,34 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:developer';
 
-class Controller extends GetxController{
+class Controller extends GetxController {
   final WordsProvider _wordsProvider = WordsProvider();
   final UserProvider _userProvider = UserProvider();
-  
+
   @override
-  void onInit() async{
+  void onInit() async {
     super.onInit();
     _userProvider.timeout = Duration(seconds: 45);
   }
-  
-  Future<Map<String, dynamic>> getSessionData() async{
+
+  Future<Map<String, dynamic>> getSessionData() async {
     return await _userProvider.getLocalStorge();
   }
-  Future<String> getUserName() async{
+
+  Future<String> getUserName() async {
     Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
     if (sessionData.containsKey('error') == false)
-        return sessionData['username'] as String;
+      return sessionData['username'] as String;
     return "";
   }
-  Future<String> getUUID() async{
+
+  Future<String> getUUID() async {
     Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
     if (sessionData.containsKey('error') == false)
-        return sessionData['uuid'] as String;
+      return sessionData['uuid'] as String;
     return "";
   }
+
   // Future<String> getAccessToken() async{
   //   Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
   //   if (sessionData.containsKey('error') == false)
@@ -53,54 +56,61 @@ class Controller extends GetxController{
   //       return sessionData['baseUrl'] as String;
   //   return "";
   // }
-  Future<int> getPremium() async{
+  Future<int> getPremium() async {
     Map<String, dynamic> sessionData = await _userProvider.getLocalStorge();
     if (sessionData.containsKey('error') == false)
-        return sessionData['premium'] as int;
+      return sessionData['premium'] as int;
     return 0;
   }
-  Future<List<dynamic>> searchWords(String word) async{
+
+  Future<List<dynamic>> searchWords(String word) async {
     return await _wordsProvider.searchWords(word);
   }
-  Future<List<dynamic>> getWord(String word) async{
+
+  Future<List<dynamic>> getWord(String word) async {
     return await _wordsProvider.getWord(word);
   }
+
   Future<List<dynamic>> getWords(List<dynamic> word_json_list) async {
     return await _wordsProvider.getWords(word_json_list);
   }
-  Future<Map<String ,dynamic>> chat(String username, String message, int conversation_id, String message_key) async{
-    return await _userProvider.chat(username, message, conversation_id, message_key);
+
+  Future<Map<String, dynamic>> chat(String username, String message,
+      int conversation_id, String message_key) async {
+    return await _userProvider.chat(
+        username, message, conversation_id, message_key);
   }
-  Future<Map<String, dynamic>> voiceChat(String username, String message, String fileName, String message_key, int conversation_id) async{
-    return await _userProvider.voiceChat(username, message, fileName, message_key, conversation_id);
+
+  Future<Map<String, dynamic>> voiceChat(String username, String message,
+      String fileName, String message_key, int conversation_id) async {
+    return await _userProvider.voiceChat(
+        username, message, fileName, message_key, conversation_id);
   }
-  Future<Map<String, dynamic>> signin(String username, String password) async{
+
+  Future<Map<String, dynamic>> signin(String username, String password) async {
     return await _userProvider.signin(username, password);
   }
-  Future<Map<String, dynamic>> signup(String username, String password) async{
+
+  Future<Map<String, dynamic>> signup(String username, String password) async {
     return await _userProvider.signup(username, password);
   }
-  Future<bool> signout() async{
-    if(await CacheHelper.hasData('sessionData')){
+
+  Future<bool> signout() async {
+    if (await CacheHelper.hasData('sessionData')) {
       await CacheHelper.setData('sessionData', null);
     }
     return true;
   }
-  
+
   Future<String> getWordPipeAppVersion() async {
-    if (GetPlatform.isMacOS == false)
-      return "0.0.0";
-    
     final PackageInfo packageInfo = await PackageInfo.fromPlatform();
     // String appName = packageInfo.appName;
     // String packageName = packageInfo.packageName;
     String version = packageInfo.version;
     // String buildNumber = packageInfo.buildNumber;
-
-    return version; 
+    return version;
   }
 }
-
 
 class WordsProvider extends GetConnect {
   // @override
@@ -109,7 +119,7 @@ class WordsProvider extends GetConnect {
   //   var db = await openDatabase( dbPath+ 'my_db.db');
   // }
 
-  Future<List<dynamic>> searchWords(String word) async{
+  Future<List<dynamic>> searchWords(String word) async {
     // 检查缓存中是否有数据
     if (await CacheHelper.hasData(word)) {
       // print('Fetching data from cache in searchWords("$word")');
@@ -125,11 +135,13 @@ class WordsProvider extends GetConnect {
       return data;
     } else {
       // throw Exception('Failed to fetch items in searchWords("$word")');
-      return [{"result":[]}];
+      return [
+        {"result": []}
+      ];
     }
   }
 
-  Future<List<dynamic>> getWord(String word) async{
+  Future<List<dynamic>> getWord(String word) async {
     if (await CacheHelper.hasData(word)) {
       // print('Fetching data from cache in getWord("$word")');
       return await CacheHelper.getData(word) as List<dynamic>;
@@ -144,27 +156,26 @@ class WordsProvider extends GetConnect {
     }
   }
 
-  Future<List<dynamic>> getWords(List<dynamic> word_json_list) async{
+  Future<List<dynamic>> getWords(List<dynamic> word_json_list) async {
     Uri url = Uri.parse('$HTTP_SERVER_HOST/qb');
     // String data = jsonEncode(word_json_list);
     final response = await post(url.toString(), word_json_list);
-    
+
     if (response.statusCode == 200) {
       return response.body as List<dynamic>;
     } else {
       throw Exception('Failed to fetch items');
     }
   }
-  
+
   // GetSocket userMessages() {
   //   return socket('https://yourapi/users/socket');
   // }
 }
 
-
 class UserProvider extends GetConnect {
-
-  Future<Map<String, dynamic>> chat(String username, String message, int conversation_id, String message_key) async{
+  Future<Map<String, dynamic>> chat(String username, String message,
+      int conversation_id, String message_key) async {
     // String baseUrl='$HTTP_SERVER_HOST/chat';
     // Uri url = Uri.parse(baseUrl).replace(
     //   queryParameters: <String, String>{
@@ -179,38 +190,42 @@ class UserProvider extends GetConnect {
     data['conversation_id'] = conversation_id;
     data['message_key'] = message_key;
     String access_token = "";
-    if (await CacheHelper.hasData('sessionData')){
-      if(await CacheHelper.getData('sessionData') != null){
-        Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
+    if (await CacheHelper.hasData('sessionData')) {
+      if (await CacheHelper.getData('sessionData') != null) {
+        Map<String, dynamic> sessionData =
+            await CacheHelper.getData('sessionData');
         access_token = sessionData['access_token'] as String;
       }
     }
-    Map<String,String> hs = {};
-    if (access_token != ""){
+    Map<String, String> hs = {};
+    if (access_token != "") {
       hs['X-access-token'] = access_token;
     }
-    final response = await post(url.toString(), data, headers: hs, contentType: 'application/json');
+    final response = await post(url.toString(), data,
+        headers: hs, contentType: 'application/json');
     if (response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.body);
-      } else {
-        log('in controller chat(), response.statusCode !=200 : ${response.body}');
-        return {"errcode": 3, "errmsg": response.body};
-      }
+      return Map<String, dynamic>.from(response.body);
+    } else {
+      log('in controller chat(), response.statusCode !=200 : ${response.body}');
+      return {"errcode": 3, "errmsg": response.body};
+    }
   }
 
-  Future<Map<String, dynamic>> voiceChat(String username, String message, String fileName, String message_key, int conversation_id) async{
+  Future<Map<String, dynamic>> voiceChat(String username, String message,
+      String fileName, String message_key, int conversation_id) async {
     Uri url = Uri.parse('$HTTP_SERVER_HOST/voicechat');
     String access_token = "";
     String apiKey = '';
-    if (await CacheHelper.hasData('sessionData')){
-      if(await CacheHelper.getData('sessionData') != null){
-        Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
+    if (await CacheHelper.hasData('sessionData')) {
+      if (await CacheHelper.getData('sessionData') != null) {
+        Map<String, dynamic> sessionData =
+            await CacheHelper.getData('sessionData');
         access_token = sessionData['access_token'] as String;
         apiKey = sessionData['apiKey'] as String;
       }
     }
-    Map<String,String> hs = {};
-    if (access_token != ""){
+    Map<String, String> hs = {};
+    if (access_token != "") {
       hs['X-access-token'] = access_token;
     }
 
@@ -220,32 +235,35 @@ class UserProvider extends GetConnect {
       audio_suffix = FlutterDesktopAudioRecorder().macosFileExtension;
     else if (GetPlatform.isWindows)
       audio_suffix = FlutterDesktopAudioRecorder().windowsFileExtension;
-    String filePath = temporaryDirectory.path + '/' + fileName + '.' + audio_suffix;
+    String filePath =
+        temporaryDirectory.path + '/' + fileName + '.' + audio_suffix;
     if (!File(filePath).existsSync()) {
       return {"errcode": 4, "errmsg": "file not exist"};
     }
-    MultipartFile f = MultipartFile(await File(filePath).readAsBytes(), filename: fileName + '.' + audio_suffix);
+    MultipartFile f = MultipartFile(await File(filePath).readAsBytes(),
+        filename: fileName + '.' + audio_suffix);
     final SettingsController settingsController = Get.find();
     FormData formdata = FormData({
       'username': username,
       'message': message,
       'message_key': message_key,
-      'conversation_id':conversation_id,
+      'conversation_id': conversation_id,
       'file': f,
       'voice': settingsController.aiAssistantTtsVoiceZhEn.value,
       'rate': settingsController.aiAssistantTtsRate.value,
       'api_key': apiKey,
     });
-    final response = await post(url.toString(), formdata, headers: hs, contentType: 'multipart/form-data');
+    final response = await post(url.toString(), formdata,
+        headers: hs, contentType: 'multipart/form-data');
     if (response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.body);
-      } else {
-        log('in controller voicechat(), response.statusCode != 200: ${response.body}');
-        return {"errcode": 3, "errmsg": response.body};
-      }
+      return Map<String, dynamic>.from(response.body);
+    } else {
+      log('in controller voicechat(), response.statusCode != 200: ${response.body}');
+      return {"errcode": 3, "errmsg": response.body};
+    }
   }
 
-  Future<Map<String, dynamic>> signin(String username, String password) async{
+  Future<Map<String, dynamic>> signin(String username, String password) async {
     Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signin');
     Map data = {};
     data['username'] = username;
@@ -258,7 +276,7 @@ class UserProvider extends GetConnect {
     return rsp;
   }
 
-  Future<Map<String, dynamic>> signup(String username, String password) async{
+  Future<Map<String, dynamic>> signup(String username, String password) async {
     Uri url = Uri.parse('$HTTP_SERVER_HOST/user/signup');
     Map data = {};
     data['username'] = username;
@@ -287,9 +305,10 @@ class UserProvider extends GetConnect {
   }
 
   Future<Map<String, dynamic>> getLocalStorge() async {
-    if (await CacheHelper.hasData('sessionData')){
-      if(await CacheHelper.getData('sessionData') != null){
-        Map<String, dynamic> sessionData = await CacheHelper.getData('sessionData');
+    if (await CacheHelper.hasData('sessionData')) {
+      if (await CacheHelper.getData('sessionData') != null) {
+        Map<String, dynamic> sessionData =
+            await CacheHelper.getData('sessionData');
         return sessionData;
       }
     }
@@ -303,9 +322,10 @@ class SettingsBinding implements Bindings {
     Get.lazyPut(() => SettingsController());
   }
 }
+
 class SettingsController extends GetxController {
   late SharedPreferences prefs;
-  
+
   // 关闭英语输入助手
   RxBool englishInputHelperConfig = true.obs;
   // 聊天区域字体大小
@@ -324,54 +344,73 @@ class SettingsController extends GetxController {
   RxString openAiApiKey = ''.obs;
 
   RxBool freeChatMode = false.obs;
-  
+
   @override
   void onInit() async {
     super.onInit();
     prefs = await SharedPreferences.getInstance();
-    englishInputHelperConfig.value = prefs.getBool('englishInputHelperConfig') ?? englishInputHelperConfig.value;
-    fontSizeConfig.value = await prefs.getDouble('fontSizeConfig') ?? fontSizeConfig.value;
-    aiAssistantLanguage.value = await prefs.getInt('aiAssistantLanguage') ?? aiAssistantLanguage.value;
-    useOtherWordForms.value = await prefs.getBool('useOtherWordForms') ?? useOtherWordForms.value;
-    aiAssistantTtsVoice.value = await prefs.getString('aiAssistantTtsVoice') ?? aiAssistantTtsVoice.value;
-    aiAssistantTtsVoiceZhEn.value = await prefs.getString('aiAssistantTtsVoiceZhEn') ?? aiAssistantTtsVoiceZhEn.value;
-    aiAssistantTtsRate.value = await prefs.getInt('aiAssistantTtsRate') ?? aiAssistantTtsRate.value;
-    openAiApiKey.value = await prefs.getString('openAiApiKey') ?? openAiApiKey.value;
-    freeChatMode.value = await prefs.getBool('freeChatMode') ?? freeChatMode.value;
+    englishInputHelperConfig.value =
+        prefs.getBool('englishInputHelperConfig') ??
+            englishInputHelperConfig.value;
+    fontSizeConfig.value =
+        await prefs.getDouble('fontSizeConfig') ?? fontSizeConfig.value;
+    aiAssistantLanguage.value =
+        await prefs.getInt('aiAssistantLanguage') ?? aiAssistantLanguage.value;
+    useOtherWordForms.value =
+        await prefs.getBool('useOtherWordForms') ?? useOtherWordForms.value;
+    aiAssistantTtsVoice.value = await prefs.getString('aiAssistantTtsVoice') ??
+        aiAssistantTtsVoice.value;
+    aiAssistantTtsVoiceZhEn.value =
+        await prefs.getString('aiAssistantTtsVoiceZhEn') ??
+            aiAssistantTtsVoiceZhEn.value;
+    aiAssistantTtsRate.value =
+        await prefs.getInt('aiAssistantTtsRate') ?? aiAssistantTtsRate.value;
+    openAiApiKey.value =
+        await prefs.getString('openAiApiKey') ?? openAiApiKey.value;
+    freeChatMode.value =
+        await prefs.getBool('freeChatMode') ?? freeChatMode.value;
   }
- 
+
   void toggleEnglishInputHelper(bool value) async {
     englishInputHelperConfig.value = value;
     await prefs.setBool('englishInputHelperConfig', value);
   }
+
   void setFontSize(double value) async {
     fontSizeConfig.value = value.toDouble();
     await prefs.setDouble('fontSizeConfig', value.toDouble());
   }
+
   void setAiAssistantLanguage(int value) async {
     aiAssistantLanguage.value = value;
     await prefs.setInt('aiAssistantLanguage', value);
   }
+
   void toggleUseOtherWordForms(bool value) async {
     useOtherWordForms.value = value;
     await prefs.setBool('useOtherWordForms', value);
   }
+
   void setAiAssistantTtsVoice(String value) async {
     aiAssistantTtsVoice.value = value;
     await prefs.setString('aiAssistantTtsVoice', value);
   }
+
   void setAiAssistantTtsVoiceZhEn(String value) async {
     aiAssistantTtsVoiceZhEn.value = value;
     await prefs.setString('aiAssistantTtsVoiceZhEn', value);
   }
+
   void setAiAssistantTtsRate(int value) async {
     aiAssistantTtsRate.value = value;
     await prefs.setInt('aiAssistantTtsRate', value);
   }
+
   void setOpenAiApiKey(String value) async {
     openAiApiKey.value = value;
     await prefs.setString('openAiApiKey', value);
   }
+
   void toggleFreeChatMode(bool value) async {
     freeChatMode.value = value;
     await prefs.setBool('freeChatMode', value);
