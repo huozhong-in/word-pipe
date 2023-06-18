@@ -93,7 +93,7 @@ class DesktopHome extends StatelessWidget {
       }
     }
   }
-  
+
   void _handleMatchWords(String text) {
     if(settingsController.englishInputHelperConfig == false){
       _matchWords.clear();
@@ -169,8 +169,8 @@ class DesktopHome extends StatelessWidget {
       // 用isSelected变量告知前端是否高亮显示当前单词
       bool fullMatch = (element.toLowerCase() == _currentWord.toLowerCase());
       int cur_index = i;
-      _matchWords.insert(_matchWords.length, 
-        MatchWords(text: element, fullMatch: fullMatch, isSelected: element == words[_indexHighlight], 
+      _matchWords.insert(_matchWords.length,
+        MatchWords(text: element, fullMatch: fullMatch, isSelected: element == words[_indexHighlight],
           onTap:() {
             // 当用户点击某个单词时:查词；
             _indexHighlight = cur_index;
@@ -193,13 +193,13 @@ class DesktopHome extends StatelessWidget {
               _wordDetail.clear();
               log("build_matchWords_list($element) " + e.toString());
             }
-            
+
           }
         });
       }
       i++;
     }
-    
+
 
     // 当用键盘　↑　↓　时，需要重新计算高亮单词的位置和滚动距离，保证高亮项始终在可视区域内
     final double listItemHeight = 20;
@@ -260,7 +260,7 @@ class DesktopHome extends StatelessWidget {
       // log('get_word_index_range_in_text(): Found "$word" at position $startIndex-$endIndex');
       if(cursorPosition > startIndex && cursorPosition <= endIndex){
         _currentWord = word!;
-        return [startIndex, endIndex];    
+        return [startIndex, endIndex];
       }
     }
     return [0, 0];
@@ -300,7 +300,7 @@ class DesktopHome extends StatelessWidget {
             // 取得当前光标所在单词的起始位置和结束位置
             List<int> currentWordIndexRange = get_word_index_range_in_text(_textController.text, cursorStart);
             // 如果从接口中查询到的匹配单词列表不为空
-            if (_matchWords.isNotEmpty){ 
+            if (_matchWords.isNotEmpty){
               // log("_matchWords.length:${_matchWords.length}");
               if(currentWordIndexRange != [0,0]){
                 String words_behind = _textController.text.substring(currentWordIndexRange[1], _textController.text.length);
@@ -420,7 +420,7 @@ class DesktopHome extends StatelessWidget {
       final waveFile = File(p.join((await getTemporaryDirectory()).path, '$fileName.wave'));
       // 学习一下这篇文章，随语音录入实时显示波形 https://coldstone.fun/post/2020/04/13/flutter-stream/
       progressStream.value = JustWaveform.extract(
-        audioInFile: audioFile, 
+        audioInFile: audioFile,
         waveOutFile: waveFile,
         // zoom: const WaveformZoom.pixelsPerSecond(100)
       ).asBroadcastStream();
@@ -506,12 +506,12 @@ class DesktopHome extends StatelessWidget {
                   iconSize: 20,
                   onPressed: () async {
                     deleteAllTempAudioFiles();
-                  }, 
+                  },
                   icon: Icon(Icons.cancel, color: Colors.red[100])
                 ),
               ),
             ],
-          ),          
+          ),
           Container(
             height: 50,
             width: double.infinity,
@@ -553,7 +553,7 @@ class DesktopHome extends StatelessWidget {
 
   @override
   Widget build(context){
-    
+
     _commentFocus = messageController.commentFocus;
 
     return Scaffold(
@@ -659,9 +659,9 @@ class DesktopHome extends StatelessWidget {
                     future: c.getWordPipeAppVersion(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
-                        if (snapshot.data! == '0.0.0')
-                          return Container();
-                        
+                        // if (snapshot.data! == '0.0.0')
+                        //   return Container();
+
                         return Padding(
                           padding: const EdgeInsets.only(left: 22, right: 22, top: 16, bottom: 16),
                           child: UpdatWidget(
@@ -670,13 +670,13 @@ class DesktopHome extends StatelessWidget {
                               final data = await http.get(Uri.parse(
                                 "https://api.github.com/repos/huozhong-in/word-pipe/releases/latest",
                               ));
-                      
+
                               // Return the tag name, which is always a semantically versioned string.
                               return jsonDecode(data.body)["tag_name"];
                             },
                             getBinaryUrl: (version) async {
                               // Github also gives us a great way to download the binary for a certain release (as long as we use a consistent naming scheme)
-                      
+
                               // Make sure that this link includes the platform extension with which to save your binary.
                               // If you use https://exapmle.com/latest/macos for instance then you need to create your own file using `getDownloadFileLocation`
                               String platformExt = "";
@@ -714,9 +714,9 @@ class DesktopHome extends StatelessWidget {
                       activeTrackColor: Colors.green[100],
                       inactiveThumbColor: Colors.green[200],
                       inactiveTrackColor: Colors.green[100],
-                      title: Text('英语打字助手', 
-                      style: TextStyle(fontSize: 14)), 
-                      value:  settingsController.englishInputHelperConfig.value, 
+                      title: Text('英语打字助手',
+                      style: TextStyle(fontSize: 14)),
+                      value:  settingsController.englishInputHelperConfig.value,
                       onChanged: ((bool value) {
                         settingsController.toggleEnglishInputHelper(value);
                       }
@@ -729,7 +729,7 @@ class DesktopHome extends StatelessWidget {
                       activeTrackColor: Colors.green[100],
                       inactiveThumbColor: Colors.green[200],
                       inactiveTrackColor: Colors.green[100],
-                      title: Text('连续对话模式', style: TextStyle(fontSize: 14)), 
+                      title: Text('连续对话模式', style: TextStyle(fontSize: 14)),
                       // subtitle: Text('会员专享', style: TextStyle(fontSize: 12, color: Colors.blue)),
                       value: settingsController.freeChatMode.value,
                       onChanged: ((bool value) async {
@@ -764,7 +764,7 @@ class DesktopHome extends StatelessWidget {
                           _commentFocus.requestFocus();
                         }
                       }),
-                    );                    
+                    );
                   },)
                 ],
               ),
@@ -775,7 +775,7 @@ class DesktopHome extends StatelessWidget {
                   Expanded(
                     child: Container(
                       margin: const EdgeInsets.all(0),
-                      child: 
+                      child:
                         Stack(
                           children: [
                             Container(
@@ -796,11 +796,11 @@ class DesktopHome extends StatelessWidget {
                                         Text('Jasmine', style: TextStyle(fontFamily: 'Roboto', fontSize: 18, fontWeight: FontWeight.w600, color: Colors.green[900])),
                                         Obx(() {
                                           return Text(
-                                            messageController.selectedConversationName.value, 
+                                            messageController.selectedConversationName.value,
                                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green[900]),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                          );                                          
+                                          );
                                         }),
                                         PopupMenuButton(
                                           icon: Icon(Icons.more_vert),
@@ -887,7 +887,7 @@ class DesktopHome extends StatelessWidget {
                                 ],
                               )
                             ),
-                            Obx(() => 
+                            Obx(() =>
                               Visibility(
                                 visible: _matchWords.isNotEmpty.obs.value,
                                 child: Positioned(
@@ -934,7 +934,7 @@ class DesktopHome extends StatelessWidget {
                                           mainAxisAlignment: MainAxisAlignment.start,
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Flexible( 
+                                            Flexible(
                                               flex: 1,
                                               fit: FlexFit.tight,
                                               child: SizedBox(
@@ -1042,7 +1042,7 @@ class DesktopHome extends StatelessWidget {
                       children: [
                         Obx(() {
                           final String keyString = "[VOICEINPUT]";
-                          
+
                           // 播放语音和暂停播放按钮的显示和控制逻辑
                           // print("whichIsPlaying: " + messageController.whichIsPlaying.value);
                           if (_m4aFileName.value!='' && _isRecording.value==false){
@@ -1101,7 +1101,7 @@ class DesktopHome extends StatelessWidget {
                                     _hasMicPermission.value = await recorder.hasMicPermission();
                                     if(_hasMicPermission.value){
                                       Directory temporaryDirectory = await getTemporaryDirectory();
-                                      
+
                                       if(_isRecording.value){
                                         if(await recorder.isRecording()){
                                           timer?.cancel();
@@ -1137,10 +1137,10 @@ class DesktopHome extends StatelessWidget {
                                       customSnackBar(title: "没有麦克风权限", content: "请在设置中打开麦克风权限: \n设置->隐私与安全->麦克风->WordPipe");
                                       recorder.requestMicPermission();
                                     }
-                                  }, 
+                                  },
                                   icon: Icon(Icons.mic_rounded, color: _isRecording.value? Colors.redAccent[100] : Colors.grey)
                                 ),
-                              )   
+                              )
                             ],
                           );
                         },),
@@ -1210,7 +1210,7 @@ class DesktopHome extends StatelessWidget {
       return TextSpan(children: children, style: const TextStyle(fontSize: 16,color: Colors.white, backgroundColor: Colors.teal));
     }else{
       return TextSpan(text: "");
-    }    
+    }
   }
 }
 
@@ -1253,7 +1253,7 @@ TextSpan _addHighlightToExchange(Map<String, String> wordDetail) {
     return TextSpan(children: children, style: const TextStyle(fontSize: 16,color: Colors.teal),);
   }else{
     return TextSpan(text: "");
-  }    
+  }
 }
 // 拆分_wordDetail['pos']的词性和出现概率
 TextSpan _addHighlightToPos(Map<String, String> wordDetail) {

@@ -119,15 +119,15 @@ flutter:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
-    
+
     # - family: NotoSansSC
     #   fonts:
     #     - asset: fonts/NotoSansSC-Regular.otf
-    
+
     - family: Roboto
       fonts:
         - asset: fonts/Roboto-Regular.ttf
-    
+
     - family: SofadiOne
       fonts:
         - asset: fonts/SofadiOne-Regular.ttf
