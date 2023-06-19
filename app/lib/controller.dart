@@ -300,6 +300,7 @@ class UserProvider extends GetConnect {
     sessionData['uuid'] = rsp['uuid'] as String;
     sessionData['apiKey'] = decrypt(rsp['apiKey']);
     sessionData['baseUrl'] = rsp['baseUrl'] as String;
+    sessionData['azureBaseUrl'] = rsp['azureBaseUrl'] as String;
     sessionData['premium'] = rsp['premium'] as int;
     await CacheHelper.setData('sessionData', sessionData);
   }

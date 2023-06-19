@@ -220,7 +220,7 @@ class MessageController extends GetxController{
       curr_user = sessionData['username'] as String;
       access_token = sessionData['access_token'] as String;
       apiKey = sessionData['apiKey'] as String;
-      baseUrl = sessionData['baseUrl'] as String;
+      baseUrl = sessionData['azureBaseUrl'] as String;
     }else{
       return;
     }
@@ -338,7 +338,7 @@ class MessageController extends GetxController{
       curr_user = sessionData['username'] as String;
       access_token = sessionData['access_token'] as String;
       apiKey = sessionData['apiKey'] as String;
-      baseUrl = sessionData['baseUrl'] as String;
+      baseUrl = sessionData['azureBaseUrl'] as String;
       premium = sessionData['premium'] as int;
     }else{
       return;

@@ -59,14 +59,16 @@ try:
 except Exception as e:
     ip = '127.0.0.1'
 OPENAI_PROXY_BASEURL = {
-    "dev": f"http://{ip}/api/openai", # for intranet Mobile Web testing
+    "dev": f"http://{ip}/api/openai",
     "prod": "https://wordpipe.in/api/openai",
+    "azure_dev": f"http://{ip}/api/azure",
+    "azure_prod": "https://wordpipe.in/api/azure",
 }
 AZURE_CONFIG = {
-    "BASE": "https://wordpipe.openai.azure.com/",
-    "VERSION": "2023-05-15",
-    "CHAT_DEPLOYMENT_NAME": 'gpt-35-turbo',
-    "EMBEDDING_DEPLOYMENT_NAME": 'text-embedding-ada-002',
+    "base_url": "https://wordpipe.openai.azure.com/",
+    "chat_version": "2023-05-15",
+    "chat_deployment_id": 'gpt-35-turbo',
+    "embedding_deployment_id": 'text-embedding-ada-002',
 }
 
 def generate_random_avatar(user_name: str) -> bool:

@@ -46,6 +46,7 @@ def openai_chat():
     '''
     apiKey = request.headers.get('Authorization').split(' ')[1] if request.headers.get('Authorization') != None else None
     openai.api_key = apiKey
+    openai.proxy = PROXIES['https']
     model = request.json['model']
     messages = request.json['messages']
     stream: bool = False

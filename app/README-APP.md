@@ -28,11 +28,13 @@ pod update
   - [ ] [官网建设](https://framer.com/)，隐私协议，服务条款，开源软件列表，
 - 产品功能
   - [x] 桌面版本能在线更新，能做到强制更新。现在的方案，只能实现要么全部强制更新，要么都不强制更新。
-    - [ ] Windows版本的问题。版本号取得；字体；
+    - [x] Windows[字体] (https://cnblogs.com/Vayne-N/p/11066940.html)
     - [x] 录音全在服务端转为mp3，用ffmpeg-python `for file in *.m4a; do ffmpeg -i "$file" -c:v copy -c:a libmp3lame -q:a 4  "${file%.*}.mp3"; done;`；
   - [x] 语音对话，携带上文。prompt限制max_tokens。[waveform](https://github.com/ryanheise/just_audio/issues/97) [和](https://github.com/ryanheise/just_audio/blob/visualizer/just_audio/example/lib/example_visualizer.dart)
   - [ ] 支持多个服务商的API。
-    - [ ] 首选使用azure，支持OpenAI，不再让用户自定义API key，可以由服务端切换
+    - [ ] chat接口使用azure，stt接口使用OpenAI
+    - [ ] 支持Claude
+    - [ ] 支持本地部署大模型
   - [ ] 故事模式
     - [ ] 选男女，看故事 [introduction_screen](https://pub.dev/packages/introduction_screen)
     - [ ] 语音消息转文字后，帮助用户润色，然后再读出来。口语润色自带语法纠错。
@@ -49,7 +51,6 @@ pod update
   - [ ] 词典用本地数据库。聊天记录本地缓存，减少网络查询。聊天记录还是需要放在云端，真人互聊、家庭号需要。收集信息是为了持续训练垂直领域模型
   - [ ] 优化token使用。使用LangChain或复制它的逻辑，或使用gpt_index框架
   - [ ] shift+enter换行、enter发送，或者enter换行、cmd+enter发送【hotkey_manager】
-  - [ ] 支持本地部署大模型
   - [ ] 什么时候开CoT? 通识教育中需要逻辑和推导的领域。 `Let's work this out in a step by step way to be sure we have the right answer.`
   - [ ] 更多prompt转至产品功能，到屏幕右侧。提供prompt template，在界面右侧提供一些常用的模板（最佳实践），用户可以选择，点击将文本框变成表单？
   - [ ] 多语言支持（界面翻译/多语种学习）

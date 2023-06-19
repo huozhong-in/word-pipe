@@ -18,8 +18,10 @@ from flask import (
     url_for, 
     send_file,
     g,
+    stream_with_context,
 )
 from flask_sse import sse
+from multidict import MultiDict
 from stardict import *
 from config import *
 from io import BytesIO
@@ -851,8 +853,6 @@ def openai_chat_proxy():
     '''
     代理到OpenAI chat API的请求，并将聊天记录存入数据库
     '''
-    if os.environ['AZURE_API_KEY'] == '':
-        pass
     api_url = 'https://api.openai.com/v1/chat/completions'
     headers = {key: value for (key, value) in request.headers if key != 'Host'}
     data = request.get_data()
@@ -860,8 +860,6 @@ def openai_chat_proxy():
     tmp_user = request.json['user']
     messages = request.json['messages']
     # stream = request.json['stream']
-    print(data)
-    print(request.headers)
     
     # 检查消息是否为空
     last_message: dict  = messages[-1]
@@ -908,12 +906,28 @@ def openai_chat_proxy():
                     if delta is not None and delta.get('content') is not None:
                         completion_text_queue.put(delta.get('content'))
                         # print(delta.get('content'))
-                    elif delta is not None and delta.get('finish_reason') is not None and delta.get('finish_reason') == 'stop':
-                        logging.info('finish_reason: stop')
+                    elif delta is None and j.get('choices')[0].get('finish_reason') is not None and j.get('choices')[0].get('finish_reason') == 'stop':
                         completion_text_queue.put("[DONE]")
             yield chunk
-
-    rsp = Response(generate(), headers=dict(response.headers))
+    
+    def generate2():
+        for line in response.iter_lines():
+            if line is not None and line != b'':
+                if b'data:' in line:
+                    data = line.decode('utf-8').split('data:')[1].strip()
+                    if data == '[DONE]':
+                        completion_text_queue.put('[DONE]')
+                        break
+                    j = json.loads(data)
+                    delta = j.get('choices')[0].get('delta') if j.get('choices') else None
+                    if delta is not None and delta.get('content') is not None:
+                        completion_text_queue.put(delta.get('content'))
+                        # print(delta.get('content'))
+                    elif delta is None and j.get('choices')[0].get('finish_reason') is not None and j.get('choices')[0].get('finish_reason') == 'stop':
+                        completion_text_queue.put("[DONE]")
+                yield line + b'\n\n'
+    
+    rsp = Response(generate2(), headers=dict(response.headers))
 
     def fn_thread(completion_text_queue: Queue, username: str):
         completion_text: str = ''
@@ -944,6 +958,104 @@ def openai_chat_proxy():
     thread = threading.Thread(target=fn_thread, args=(completion_text_queue, username))
     thread.start()
     return rsp
+
+@app.route('/api/azure/v1/chat/completions', methods=['POST'])
+def azure_chat_proxy():
+    '''
+    代理到azure chat API的请求，并将聊天记录存入数据库
+    '''
+    tmp_user = request.json['user']
+    messages = request.json['messages']
+    max_tokens = 300
+
+    # 检查消息是否为空
+    last_message: dict = messages[-1]
+    if last_message['content'] == '':
+        return make_response(jsonify({"errcode":50007,"errmsg":"Message is empty"}), 500)
+    
+    #  携带上文在对话中
+    ## username本身是一个独立的json文件，需要解析一下
+    sticker: json = json.loads(tmp_user)
+    username = sticker['user']
+    conversation_id = sticker['conversation_id']
+    # message_key = sticker['message_key']
+    if sticker['type'] == '[FREECHAT]':
+        # 携带上文信息，并优化token使用
+        userDB = UserDB(db_session)
+        myuuid: str = userDB.get_user_by_username(username).uuid
+        try:
+            # 从数据库中取出此用户最近的20条记录，按顺序拼接到messages前面
+            crdb = ChatRecordDB(db_session)
+            l: list = crdb.get_chat_record(user_id=myuuid, last_chat_record_id=0, limit=20, conversation_id=int(conversation_id))
+        except Exception as e:
+            l: list = []
+            logging.debug(e)
+        for cr in l:
+            # 优化token用量，给question保留三分之二的token，给answer保留三分之一
+            if num_tokens_from_messages(messages) > 4096/3*2:
+                break
+            last_message['content'] = cr.msgContent + '\n' + last_message['content']
+        max_tokens = 4096 - num_tokens_from_messages(messages)
+ 
+    
+    # 队列是线程安全的，所以利用它拼接流式的聊天记录
+    completion_text_queue = Queue()
+    
+    def generate():
+        openai.api_type = "azure"
+        openai.api_key = os.environ['AZURE_API_KEY']
+        openai.api_base = AZURE_CONFIG['base_url']
+        openai.api_version = AZURE_CONFIG['chat_version']
+        messages = request.json['messages']
+        temperature = request.json['temperature']
+        response = openai.ChatCompletion.create(
+            deployment_id=AZURE_CONFIG['chat_deployment_id'],
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stream=True
+        )
+        for chunk in response:
+            yield f'data: {json.dumps(chunk)}\n\n'
+            
+            delta = chunk["choices"][0].get("delta")
+            if delta is not None and delta.get("content") is not None:
+                completion_text_queue.put(delta.get("content"))
+            if chunk["choices"][0].get("finish_reason") is not None and chunk["choices"][0].get("finish_reason") == "stop":
+                completion_text_queue.put("[DONE]")
+        yield 'data: [DONE]\n\n'
+
+    rsp = Response(stream_with_context(generate()), mimetype='text/event-stream')
+    
+    def fn_thread(completion_text_queue: Queue, username: str):
+        completion_text: str = ''
+        while True:
+            c = completion_text_queue.get()
+            if c == '[DONE]':
+                break
+            else:
+                completion_text += c
+        try:
+            userDB = UserDB(db_session)
+            myuuid: str = userDB.get_user_by_username(username).uuid
+            cr = ChatRecord(
+                msgFrom=userDB.get_user_by_username('Jasmine').uuid, 
+                msgTo=myuuid, 
+                msgCreateTime=int(time.time()), 
+                msgContent=completion_text, 
+                msgType=1, 
+                conversation_id=conversation_id
+                )
+            crdb = ChatRecordDB(db_session)
+            pk_chat_record: int = crdb.insert_chat_record(cr)
+            logging.debug(pk_chat_record)
+        except Exception as e:
+            logging.error(e)
+    
+    thread = threading.Thread(target=fn_thread, args=(completion_text_queue, username))
+    thread.start()
+    return rsp
+
 
 def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301") -> int:
     """Returns the number of tokens used by a list of messages."""
@@ -1006,6 +1118,7 @@ def get_openai_apikey() -> dict:
         return {
             "apiKey": encrypt(os.environ['OPENAI_API_KEY']),
             "baseUrl": OPENAI_PROXY_BASEURL['dev'] if os.environ.get('DEBUG_MODE') != None else OPENAI_PROXY_BASEURL['prod'],
+            "azureBaseUrl": OPENAI_PROXY_BASEURL['azure_dev'] if os.environ.get('DEBUG_MODE') != None else OPENAI_PROXY_BASEURL['azure_prod'],
             }
 
 def encrypt(text):
