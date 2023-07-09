@@ -419,76 +419,76 @@ def voicechat():
     audio_file_full_path = AUDIO_FILE_PATH / intermediate_path / f'{pk_chat_record}.{audio_suffix}'
     f.save(audio_file_full_path)
     
-    # TODO 将以下代码改成异步执行
-    # 将音频文件转成mp3格式
-    if audio_suffix != 'mp3':
-        mp3_file_full_path = AUDIO_FILE_PATH / intermediate_path / f'{pk_chat_record}.mp3'
-        (ffmpeg
-            .input(audio_file_full_path.as_posix())
-            .output(mp3_file_full_path.as_posix())
-            .run()
-        )
-        os.remove(audio_file_full_path.as_posix())
-
-    toc1 = time.perf_counter()
-    logging.info(f"[语音文件上传耗时: {toc1 - tic:0.4f} seconds]")
-
-    # 获得回复并转成语音，推送回客户端
-    openai.api_key = data.get('api_key')
-    if os.environ.get('DEBUG_MODE') != None:
-        openai.proxy = PROXIES['https']
-    # 携带上文
-    ## 从数据库中取出此用户最近的20条记录，按顺序拼接到messages前面
-    crdb = ChatRecordDB(db_session)
-    l: list = crdb.get_chat_record(user_id=myuuid, last_chat_record_id=0, limit=20, conversation_id=int(conversation_id))
-    new_msgs: list = [{"role": "user", "content": message}]
-    for cr in l:
-        ## 优化token用量，给question保留三分之二的token，给answer保留三分之一
-        if num_tokens_from_messages(new_msgs) > 4096/3*2:
-            break
-        new_msgs[-1]['content'] = cr.msgContent + '\n' + new_msgs[-1]['content']
-    max_tokens: int = 4096 - num_tokens_from_messages(new_msgs)
-    response = openai.ChatCompletion.create(
-        model='gpt-3.5-turbo',
-        messages=[
-            {
-                # 'role': 'system', 
-                # 'content': 'Your are my English conversation teacher. If I don\'t get my word right, you\'ll ask questions to clarify my intentions and reply to move the conversation forward. After I say "let\'s take a break", you will conduct a stage summary, and explain and correct any mistakes I made in the conversation just now, including words, grammar, colloquialism, etc.',
-                # 'role': 'user', 
-                # 'content': '',
-                # 'role': 'assistant', 
-                # 'content': '',
-                'role': 'user', 
-                'content': new_msgs[-1]['content'],
-            }
-        ],
-        temperature=0.3,
-        max_tokens=max_tokens,
-    )
-    text: str = response['choices'][0]['message']['content']
-    
-    toc2 = time.perf_counter()
-    logging.info(f"[取回回复文字耗时: {toc2 - tic:0.4f} seconds]")
-    
-    # 将AI回复的消息存到数据库
-    cr = ChatRecord(msgFrom=jasmine_uuid, msgTo=myuuid, msgCreateTime=int(thistime), msgContent=text, msgType=34, conversation_id=conversation_id)
-    crdb = ChatRecordDB(db_session)
-    pk_chat_record2: int = crdb.insert_chat_record(cr)
-    # 生成音频推送给客户端
-    import asyncio
-    import edge_tts
-    if not os.path.exists(AUDIO_FILE_PATH / intermediate_path):
-        os.makedirs(AUDIO_FILE_PATH / intermediate_path)
-    voice: str = data.get('voice')
-    rate: str = data.get('rate')
-    async def _main(key: str, text: str) -> None:
+    async def _main() -> None:
         with app.app_context():
+            # 将音频文件转成mp3格式
+            if audio_suffix != 'mp3':
+                mp3_file_full_path = AUDIO_FILE_PATH / intermediate_path / f'{pk_chat_record}.mp3'
+                (ffmpeg
+                    .input(audio_file_full_path.as_posix())
+                    .output(mp3_file_full_path.as_posix())
+                    .run()
+                )
+                os.remove(audio_file_full_path.as_posix())
+
+            toc1 = time.perf_counter()
+            logging.info(f"[语音文件上传耗时: {toc1 - tic:0.4f} seconds]")
+
+            # 获得回复并转成语音，推送回客户端
+            openai.api_key = data.get('api_key')
+            if os.environ.get('DEBUG_MODE') != None:
+                openai.proxy = PROXIES['https']
+            # 携带上文
+            ## 从数据库中取出此用户最近的20条记录，按顺序拼接到messages前面
+            crdb = ChatRecordDB(db_session)
+            l: list = crdb.get_chat_record(user_id=myuuid, last_chat_record_id=0, limit=20, conversation_id=int(conversation_id))
+            new_msgs: list = [{"role": "user", "content": message}]
+            for cr in l:
+                ## 优化token用量，给question保留三分之二的token，给answer保留三分之一
+                if num_tokens_from_messages(new_msgs) > 4096/3*2:
+                    break
+                new_msgs[-1]['content'] = cr.msgContent + '\n' + new_msgs[-1]['content']
+            max_tokens: int = 4096 - num_tokens_from_messages(new_msgs)
+            response = openai.ChatCompletion.create(
+                model='gpt-3.5-turbo',
+                messages=[
+                    {
+                        # 'role': 'system', 
+                        # 'content': 'Your are my English conversation teacher. If I don\'t get my word right, you\'ll ask questions to clarify my intentions and reply to move the conversation forward. After I say "let\'s take a break", you will conduct a stage summary, and explain and correct any mistakes I made in the conversation just now, including words, grammar, colloquialism, etc.',
+                        # 'role': 'user', 
+                        # 'content': '',
+                        # 'role': 'assistant', 
+                        # 'content': '',
+                        'role': 'user', 
+                        'content': new_msgs[-1]['content'],
+                    }
+                ],
+                temperature=0.3,
+                max_tokens=max_tokens,
+            )
+            text: str = response['choices'][0]['message']['content']
+            
+            toc2 = time.perf_counter()
+            logging.info(f"[取回回复文字耗时: {toc2 - tic:0.4f} seconds]")
+            
+            # 将AI回复的消息存到数据库
+            cr = ChatRecord(msgFrom=jasmine_uuid, msgTo=myuuid, msgCreateTime=int(thistime), msgContent=text, msgType=34, conversation_id=conversation_id)
+            crdb = ChatRecordDB(db_session)
+            pk_chat_record2: int = crdb.insert_chat_record(cr)
+            # 生成音频推送给客户端
+            
+            import edge_tts
+            if not os.path.exists(AUDIO_FILE_PATH / intermediate_path):
+                os.makedirs(AUDIO_FILE_PATH / intermediate_path)
+            voice: str = data.get('voice')
+            rate: str = data.get('rate')
+    
             back_data: json = {}
             back_data['username'] = 'Jasmine'
             back_data['uuid'] = jasmine_uuid
             back_data['type'] = 34 # WordPipeMessageType.audio See: config.dart
             back_data['createTime'] = int(thistime)
-            mp3File = Path(AUDIO_FILE_PATH / intermediate_path / f'{key}.mp3')
+            mp3File = Path(AUDIO_FILE_PATH / intermediate_path / f'{pk_chat_record2}.mp3')
             if not mp3File.exists():
                 if int(rate) == 0:
                     communicate = edge_tts.Communicate(text=text, voice=voice)
@@ -499,21 +499,22 @@ def voicechat():
                     communicate = edge_tts.Communicate(text=text, voice=voice, rate=rate_str)
                 
                 await communicate.save(mp3File)
-            back_data['message_key'] = str(key)
+            back_data['message_key'] = str(pk_chat_record2)
             dataList: list = list()
             dataList.append(text)
-            dataList.append(key)
-            dataList.append(f'/{AUDIO_SERVER_PATH}/{intermediate_path}/{key}.mp3')
+            dataList.append(pk_chat_record2)
+            dataList.append(f'/{AUDIO_SERVER_PATH}/{intermediate_path}/{pk_chat_record2}.mp3')
             back_data['dataList'] = dataList
             id = generate_time_based_client_id(prefix=username)
             sse.publish(id=id, data=back_data, type=SSE_MSG_EVENTTYPE, channel=username)
     
-    def fn_thread(key: str, text: str):
+    import asyncio
+    def fn_thread():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        loop.run_until_complete(_main(key=key, text=text))
+        loop.run_until_complete(_main())
     
-    thread = threading.Thread(target=fn_thread, args=(pk_chat_record2, text))
+    thread = threading.Thread(target=fn_thread, args=())
     thread.start()
 
     r: dict = {

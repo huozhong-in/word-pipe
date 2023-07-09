@@ -103,7 +103,7 @@ class MessageBubble extends StatelessWidget {
                             Visibility(
                               visible: isMe == false,
                               child: Tooltip(
-                                message: "播放音频",
+                                message: "朗读",
                                 child: Container(
                                   width: 30,
                                   height: 30,

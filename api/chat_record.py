@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from sqlalchemy import Column, Integer, String, or_
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, scoped_session
 from config import *
 
 Base: declarative_base = declarative_base()
@@ -26,7 +26,7 @@ class ChatRecord(Base):
 
 class ChatRecordDB:
 
-    def __init__(self, session):
+    def __init__(self, session: scoped_session):
         self.session = session
 
     def get_chat_record(self, user_id: str, last_chat_record_id: int, limit: int=30, conversation_id: int=0):
@@ -63,7 +63,7 @@ class Conversation(Base):
     conversation_create_time = Column(Integer, nullable=False, default=0)
 
 class ConversationDB:
-    def __init__(self, session) -> None:
+    def __init__(self, session: scoped_session) -> None:
         self.session = session
     
     def get_conversation_list(self, user_id: str) -> list:

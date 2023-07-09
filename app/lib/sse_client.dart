@@ -60,10 +60,11 @@ class SSEClient {
       log('lastEventId: ${messageEvent.lastEventId}');
       // 过滤掉重复的消息
       if (messageEvent.lastEventId == lastLastEventId) {
-        return;
+        print('重复的消息');
+      }else{
+        lastLastEventId = messageEvent.lastEventId;
+        _messageController.add(messageEvent.data); // 向StreamController添加消息
       }
-      lastLastEventId = messageEvent.lastEventId;
-      _messageController.add(messageEvent.data); // 向StreamController添加消息
     });
 
     // _eventSource!.onMessage.listen((event) {

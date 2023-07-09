@@ -729,7 +729,7 @@ class DesktopHome extends StatelessWidget {
                       activeTrackColor: Colors.green[100],
                       inactiveThumbColor: Colors.green[200],
                       inactiveTrackColor: Colors.green[100],
-                      title: Text('连续对话模式', style: TextStyle(fontSize: 14)),
+                      title: Text('问答/对话模式', style: TextStyle(fontSize: 14)),
                       // subtitle: Text('会员专享', style: TextStyle(fontSize: 12, color: Colors.blue)),
                       value: settingsController.freeChatMode.value,
                       onChanged: ((bool value) async {
@@ -1088,7 +1088,7 @@ class DesktopHome extends StatelessWidget {
                               Positioned.fill(
                                 child: CircularProgressIndicator(
                                   value: _isRecording.value? 1 - recordProgress.value / 60 : 0,
-                                  valueColor: AlwaysStoppedAnimation(Colors.redAccent[100]),
+                                  valueColor: AlwaysStoppedAnimation(Colors.pink[300]),
                                   strokeWidth: 5,
                                 ),
                               ),
@@ -1138,7 +1138,7 @@ class DesktopHome extends StatelessWidget {
                                       recorder.requestMicPermission();
                                     }
                                   },
-                                  icon: Icon(Icons.mic_rounded, color: _isRecording.value? Colors.redAccent[100] : Colors.grey)
+                                  icon: Icon(Icons.mic_rounded, color: _isRecording.value? Colors.pink[300] : Colors.grey)
                                 ),
                               )
                             ],
